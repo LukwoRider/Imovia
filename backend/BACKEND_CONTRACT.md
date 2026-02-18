@@ -80,6 +80,7 @@ await supabase.rpc("get_owner_dashboard");
 Use normal `select` on:
 
 - `properties`
+- `property_images`
 - `leases`
 - `lease_tenants`
 - `rental_applications`
@@ -87,14 +88,19 @@ Use normal `select` on:
 - `incidents`
 - `maintenance_requests`
 - `documents`
+- `profiles`
 - `owner_kpis` (view)
 
 RLS decides visibility based on authenticated user ownership/membership.
 
-## Storage Contract (Documents)
+## Storage Contract
 
 - Bucket: `documents` (private)
-- Object path format: `leases/{leaseId}/{uuid}-{filename}`
+- Bucket: `property-images` (private)
+- Bucket: `avatars` (private)
+- Object path format (documents): `leases/{leaseId}/{uuid}-{filename}`
+- Object path format (property images): `properties/{propertyId}/{uuid}-{filename}`
+- Object path format (avatars): `profiles/{userId}/{uuid}-{filename}`
 
 Upload example:
 

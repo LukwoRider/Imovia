@@ -84,7 +84,7 @@ node test.mjs
 
 Expected success marker:
 
-`TEST COMPLET RÉUSSI (documents inclus)`
+`TEST COMPLET REUSSI (documents inclus)`
 
 ## Frontend Contract (Use This First)
 
@@ -112,6 +112,9 @@ Frontend guidance:
 - use authenticated user session for all writes
 - rely on RLS instead of client-side authorization checks
 - prefer RPCs for business transitions (status changes, lease creation, payment marking)
+
+Contract source of truth:
+- `backend/BACKEND_CONTRACT.md` (current: `v1.0.0`)
 
 ## Storage Contract (Documents)
 
@@ -168,6 +171,14 @@ Notes:
 - do not manually edit pulled snapshot migration except for review
 - create additive migrations for fixes (like security hardening)
 
+## Production Operations
+
+Release and rollback procedure:
+- `backend/PROD_RELEASE_RUNBOOK.md`
+
+Short rule:
+- every production release must include backup plan + post-deploy smoke test
+
 ## Backend/Frontend Readiness Checklist
 
 Before merging to production branch:
@@ -182,6 +193,8 @@ Before merging to production branch:
 
 - `backend/test.mjs`: integration scenario and smoke test
 - `backend/.env.example`: env template
+- `backend/BACKEND_CONTRACT.md`: frontend/backend integration contract
+- `backend/PROD_RELEASE_RUNBOOK.md`: release, backup, and rollback process
 - `backend/sample.txt`: test upload payload
 - `supabase/migrations/`: source of truth for schema evolution
 - `supabase/config.toml`: Supabase CLI project config

@@ -1,5 +1,8 @@
 # Backend Contract (Frontend Integration)
 
+Contract version: `v1.0.0`  
+Status: `stable`  
+Last updated: `2026-02-18`
 This document is the practical contract for frontend developers using Supabase directly.
 
 ## Scope
@@ -142,3 +145,14 @@ Never expose:
 
 - This contract assumes migrations in `supabase/migrations/` are applied.
 - Use the same project ref/environment as the branch target for QA.
+
+## Versioning Policy
+
+- Backward-compatible additions (new optional fields, new RPCs): minor update (`v1.1.0`).
+- Breaking changes (renamed RPC args, removed fields, changed semantics): major update (`v2.0.0`).
+- Bug-fix clarifications with no contract impact: patch update (`v1.0.1`).
+
+For breaking changes:
+- update this file version
+- document migration path for frontend teams
+- announce rollout window before deployment

@@ -15,6 +15,21 @@ import {
 const AVATAR_URI =
   "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80";
 
+function CabinetIcon({ color = "#727682" }: { color?: string }) {
+  return (
+    <View style={styles.cabinetWrap}>
+      <View style={[styles.cabinetSide, styles.cabinetSideLeft, { borderColor: color }]} />
+      <View style={[styles.cabinetSide, styles.cabinetSideRight, { borderColor: color }]} />
+      <View style={[styles.cabinetMain, { borderColor: color }]}>
+        <View style={[styles.cabinetLine, { backgroundColor: color }]} />
+        <View style={[styles.cabinetLine, { backgroundColor: color }]} />
+        <View style={[styles.cabinetLine, { backgroundColor: color }]} />
+        <View style={[styles.cabinetLine, { backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+}
+
 function InfoField({
   icon,
   value,
@@ -69,7 +84,7 @@ export default function ProfilePage() {
             <View style={styles.shapeTop} />
             <View style={styles.shapeBottom} />
 
-            <View className="px-6 pb-8 pt-4">
+            <View className="px-6 pb-4 pt-2">
               <View className="items-end">
                 <View className="relative">
                   <Image
@@ -84,21 +99,22 @@ export default function ProfilePage() {
               </View>
 
               <Image
-                source={require("@/assets/images/logo.svg")}
+                source={require("@/assets/images/logo-white.svg")}
                 style={{ width: 156, height: 48 }}
                 contentFit="contain"
+                className="-mt-2"
               />
-              <Text className="text-white text-[48px] leading-[52px] font-bold mt-2">
+              <Text className="text-white text-[48px] leading-[52px] font-bold mt-1">
                 Profile
               </Text>
-              <Text className="text-[#EAF2FF] text-[18px] leading-7 mt-2 max-w-[300px]">
+              <Text className="text-white text-[18px] leading-7 mt-1 max-w-[300px]">
                 Suivez et gérez tous les incidents signalés dans votre logement.
               </Text>
             </View>
           </View>
 
-          <View className="px-5 -mt-7 gap-6">
-            <View className="rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
+          <View className="px-5 mt-4 gap-6">
+            <View className="mx-1 rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
               <View className="px-5 py-6 flex-row items-center border-b border-[#D0D2D8]">
                 <View className="h-16 w-16 rounded-2xl border border-[#C8CAD1] items-center justify-center bg-[#F4F4F6]">
                   <Feather name="user" size={25} color="#3158B8" />
@@ -173,7 +189,7 @@ export default function ProfilePage() {
               </View>
             </View>
 
-            <View className="rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
+            <View className="mx-1 rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
               <View className="px-5 py-6 flex-row items-center border-b border-[#D0D2D8]">
                 <View className="h-16 w-16 rounded-2xl border border-[#C8CAD1] items-center justify-center bg-[#F4F4F6]">
                   <Feather name="lock" size={25} color="#3158B8" />
@@ -231,23 +247,23 @@ export default function ProfilePage() {
         <View className="absolute bottom-0 left-0 right-0 bg-[#F4F4F6] border-t border-[#DADCE2] px-2 pt-3 pb-5 flex-row justify-around">
           <View className="items-center gap-1">
             <Feather name="pie-chart" size={23} color="#727682" />
-            <Text className="text-[#727682] text-[13px]">Accueil</Text>
+            <Text className="text-[#727682] text-[12px]">Accueil</Text>
           </View>
           <View className="items-center gap-1">
-            <Feather name="clipboard" size={23} color="#3158B8" />
-            <Text className="text-[#3158B8] text-[13px]">Biens</Text>
+            <CabinetIcon color="#727682" />
+            <Text className="text-[#727682] text-[12px]">Biens</Text>
           </View>
           <View className="items-center gap-1">
             <Feather name="home" size={23} color="#727682" />
-            <Text className="text-[#727682] text-[13px]">Mon logement</Text>
+            <Text className="text-[#727682] text-[12px]">Mon logement</Text>
           </View>
           <View className="items-center gap-1">
             <Feather name="file-text" size={23} color="#727682" />
-            <Text className="text-[#727682] text-[13px]">Documents</Text>
+            <Text className="text-[#727682] text-[12px]">Documents</Text>
           </View>
           <View className="items-center gap-1">
             <Feather name="alert-circle" size={23} color="#727682" />
-            <Text className="text-[#727682] text-[13px]">Incidents</Text>
+            <Text className="text-[#727682] text-[12px]">Incidents</Text>
           </View>
         </View>
       </View>
@@ -281,4 +297,40 @@ const styles = StyleSheet.create({
     backgroundColor: "#071E7A",
     opacity: 0.7,
   },
+  cabinetWrap: {
+    width: 24,
+    height: 24,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cabinetMain: {
+    width: 12,
+    height: 20,
+    borderWidth: 2,
+    borderRadius: 4,
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    paddingVertical: 3,
+  },
+  cabinetSide: {
+    position: "absolute",
+    width: 5,
+    height: 12,
+    borderWidth: 2,
+    borderRadius: 3,
+    top: 8,
+  },
+  cabinetSideLeft: {
+    left: 0,
+  },
+  cabinetSideRight: {
+    right: 0,
+  },
+  cabinetLine: {
+    width: 6,
+    height: 2,
+    borderRadius: 1,
+  },
 });
+

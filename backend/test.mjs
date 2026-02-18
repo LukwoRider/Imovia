@@ -271,6 +271,17 @@ async function run() {
 
   console.log("🔗 Signed URL (60s):", signed.signedUrl);
 
+  // ==========================
+  // 7) OWNER DASHBOARD (test rapide)
+  // ==========================
+  await supabase.auth.signOut();
+  await login(ownerEmail, ownerPass);
+
+  const { data: dash, error: dErr } = await supabase.rpc("get_owner_dashboard");
+  if (dErr) throw dErr;
+
+  console.log("📊 OWNER DASHBOARD:", JSON.stringify(dash, null, 2));
+
   console.log("✅ TEST COMPLET RÉUSSI 🚀 (documents inclus)");
 }
 

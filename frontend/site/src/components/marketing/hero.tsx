@@ -81,7 +81,6 @@ export function Hero() {
                             whileInView={{ opacity: 1, rotateX: 5, rotateY: -5 }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             animate={{ y: [0, -15, 0] }}
-                            // @ts-ignore - framer motion types issue with repeat
                             style={{ y: 0 }} // default style
                         >
                             <motion.div

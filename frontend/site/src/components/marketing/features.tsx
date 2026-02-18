@@ -1,6 +1,6 @@
 "use client"
 
-import { Building2, LineChart, Shield, Zap, ArrowRight } from "lucide-react"
+import { Building2, LineChart, Shield, Zap } from "lucide-react"
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion"
 import { FadeInUp, AnimatedGradientText } from "@/components/ui/motion-wrapper"
 import { cn } from "@/lib/utils"

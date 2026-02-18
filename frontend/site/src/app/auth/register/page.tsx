@@ -44,7 +44,7 @@ export default function RegisterPage() {
                     />
                     <RoleCard
                         icon={<Key className="h-6 w-6" />}
-                        title="Propirétaire"
+                        title="Propriétaire"
                         description="Je possède un ou plusieurs biens à louer"
                         onClick={() => handleRoleSelect("owner")}
                     />
@@ -79,7 +79,7 @@ export default function RegisterPage() {
                         </Button>
                     </div>
 
-                    {role === "agency" ? <AgencyForm /> : <UserForm role={role} />}
+                    {role === "agency" ? <AgencyForm /> : <UserForm />}
 
                     <Button className="w-full bg-[#25468d] hover:bg-[#1e3a75] text-white mt-4">
                         Créer votre compte
@@ -129,7 +129,7 @@ function RoleCard({ icon, title, description, onClick }: { icon: React.ReactNode
     )
 }
 
-function UserForm({ role }: { role: string }) {
+function UserForm() {
     return (
         <div className="grid gap-4">
             <div className="grid gap-2">

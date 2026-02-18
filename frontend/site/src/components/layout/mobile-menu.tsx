@@ -17,7 +17,11 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
+        // eslint-disable-next-line
         setMounted(true)
+    }, [])
+
+    useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden"
         } else {

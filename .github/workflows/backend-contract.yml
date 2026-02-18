@@ -1,0 +1,75 @@
+name: Backend Contract Checks
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "supabase/**"
+      - ".github/workflows/backend-contract.yml"
+      - "package.json"
+      - "package-lock.json"
+  push:
+    branches:
+      - "back/**"
+    paths:
+      - "backend/**"
+      - "supabase/**"
+      - ".github/workflows/backend-contract.yml"
+      - "package.json"
+      - "package-lock.json"
+
+jobs:
+  backend-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      - name: Install Backend Dependencies
+        run: npm ci --prefix backend
+
+      - name: Supabase CLI Version
+        run: npx supabase --version
+
+      - name: Validate Migration File Names
+        run: |
+          set -euo pipefail
+          if [ ! -d "supabase/migrations" ]; then
+            echo "supabase/migrations directory is missing"
+            exit 1
+          fi
+
+          files=$(find supabase/migrations -maxdepth 1 -type f -name "*.sql" | sed 's|.*/||' | sort)
+          if [ -z "$files" ]; then
+            echo "No SQL migrations found in supabase/migrations"
+            exit 1
+          fi
+
+          invalid=$(echo "$files" | grep -Ev '^[0-9]{14}_.+\.sql$' || true)
+          if [ -n "$invalid" ]; then
+            echo "Invalid migration filenames:"
+            echo "$invalid"
+            exit 1
+          fi
+
+      - name: Validate Backend Contract Docs Presence
+        run: |
+          test -f backend/README.md
+          test -f backend/BACKEND_CONTRACT.md
+          test -f backend/.env.example
+
+      - name: Validate Test Script Syntax
+        run: npm --prefix backend run check:syntax

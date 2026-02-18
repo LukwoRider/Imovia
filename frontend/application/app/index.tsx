@@ -1,14 +1,12 @@
-import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
   return (
-    <>
-      <Image
-        source={require("../../assets/react-logo.png")}
-        style={styles.reactLogo}
-      />
-    </>
+    <View className="flex-1 items-center justify-center bg-blue-500">
+      <Text className="text-white text-2xl font-bold">
+        Coucou, bienvenue sur la page Login 🚀
+      </Text>
+    </View>
   );
 }
 

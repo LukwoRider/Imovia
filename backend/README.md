@@ -49,38 +49,42 @@ npm install
 
 ## Environment Variables
 
-Create `backend/.env`:
+Create `backend/.env.local` for local tests (copy from `backend/.env.example`):
 
 ```env
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=<local-anon-key>
 
 OWNER_EMAIL=owner@imovia.test
-OWNER_PASS=<owner-password>
+OWNER_PASS=test
 
 TENANT_EMAIL=tenant@imovia.test
-TENANT_PASS=<tenant-password>
+TENANT_PASS=test
 ```
 
-Template file: `backend/.env.example`.
+For staging, copy `backend/.env.example` to `backend/.env.staging` and set staging values.
 
 Security rules:
-- never commit `backend/.env`
+- never commit real env files (`backend/.env.local`, `backend/.env.staging`, etc.)
 - never expose service role key in frontend apps
 
 ## Run Integration Test
 
-From repo root:
+Local (default, safe mode):
 
 ```bash
 node backend/test.mjs
 ```
 
-From `backend/`:
+Staging (explicit opt-in):
 
 ```bash
-node test.mjs
+TEST_TARGET=staging TEST_ENV_FILE=.env.staging ALLOW_REMOTE_TESTS=true node backend/test.mjs
 ```
+
+Notes:
+- default mode is `TEST_TARGET=local` and expects `backend/.env.local`
+- script refuses remote writes unless `ALLOW_REMOTE_TESTS=true`
 
 Expected success marker:
 
@@ -170,6 +174,34 @@ Notes:
 - `db pull` may require Docker
 - do not manually edit pulled snapshot migration except for review
 - create additive migrations for fixes (like security hardening)
+
+## Local Seed Data (Repo Root)
+
+For local onboarding and frontend testing, this repo includes:
+- `supabase/seed.sql`
+- `[db.seed]` enabled in `supabase/config.toml`
+
+Run a full local reset + migrations + seed:
+
+```bash
+npx supabase db reset
+```
+
+This creates deterministic demo data and test users:
+- `owner@imovia.test` / `test`
+- `tenant@imovia.test` / `test`
+
+Seeded entities include:
+- owner + tenant profiles
+- available and rented properties
+- rental applications (pending + accepted)
+- one active lease and rent payments
+- one incident and one maintenance request
+- documents bucket bootstrap (`documents`)
+
+Important:
+- seed is for local/dev workflows only
+- do not use these credentials in production
 
 ## Production Operations
 

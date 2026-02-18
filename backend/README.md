@@ -171,6 +171,34 @@ Notes:
 - do not manually edit pulled snapshot migration except for review
 - create additive migrations for fixes (like security hardening)
 
+## Local Seed Data (Repo Root)
+
+For local onboarding and frontend testing, this repo includes:
+- `supabase/seed.sql`
+- `[db.seed]` enabled in `supabase/config.toml`
+
+Run a full local reset + migrations + seed:
+
+```bash
+npx supabase db reset
+```
+
+This creates deterministic demo data and test users:
+- `owner@imovia.test` / `test`
+- `tenant@imovia.test` / `test`
+
+Seeded entities include:
+- owner + tenant profiles
+- available and rented properties
+- rental applications (pending + accepted)
+- one active lease and rent payments
+- one incident and one maintenance request
+- documents bucket bootstrap (`documents`)
+
+Important:
+- seed is for local/dev workflows only
+- do not use these credentials in production
+
 ## Production Operations
 
 Release and rollback procedure:

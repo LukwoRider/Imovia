@@ -49,38 +49,42 @@ npm install
 
 ## Environment Variables
 
-Create `backend/.env`:
+Create `backend/.env.local` for local tests (copy from `backend/.env.example`):
 
 ```env
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=<local-anon-key>
 
 OWNER_EMAIL=owner@imovia.test
-OWNER_PASS=<owner-password>
+OWNER_PASS=test
 
 TENANT_EMAIL=tenant@imovia.test
-TENANT_PASS=<tenant-password>
+TENANT_PASS=test
 ```
 
-Template file: `backend/.env.example`.
+For staging, copy `backend/.env.example` to `backend/.env.staging` and set staging values.
 
 Security rules:
-- never commit `backend/.env`
+- never commit real env files (`backend/.env.local`, `backend/.env.staging`, etc.)
 - never expose service role key in frontend apps
 
 ## Run Integration Test
 
-From repo root:
+Local (default, safe mode):
 
 ```bash
 node backend/test.mjs
 ```
 
-From `backend/`:
+Staging (explicit opt-in):
 
 ```bash
-node test.mjs
+TEST_TARGET=staging TEST_ENV_FILE=.env.staging ALLOW_REMOTE_TESTS=true node backend/test.mjs
 ```
+
+Notes:
+- default mode is `TEST_TARGET=local` and expects `backend/.env.local`
+- script refuses remote writes unless `ALLOW_REMOTE_TESTS=true`
 
 Expected success marker:
 

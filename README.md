@@ -88,15 +88,6 @@ After launching Expo, you can run the application:
 -   On a physical device using Expo Go
 
 
-## Future Improvements
-
--   Advanced UI and UX enhancements
--   Performance optimization
--   Improved state management
--   Extended backend integrations
--   AI-powered assistance features
-
-
 ## Teams
 
 The Imovia project is developed by a multidisciplinary team organized by technical areas:

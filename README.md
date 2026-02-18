@@ -97,10 +97,23 @@ After launching Expo, you can run the application:
 -   AI-powered assistance features
 
 
-## Contributing
+## Teams
 
-Contributions are welcome. Please create a feature branch and open a
-Pull Request with a clear description of your changes.
+The Imovia project is developed by a multidisciplinary team organized by technical areas:
+
+### Backend Development
+- Yoann
+- Mathis
+- Romain
+
+### Frontend Website
+- Nassim
+
+### Frontend Mobile Application
+- Lyam
+
+### Global Development
+- Timothé
 
 
 ## License

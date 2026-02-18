@@ -31,7 +31,7 @@ function InfoField({
   return (
     <View
       className={`h-14 rounded-2xl border border-[#D7D9DE] bg-[#F7F7F8] px-4 flex-row items-center ${
-        split ? "flex-1" : ""
+        split ? "flex-1 min-w-0" : ""
       }`}
     >
       <Feather name={icon} size={20} color="#3158B8" />
@@ -41,6 +41,7 @@ function InfoField({
         placeholder={placeholder}
         placeholderTextColor="#7A7D85"
         className="flex-1 ml-3 text-[17px] text-[#1C2233]"
+        style={{ minWidth: 0, flexShrink: 1 }}
       />
     </View>
   );

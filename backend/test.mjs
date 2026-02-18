@@ -114,6 +114,28 @@ async function run() {
   if (e5) throw e5;
 
   console.log("💰 Payments generated:", count);
+
+  // ✅ TEST: mark first payment as paid (owner)
+  const { data: payments, error: pErr } = await supabase
+    .from("rent_payments")
+    .select("id, amount_due")
+    .eq("lease_id", leaseId)
+    .order("due_date", { ascending: true })
+    .limit(1);
+
+  if (pErr) throw pErr;
+  if (!payments?.length) throw new Error("No rent payment found for this lease");
+
+  const firstPayment = payments[0];
+
+  const { error: payErr } = await supabase.rpc("mark_payment_paid", {
+    p_payment_id: firstPayment.id,
+    p_amount_paid: firstPayment.amount_due,
+  });
+
+  if (payErr) throw payErr;
+  console.log("✅ First payment marked as paid:", firstPayment.id);
+
   await supabase.auth.signOut();
 
   // ==========================

@@ -12,9 +12,14 @@ const Input = React.forwardRef<TextInput, InputProps>(
             <TextInput
                 ref={ref}
                 placeholderTextColor={placeholderTextColor ?? "#9ca3af"}
+                selectionColor="#3153A1"
+                cursorColor="#3153A1"
+                underlineColorAndroid="transparent"
+                style={{ outlineStyle: "none" } as any}
                 className={cn(
                     "h-12 rounded-lg border border-input bg-background px-4 text-base text-foreground",
                     "placeholder:text-muted-foreground",
+                    "focus:border-primary",
                     className
                 )}
                 {...props}

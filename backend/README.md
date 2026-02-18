@@ -1,39 +1,41 @@
-# Backend (Supabase integration test)
+# Backend (Supabase Integration Test)
 
-Ce dossier contient un script Node.js (`test.mjs`) qui execute un scenario complet de test integration contre Supabase.
+This folder contains a Node.js script (`test.mjs`) that runs a full integration scenario against Supabase.
 
-## Objectif
+## Goal
 
-Valider le flux metier principal cote backend:
+Validate the main backend business flow:
 
-1. Connexion owner
-2. Creation d'un bien
-3. Connexion tenant + creation d'une candidature
-4. Acceptation de la candidature (RPC `accept_application`)
-5. Generation des loyers (RPC `generate_rent_payments`)
-6. Gestion d'incident (creation tenant + mise a jour owner)
-7. Gestion de travaux (creation tenant + approbation/fin owner)
-8. Upload d'un document dans Storage + insertion BDD
-9. Lecture du dashboard owner (RPC `get_owner_dashboard`)
+1. Owner login
+2. Property creation
+3. Tenant login + rental application creation
+4. Application acceptance (RPC `accept_application`)
+5. Rent schedule generation (RPC `generate_rent_payments`)
+6. Incident flow (tenant creates, owner updates)
+7. Maintenance flow (tenant creates, owner approves/completes)
+8. Document upload to Storage + DB insert
+9. Optional payment test: mark one rent payment as paid (RPC `mark_payment_paid`)
+10. Owner dashboard read (RPC `get_owner_dashboard`)
 
-## Prerequis
+## Prerequisites
 
-- Node.js 18+ (recommande)
-- Un projet Supabase configure avec:
-  - les tables utilisees dans `test.mjs`
-  - les fonctions RPC:
+- Node.js 18+ (recommended)
+- A Supabase project configured with:
+  - the tables used in `test.mjs`
+  - these RPC functions:
     - `accept_application`
     - `generate_rent_payments`
+    - `mark_payment_paid`
     - `get_owner_dashboard`
-  - un bucket Storage nomme `documents`
-  - les policies RLS compatibles avec le scenario
-- Deux comptes utilisateurs existants:
-  - un owner
-  - un tenant
+  - a private Storage bucket named `documents`
+  - RLS policies compatible with this scenario (DB + Storage)
+- Two existing users:
+  - one owner
+  - one tenant
 
 ## Installation
 
-Depuis la racine du repo:
+From the repository root:
 
 ```bash
 cd backend
@@ -42,7 +44,7 @@ npm install
 
 ## Configuration
 
-Creer `backend/.env` avec les variables suivantes:
+Create `backend/.env`:
 
 ```env
 SUPABASE_URL=...
@@ -55,52 +57,88 @@ TENANT_EMAIL=tenant@imovia.test
 TENANT_PASS=...
 ```
 
-Le script charge explicitement `backend/.env`, donc il fonctionne:
+The script explicitly loads `backend/.env`, so both commands work:
 
-- depuis la racine: `node backend/test.mjs`
-- depuis `backend`: `node test.mjs`
+- from repository root: `node backend/test.mjs`
+- from `backend`: `node test.mjs`
 
-## Fichiers importants
+## Security
 
-- `backend/test.mjs`: scenario de test integration
-- `backend/sample.txt`: fichier local uploade dans le bucket `documents`
-- `backend/package.json`: dependances Node (`@supabase/supabase-js`, `dotenv`)
+- Never commit `backend/.env` (it should stay ignored by `.gitignore`).
+- Provide and maintain `backend/.env.example` with no secrets.
 
-## Execution
+## Storage (Documents)
 
-Depuis la racine:
+Bucket: `documents` (private)
+
+Path convention:
+
+- `leases/{leaseId}/{uuid}-{filename}`
+
+Download:
+
+- via signed URLs (`createSignedUrl`)
+
+## Front Handoff (API Contract)
+
+Write operations (prefer RPCs):
+
+- `accept_application`
+- `generate_rent_payments`
+- `mark_payment_paid`
+- `get_owner_dashboard`
+
+Read operations (through RLS):
+
+- `properties`
+- `leases`
+- `rent_payments`
+- `incidents`
+- `maintenance_requests`
+- `documents`
+
+## Important Files
+
+- `backend/test.mjs`: integration test scenario
+- `backend/sample.txt`: local file uploaded to the `documents` bucket
+- `backend/package.json`: Node dependencies (`@supabase/supabase-js`, `dotenv`)
+- `backend/.env.example`: environment variable template
+
+## Run
+
+From repository root:
 
 ```bash
 node backend/test.mjs
 ```
 
-ou depuis le dossier backend:
+Or from `backend`:
 
 ```bash
 node test.mjs
 ```
 
-## Resultat attendu
+## Expected Output
 
-En cas de succes, la sortie termine par:
+On success, the script ends with:
 
 `TEST COMPLET REUSSI (documents inclus)`
 
-et affiche aussi le payload du dashboard owner.
+and prints the owner dashboard payload.
 
-## Important (environnement de test)
+## Notes (Test Environment)
 
-- Chaque execution cree de nouvelles donnees (biens, candidatures, incidents, etc.).
-- Chaque execution upload un nouveau fichier dans Storage.
-- Le script ne fait pas de nettoyage automatique.
+- Each run creates new records (properties, applications, incidents, etc.).
+- Each run uploads a new file to Storage.
+- No automatic cleanup is performed.
 
-Utiliser de preference une base Supabase de dev/staging, pas la prod.
+Use a dev/staging Supabase project, not production.
 
-## Depannage rapide
+## Quick Troubleshooting
 
 - `Missing SUPABASE_URL or SUPABASE_ANON_KEY`:
-  verifier `backend/.env`.
-- Erreur RLS sur `documents`:
-  verifier les policies et la relation tenant <-> lease.
-- Erreur RPC:
-  verifier que les fonctions SQL existent et sont executables avec le role connecte.
+  check `backend/.env`.
+- RLS error on `documents`:
+  check DB + Storage policies and tenant/lease membership rules.
+- RPC error:
+  check that SQL functions exist and are executable for the connected role.

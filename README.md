@@ -1,4 +1,4 @@
-# Imovia --- Project Documentation
+# Imovia Project Documentation
 
 ## Overview
 

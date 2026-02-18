@@ -24,7 +24,6 @@ export default function LoginPage() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 32, paddingVertical: 48 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo */}
         <View className="items-center mb-8">
           <Image
             source={require("@/assets/images/logo.svg")}
@@ -32,18 +31,15 @@ export default function LoginPage() {
             contentFit="contain"
           />
 
-          {/* Title */}
           <Text className="text-2xl font-bold text-foreground mt-4">
             Connectez-vous à un compte
           </Text>
 
-          {/* Subtitle */}
           <Text className="text-sm text-muted-foreground text-center mt-2 px-4">
             Entrez votre email ci-dessous pour vous connecter à votre compte
           </Text>
         </View>
 
-        {/* Form */}
         <View className="gap-3 mb-4">
           <Input
             placeholder="Votre email"
@@ -72,7 +68,6 @@ export default function LoginPage() {
           </Button>
         </View>
 
-        {/* Separator with text */}
         <View className="flex-row items-center my-4">
           <Separator className="flex-1" />
           <Text className="mx-4 text-xs text-muted-foreground tracking-widest uppercase">
@@ -81,7 +76,6 @@ export default function LoginPage() {
           <Separator className="flex-1" />
         </View>
 
-        {/* Registration button */}
         <Button
           variant="outline"
           onPress={() => {
@@ -92,7 +86,6 @@ export default function LoginPage() {
           <Text>S'inscrire</Text>
         </Button>
 
-        {/* Legal text */}
         <View className="items-center mt-2">
           <Text className="text-xs text-muted-foreground text-center leading-5">
             En cliquant sur continuer, vous acceptez nos{" "}

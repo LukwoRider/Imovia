@@ -8,7 +8,18 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.join(__dirname, ".env") });
+const defaultEnvFile = path.join(__dirname, ".env.local");
+const envFile = process.env.TEST_ENV_FILE
+  ? path.resolve(__dirname, process.env.TEST_ENV_FILE)
+  : defaultEnvFile;
+
+if (!fs.existsSync(envFile)) {
+  throw new Error(
+    `Missing env file: ${envFile}. Copy backend/.env.example to .env.local (or .env.staging) and fill values.`
+  );
+}
+
+dotenv.config({ path: envFile });
 
 const url = process.env.SUPABASE_URL;
 const anon = process.env.SUPABASE_ANON_KEY;
@@ -19,9 +30,42 @@ const ownerPass = process.env.OWNER_PASS;
 const tenantEmail = process.env.TENANT_EMAIL;
 const tenantPass = process.env.TENANT_PASS;
 
-if (!url || !anon) throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env");
-if (!ownerEmail || !ownerPass) throw new Error("Missing OWNER_EMAIL/OWNER_PASS in .env");
-if (!tenantEmail || !tenantPass) throw new Error("Missing TENANT_EMAIL/TENANT_PASS in .env");
+if (!url || !anon) throw new Error(`Missing SUPABASE_URL or SUPABASE_ANON_KEY in ${envFile}`);
+if (!ownerEmail || !ownerPass) throw new Error(`Missing OWNER_EMAIL/OWNER_PASS in ${envFile}`);
+if (!tenantEmail || !tenantPass) throw new Error(`Missing TENANT_EMAIL/TENANT_PASS in ${envFile}`);
+
+const testTarget = (process.env.TEST_TARGET || "local").toLowerCase();
+if (!["local", "staging"].includes(testTarget)) {
+  throw new Error(`Invalid TEST_TARGET="${testTarget}". Allowed values: local, staging`);
+}
+
+let host;
+try {
+  host = new URL(url).hostname.toLowerCase();
+} catch {
+  throw new Error(`Invalid SUPABASE_URL in ${envFile}`);
+}
+
+const isLocalHost = host === "127.0.0.1" || host === "localhost";
+
+if (testTarget === "local" && !isLocalHost) {
+  throw new Error(
+    `Refusing to run local test against remote host "${host}". Use local URL (127.0.0.1/localhost).`
+  );
+}
+
+if (testTarget === "staging") {
+  if (isLocalHost) {
+    throw new Error("Staging test requires a remote Supabase URL, not localhost.");
+  }
+  if (process.env.ALLOW_REMOTE_TESTS !== "true") {
+    throw new Error(
+      "Remote write protection: set ALLOW_REMOTE_TESTS=true to run against staging."
+    );
+  }
+}
+
+console.log(`Running backend test on ${testTarget} (${host}) using ${path.basename(envFile)}`);
 
 const supabase = createClient(url, anon);
 

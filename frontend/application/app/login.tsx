@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -14,6 +15,7 @@ import {
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   return (
     <KeyboardAvoidingView
@@ -78,9 +80,7 @@ export default function LoginPage() {
 
         <Button
           variant="outline"
-          onPress={() => {
-            // TODO: navigate to registration
-          }}
+          onPress={() => router.push("/register")}
           className="mb-6"
         >
           <Text>S'inscrire</Text>

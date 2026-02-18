@@ -355,6 +355,9 @@ begin
   on conflict (lease_id, tenant_id) do update
   set share_percent = excluded.share_percent;
 
+  -- Audit triggers use auth.uid(); set actor for seeded payment writes.
+  perform set_config('request.jwt.claim.sub', v_owner_id::text, true);
+
   -- Payments: one overdue-like and one upcoming.
   insert into public.rent_payments (
     id,
@@ -403,6 +406,9 @@ begin
     amount_due = excluded.amount_due,
     amount_paid = excluded.amount_paid,
     status = excluded.status;
+
+  -- Switch actor for tenant-originated seeded writes.
+  perform set_config('request.jwt.claim.sub', v_tenant_id::text, true);
 
   -- Open incident and maintenance request for owner dashboards.
   insert into public.incidents (

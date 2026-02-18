@@ -1,39 +1,49 @@
 import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
-const url = "https://gjcuktfaipvtfxiwredc.supabase.co";
-const anon =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqY3VrdGZhaXB2dGZ4aXdyZWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDczMjUsImV4cCI6MjA4NjgyMzMyNX0.GNwArGfd3U3g2CdCYWYBgolRfr3j7FnaL68tib6tdcI";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const ownerEmail = "owner@imovia.test";
-const ownerPass = "test";
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-const tenantEmail = "tenant@imovia.test";
-const tenantPass = "test";
+const url = process.env.SUPABASE_URL;
+const anon = process.env.SUPABASE_ANON_KEY;
 
-/*
-========================================
-INITIALISATION
-========================================
-*/
+const ownerEmail = process.env.OWNER_EMAIL;
+const ownerPass = process.env.OWNER_PASS;
+
+const tenantEmail = process.env.TENANT_EMAIL;
+const tenantPass = process.env.TENANT_PASS;
+
+if (!url || !anon) throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env");
+if (!ownerEmail || !ownerPass) throw new Error("Missing OWNER_EMAIL/OWNER_PASS in .env");
+if (!tenantEmail || !tenantPass) throw new Error("Missing TENANT_EMAIL/TENANT_PASS in .env");
 
 const supabase = createClient(url, anon);
 
 async function login(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
-  return data;
+}
+
+function dumpError(label, err) {
+  console.log(`\n❌ ${label}`);
+  console.log("message:", err?.message);
+  console.log("details:", err?.details);
+  console.log("hint:", err?.hint);
+  console.log("code:", err?.code);
+  console.log("full:", err);
+  console.log("");
 }
 
 async function run() {
-  /*
-  ==========================
-  1️⃣ OWNER CRÉE UN BIEN
-  ==========================
-  */
-
+  // ==========================
+  // 1️⃣ OWNER CRÉE UN BIEN
+  // ==========================
   console.log("🔐 Login owner...");
   await login(ownerEmail, ownerPass);
 
@@ -50,35 +60,18 @@ async function run() {
     })
     .select()
     .single();
-
   if (e1) throw e1;
 
   console.log("🏠 Property created:", property.id);
-
   await supabase.auth.signOut();
 
-  /*
-  ==========================
-  2️⃣ TENANT VOIT BIENS + FAIT DEMANDE
-  ==========================
-  */
-
+  // ==========================
+  // 2️⃣ TENANT FAIT DEMANDE
+  // ==========================
   console.log("🔐 Login tenant...");
   await login(tenantEmail, tenantPass);
 
   const tenantId = (await supabase.auth.getUser()).data.user.id;
-
-  const { data: availableProps, error: e2 } = await supabase
-    .from("properties")
-    .select("id,title,status")
-    .eq("status", "available");
-
-  if (e2) throw e2;
-
-  console.log(
-    "👀 Tenant sees properties:",
-    availableProps.map((p) => p.id),
-  );
 
   const { data: application, error: e3 } = await supabase
     .from("rental_applications")
@@ -90,69 +83,45 @@ async function run() {
     })
     .select()
     .single();
-
   if (e3) throw e3;
 
   console.log("📩 Application created:", application.id);
-
   await supabase.auth.signOut();
 
-  /*
-  ==========================
-  3️⃣ OWNER ACCEPTE → CRÉE LEASE
-  ==========================
-  */
-
+  // ==========================
+  // 3️⃣ OWNER ACCEPTE → CRÉE LEASE
+  // ==========================
   console.log("🔐 Owner accepts application...");
   await login(ownerEmail, ownerPass);
 
-  const { data: leaseId, error: e4 } = await supabase.rpc(
-    "accept_application",
-    {
-      p_application_id: application.id,
-      p_start_date: "2026-03-01",
-      p_end_date: "2027-03-01",
-      p_rent_amount: 900,
-      p_charges_amount: 50,
-      p_payment_day: 5,
-      p_notice_period_days: 30,
-    },
-  );
-
+  const { data: leaseId, error: e4 } = await supabase.rpc("accept_application", {
+    p_application_id: application.id,
+    p_start_date: "2026-03-01",
+    p_end_date: "2027-03-01",
+    p_rent_amount: 900,
+    p_charges_amount: 50,
+    p_payment_day: 5,
+    p_notice_period_days: 30,
+  });
   if (e4) throw e4;
 
   console.log("📄 Lease created:", leaseId);
 
-  /*
-  ==========================
-  4️⃣ GÉNÉRER 12 MOIS DE LOYERS
-  ==========================
-  */
-
-  const { data: count, error: e5 } = await supabase.rpc(
-    "generate_rent_payments",
-    {
-      p_lease_id: leaseId,
-      p_months: 12,
-    },
-  );
-
+  const { data: count, error: e5 } = await supabase.rpc("generate_rent_payments", {
+    p_lease_id: leaseId,
+    p_months: 12,
+  });
   if (e5) throw e5;
 
   console.log("💰 Payments generated:", count);
-
   await supabase.auth.signOut();
 
-  /*
-  ==========================
-  5️⃣ TENANT CRÉE INCIDENT
-  ==========================
-  */
-
+  // ==========================
+  // 4️⃣ INCIDENT (tenant -> owner update)
+  // ==========================
   console.log("🔐 Login tenant (incident)...");
   await login(tenantEmail, tenantPass);
 
-  // ✅ On utilise DIRECTEMENT le leaseId qu'on a déjà
   const { data: incident, error: e6 } = await supabase
     .from("incidents")
     .insert({
@@ -164,22 +133,10 @@ async function run() {
     })
     .select()
     .single();
-
   if (e6) throw e6;
 
   console.log("🚨 Incident created:", incident.id);
-
-  if (e6) throw e6;
-
-  console.log("🚨 Incident created:", incident.id);
-
   await supabase.auth.signOut();
-
-  /*
-  ==========================
-  6️⃣ OWNER MET À JOUR INCIDENT
-  ==========================
-  */
 
   console.log("🔐 Owner updates incident...");
   await login(ownerEmail, ownerPass);
@@ -188,22 +145,17 @@ async function run() {
     .from("incidents")
     .update({ status: "in_progress" })
     .eq("id", incident.id);
-
   if (e7) throw e7;
 
   console.log("🔧 Incident updated to in_progress");
-
-  /*
-    ==========================
-    7️⃣ TENANT CRÉE DEMANDE DE TRAVAUX
-    ==========================
-    */
-
   await supabase.auth.signOut();
+
+  // ==========================
+  // 5️⃣ TRAVAUX (tenant -> owner approve -> done)
+  // ==========================
   console.log("🔐 Login tenant (maintenance)...");
   await login(tenantEmail, tenantPass);
 
-  // Tenant crée une demande de travaux
   const { data: work, error: e8 } = await supabase
     .from("maintenance_requests")
     .insert({
@@ -215,59 +167,112 @@ async function run() {
     })
     .select()
     .single();
-
   if (e8) throw e8;
 
   console.log("🛠️ Maintenance request created:", work.id);
-
-  /*
-    ==========================
-    8️⃣ OWNER APPROUVE + MET COÛT ESTIMÉ
-    ==========================
-    */
-
   await supabase.auth.signOut();
+
   console.log("🔐 Login owner (approve maintenance)...");
   await login(ownerEmail, ownerPass);
 
   const { error: e9 } = await supabase
     .from("maintenance_requests")
-    .update({
-      status: "approved",
-      cost_estimated: 180,
-    })
+    .update({ status: "approved", cost_estimated: 180 })
     .eq("id", work.id);
-
   if (e9) throw e9;
 
   console.log("✅ Maintenance approved + estimated cost set");
 
-  /*
-    ==========================
-    9️⃣ OWNER TERMINE + MET COÛT RÉEL
-    ==========================
-    */
-
   const { error: e10 } = await supabase
     .from("maintenance_requests")
-    .update({
-      status: "done",
-      cost_real: 165,
-    })
+    .update({ status: "done", cost_real: 165 })
     .eq("id", work.id);
-
   if (e10) throw e10;
 
   console.log("🏁 Maintenance marked done + real cost set");
+  await supabase.auth.signOut();
 
-  console.log("✅ TEST COMPLET RÉUSSI 🚀");
+  // ==========================
+  // 6) DOCUMENTS (pro)
+  // ==========================
+  console.log("🔐 Login tenant (documents)...");
+  await login(tenantEmail, tenantPass);
+
+  // 🔎 Check pro : vérifier que le tenant est bien membre du lease (sinon RLS refusera)
+  const { data: ltRows, error: ltErr } = await supabase
+    .from("lease_tenants")
+    .select("lease_id, tenant_id")
+    .eq("lease_id", leaseId)
+    .eq("tenant_id", tenantId);
+
+  if (ltErr) {
+    dumpError("lease_tenants select failed", ltErr);
+    throw ltErr;
+  }
+
+  console.log("🔎 lease_tenants membership rows:", ltRows?.length ?? 0);
+
+  // Fichier local
+  const localFile = path.join(__dirname, "sample.txt");
+  if (!fs.existsSync(localFile)) {
+    throw new Error("Fichier local introuvable: crée sample.txt dans le dossier backend");
+  }
+
+  const fileBuffer = fs.readFileSync(localFile);
+  const fileName = path.basename(localFile);
+
+  const randomId = crypto.randomUUID();
+  const storagePath = `leases/${leaseId}/${randomId}-${fileName}`;
+
+  // Upload bucket private "documents"
+  const { error: upErr } = await supabase.storage
+    .from("documents")
+    .upload(storagePath, fileBuffer, {
+      contentType: "text/plain",
+      upsert: false,
+    });
+
+  if (upErr) {
+    dumpError("storage upload failed", upErr);
+    throw upErr;
+  }
+
+  console.log("✅ Storage upload ok:", storagePath);
+
+  // INSERT row documents (c'est ici que ton RLS bloque actuellement)
+  const { data: docRow, error: dbErr } = await supabase
+    .from("documents")
+    .insert({
+      lease_id: leaseId,
+      property_id: property.id,
+      uploader_id: tenantId,
+      storage_path: storagePath,
+      doc_type: "contract",
+    })
+    .select()
+    .single();
+
+  if (dbErr) {
+    dumpError("documents insert failed", dbErr);
+    throw dbErr;
+  }
+
+  console.log("✅ DB document row created:", docRow.id);
+
+  // Signed URL (download 60s)
+  const { data: signed, error: signErr } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(storagePath, 60);
+
+  if (signErr) {
+    dumpError("signed url failed", signErr);
+    throw signErr;
+  }
+
+  console.log("🔗 Signed URL (60s):", signed.signedUrl);
+
+  console.log("✅ TEST COMPLET RÉUSSI 🚀 (documents inclus)");
 }
-
-/*
-========================================
-LANCEMENT
-========================================
-*/
 
 run().catch((err) => {
   console.error("❌ ERROR:", err.message);

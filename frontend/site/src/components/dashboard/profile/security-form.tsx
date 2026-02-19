@@ -7,19 +7,60 @@ import { Lock, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { createClient } from "@/lib/supabase/client"
+
 export function SecurityForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [showCurrentPassword, setShowCurrentPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const supabase = createClient()
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setIsLoading(true)
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setIsLoading(false)
-        toast.success("Mot de passe modifié avec succès !")
+
+        const form = e.currentTarget
+        const formData = new FormData(form)
+        const newPassword = formData.get('new-password') as string
+        const confirmPassword = formData.get('confirm-password') as string
+
+        if (newPassword !== confirmPassword) {
+            toast.error("Les nouveaux mots de passe ne correspondent pas.")
+            setIsLoading(false)
+            return
+        }
+
+        if (newPassword.length < 6) {
+            toast.error("Le mot de passe doit contenir au moins 6 caractères.")
+            setIsLoading(false)
+            return
+        }
+
+        try {
+
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            })
+
+            if (error) throw error
+
+            toast.success("Mot de passe modifié avec succès !")
+
+
+            form.reset()
+        } catch (err) {
+            const error = err as Error
+            if (error.message?.includes("different from the old password") || error.message?.includes("New password should be different")) {
+                toast.error("Le nouveau mot de passe doit être différent de l'ancien.")
+                return
+            }
+
+            console.error("Error updating password:", error)
+            toast.error(error.message || "Erreur lors de la modification du mot de passe.")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -36,21 +77,20 @@ export function SecurityForm() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                    <Label htmlFor="current-password text-slate-500" className="sr-only">Mot de passe actuel</Label>
+                    <Label htmlFor="current-password" className="sr-only">Mot de passe actuel</Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             id="current-password"
+                            name="current-password"
                             type={showCurrentPassword ? "text" : "password"}
-                            placeholder="Votre mot de passe actuel"
+                            placeholder="Mot de passe actuel (optionnel si connecté)"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                            suppressHydrationWarning
                         />
                         <button
                             type="button"
                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                            aria-label={showCurrentPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                         >
                             {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -63,16 +103,17 @@ export function SecurityForm() {
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             id="new-password"
+                            name="new-password"
                             type={showNewPassword ? "text" : "password"}
                             placeholder="Nouveau mot de passe"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                            suppressHydrationWarning
+                            required
+                            minLength={6}
                         />
                         <button
                             type="button"
                             onClick={() => setShowNewPassword(!showNewPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                            aria-label={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                         >
                             {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -85,16 +126,17 @@ export function SecurityForm() {
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             id="confirm-password"
+                            name="confirm-password"
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirmer votre mot de passe"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                            suppressHydrationWarning
+                            required
+                            minLength={6}
                         />
                         <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                            aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                         >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -109,9 +151,6 @@ export function SecurityForm() {
                     >
                         {isLoading ? "Enregistrement..." : "Enregistrer"}
                     </Button>
-                    <p className="text-center text-xs text-slate-400 mt-3">
-                        Ces informations resteront strictement confidentielles
-                    </p>
                 </div>
             </form>
         </div>

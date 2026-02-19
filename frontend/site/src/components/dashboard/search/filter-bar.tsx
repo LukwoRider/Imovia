@@ -20,6 +20,7 @@ export function FilterBar() {
 
     // Sync from URL on mount/update
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setQuery(searchParams.get("q") || "")
 
         const minSurface = searchParams.get("minSurface") ? Number(searchParams.get("minSurface")) : 0

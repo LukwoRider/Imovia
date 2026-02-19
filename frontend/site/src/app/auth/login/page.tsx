@@ -43,7 +43,14 @@ export default function LoginPage() {
             <form action={handleSubmit} className="w-full grid gap-4 text-left">
                 <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" placeholder="nom@exemple.com" type="email" autoCapitalize="none" autoComplete="email" autoCorrect="off" required />
+                    <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="m@example.com"
+                        onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
+                        required
+                    />
                 </div>
                 <div className="grid gap-2">
                     <div className="flex items-center justify-between">

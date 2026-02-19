@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useUser } from "@/contexts/user-context"
 import { cn } from "@/lib/utils"
 import {
     LayoutDashboard,
@@ -33,7 +34,8 @@ const ownerItems = [
 
 export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
     const pathname = usePathname()
-    const isOwner = pathname?.startsWith("/dashboard/owner")
+    const { user } = useUser()
+    const isOwner = user?.role === "owner" || user?.role === "agency"
     const items = isOwner ? ownerItems : tenantItems
 
     return (

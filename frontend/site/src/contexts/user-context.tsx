@@ -11,6 +11,8 @@ interface UserProfile {
     phone: string
     avatar: string
     role: "tenant" | "owner" | "agency" | null
+    siret?: string
+    address?: string
 }
 
 
@@ -48,7 +50,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     email: authUser.email || "",
                     phone: profile?.phone || authUser.user_metadata?.phone || "",
                     avatar: profile?.avatar_url || authUser.user_metadata?.avatar_url || "",
-                    role: profile?.role || authUser.user_metadata?.role || "tenant"
+                    role: profile?.role || authUser.user_metadata?.role || ((profile?.full_name || authUser.user_metadata?.full_name || "").includes("Agence") ? "agency" : "tenant"),
+                    siret: profile?.siret || authUser.user_metadata?.siret || "",
+                    address: profile?.address || authUser.user_metadata?.address || ""
                 })
             } else {
                 setUser(null)
@@ -75,7 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             if (updates.name) {
                 dbUpdates.full_name = updates.name
             }
-            if (updates.phone) {
+            if (updates.phone !== undefined) {
                 dbUpdates.phone = updates.phone
             }
 

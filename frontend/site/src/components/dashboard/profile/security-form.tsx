@@ -66,7 +66,7 @@ export function SecurityForm() {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
             <div className="flex items-center gap-3 mb-8">
-                <div className="h-10 w-10 bg-slate-50 text-slate-600 rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-blue-50 text-[#3153A1] rounded-lg flex items-center justify-center">
                     <Lock className="h-5 w-5" />
                 </div>
                 <div>
@@ -83,9 +83,9 @@ export function SecurityForm() {
                         <Input
                             id="current-password"
                             name="current-password"
-                            type={showCurrentPassword ? "text" : "password"}
                             placeholder="Mot de passe actuel (optionnel si connecté)"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                            onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
                         />
                         <button
                             type="button"
@@ -107,6 +107,7 @@ export function SecurityForm() {
                             type={showNewPassword ? "text" : "password"}
                             placeholder="Nouveau mot de passe"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                            onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
                             required
                             minLength={6}
                         />
@@ -130,6 +131,7 @@ export function SecurityForm() {
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirmer votre mot de passe"
                             className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                            onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
                             required
                             minLength={6}
                         />

@@ -1,6 +1,5 @@
 "use client"
 
-import { usePathname } from "next/navigation"
 import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,9 +7,10 @@ import { Menu, Bell } from "lucide-react"
 
 export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: (open: boolean) => void }) {
     const { user } = useUser()
-    const pathname = usePathname()
 
     if (!user) return null
+
+    const isOwnerOrAgency = user.role === "owner" || user.role === "agency"
 
     return (
         <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
@@ -25,10 +25,12 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
                 </Button>
                 <div>
                     <h1 className="text-xl font-bold text-[#12182C]">
-                        {pathname?.startsWith("/dashboard/owner") ? `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !` : `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !`}
+                        {isOwnerOrAgency ? `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !` : `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !`}
                     </h1>
                     <p className="text-sm text-slate-500 hidden sm:block">
-                        {pathname?.startsWith("/dashboard/owner") ? "Espace Propriétaire Imovia" : "Bienvenue sur votre espace locataire Imovia"}
+                        {user.role === "agency" ? "Espace Agence Imovia" :
+                            user.role === "owner" ? "Espace Propriétaire Imovia" :
+                                "Bienvenue sur votre espace locataire Imovia"}
                     </p>
                 </div>
             </div>

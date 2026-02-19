@@ -18,6 +18,10 @@ const PasswordInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"i
                     className={cn("hide-password-toggle pr-10", className)}
                     ref={ref}
                     {...props}
+                    onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")
+                        if (props.onInput) props.onInput(e)
+                    }}
                 />
                 <Button
                     type="button"

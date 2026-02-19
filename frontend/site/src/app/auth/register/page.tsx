@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { signup } from "../actions"
 import { toast } from "sonner"
+import { PhoneInput } from "@/components/ui/phone-input"
 
 type Role = "tenant" | "owner" | "agency" | null
 
@@ -161,25 +162,19 @@ function UserForm() {
         <div className="grid gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="lastname">Nom</Label>
-                <Input id="lastname" name="lastname" placeholder="Votre nom" required />
+                <Input id="lastname" name="lastname" placeholder="Votre nom" required onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-zÀ-ÿ-]/g, "")} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="firstname">Prénom</Label>
-                <Input id="firstname" name="firstname" placeholder="Votre prénom" required />
+                <Input id="firstname" name="firstname" placeholder="Votre prénom" required onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-zÀ-ÿ-]/g, "")} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" required />
+                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")} required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="phone">Numéro de téléphone</Label>
-                <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="+33"
-                    type="tel"
-                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9+]/g, "")}
-                />
+                <PhoneInput id="phone" name="phone" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="password">Mot de passe</Label>
@@ -203,21 +198,15 @@ function AgencyForm() {
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="siret">Siret</Label>
-                <Input id="siret" name="siret" placeholder="Votre numéro de siret" />
+                <Input id="siret" name="siret" placeholder="Votre numéro de siret" onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")} required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" required />
+                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")} required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="phone">Numéro de téléphone</Label>
-                <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="+33"
-                    type="tel"
-                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9+]/g, "")}
-                />
+                <PhoneInput id="phone" name="phone" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="password">Mot de passe</Label>

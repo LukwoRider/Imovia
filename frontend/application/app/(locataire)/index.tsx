@@ -3,6 +3,7 @@ import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { ScrollView, View } from "react-native";
 
 // --- Mock Data ---
@@ -142,6 +143,7 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
 // --- Main Dashboard ---
 
 export default function DashboardLocataire() {
+    const router = useRouter();
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
 
@@ -249,7 +251,7 @@ export default function DashboardLocataire() {
                         ))}
                     </View>
 
-                    <Button onPress={() => { }}>
+                    <Button onPress={() => router.push("/(locataire)/logement")}>
                         <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                         <Text>Voir les détails</Text>
                     </Button>

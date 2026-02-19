@@ -169,10 +169,8 @@ export default function LogementPage() {
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView
-                contentContainerStyle={{ paddingBottom: 90 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* === HEADER === */}
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}

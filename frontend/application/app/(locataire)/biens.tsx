@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { Text } from "@/components/ui/text";
 
-// --- Mock Data ---
 const ALL_BIENS = [
     { id: 1, adresse: "25 Rue des Francs-Bourgeois", ville: "Lille", prix: 289, surface: 45, type: "Appartement", favori: true, images: 4 },
     { id: 2, adresse: "12 Avenue Foch", ville: "Lille", prix: 450, surface: 72, type: "Appartement", favori: false, images: 4 },
@@ -31,13 +30,10 @@ const ALL_BIENS = [
 const ITEMS_PER_PAGE = 4;
 const screenWidth = Dimensions.get("window").width;
 
-// --- Filter constants ---
 const SURFACE_MIN = 0;
 const SURFACE_MAX = 300;
 const LOYER_MIN = 0;
 const LOYER_MAX = 5000;
-
-// --- Draggable Slider ---
 
 function DraggableSlider({
     label,
@@ -80,7 +76,6 @@ function DraggableSlider({
                     <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>{formatValue(value)}</Text>
                 </View>
             </View>
-            {/* Touchable track area */}
             <View
                 onLayout={handleTrackLayout}
                 onStartShouldSetResponder={() => true}
@@ -92,7 +87,6 @@ function DraggableSlider({
                     justifyContent: "center",
                 }}
             >
-                {/* Track background */}
                 <View style={{ height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
                     <View
                         style={{
@@ -103,7 +97,6 @@ function DraggableSlider({
                         }}
                     />
                 </View>
-                {/* Thumb */}
                 <View
                     style={{
                         position: "absolute",
@@ -126,8 +119,6 @@ function DraggableSlider({
         </View>
     );
 }
-
-// --- Property Card (mobile optimized) ---
 
 function PropertyCard({
     item,
@@ -155,7 +146,6 @@ function PropertyCard({
                 elevation: 1,
             }}
         >
-            {/* Image placeholder */}
             <View
                 style={{
                     width: "100%",
@@ -164,7 +154,6 @@ function PropertyCard({
                     justifyContent: "flex-end",
                 }}
             >
-                {/* Favorite heart */}
                 <Pressable
                     onPress={() => onToggleFavori(item.id)}
                     style={{
@@ -186,7 +175,6 @@ function PropertyCard({
                     />
                 </Pressable>
 
-                {/* Dots indicator */}
                 <View
                     style={{
                         flexDirection: "row",
@@ -209,7 +197,6 @@ function PropertyCard({
                 </View>
             </View>
 
-            {/* Card content */}
             <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
                 <Text
                     style={{ fontSize: 14, fontWeight: "600", color: "#1e293b", marginBottom: 2, fontFamily: "Montserrat_600SemiBold" }}
@@ -239,8 +226,6 @@ function PropertyCard({
         </Pressable>
     );
 }
-
-// --- Pagination ---
 
 function PaginationBar({
     currentPage,
@@ -330,8 +315,6 @@ function PaginationBar({
     );
 }
 
-// --- Main Page ---
-
 export default function BiensPage() {
     const router = useRouter();
     const [search, setSearch] = useState("");
@@ -351,20 +334,16 @@ export default function BiensPage() {
         });
     };
 
-    // --- Functional filtering ---
     const filteredBiens = useMemo(() => {
         const searchLower = search.trim().toLowerCase();
         return ALL_BIENS.filter((bien) => {
-            // Search filter (adresse or ville)
             if (searchLower) {
                 const matchSearch =
                     bien.adresse.toLowerCase().includes(searchLower) ||
                     bien.ville.toLowerCase().includes(searchLower);
                 if (!matchSearch) return false;
             }
-            // Surface filter
             if (bien.surface > surfaceMax) return false;
-            // Loyer filter
             if (bien.prix > loyerMax) return false;
             return true;
         }).map((bien) => ({
@@ -373,7 +352,6 @@ export default function BiensPage() {
         }));
     }, [search, surfaceMax, loyerMax, favoris]);
 
-    // Reset to page 1 when filters change
     const totalPages = Math.max(1, Math.ceil(filteredBiens.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
     const pagedBiens = filteredBiens.slice(
@@ -396,7 +374,6 @@ export default function BiensPage() {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* === HEADER === */}
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
@@ -452,14 +429,11 @@ export default function BiensPage() {
                     </View>
                 </LinearGradient>
 
-                {/* === CONTENT === */}
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
-                    {/* Title */}
                     <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
                         Trouver un appartement à Lille ?
                     </Text>
 
-                    {/* === SEARCH + FILTERS CARD === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -470,7 +444,6 @@ export default function BiensPage() {
                             marginBottom: 18,
                         }}
                     >
-                        {/* Search input */}
                         <View
                             style={{
                                 flexDirection: "row",
@@ -509,7 +482,6 @@ export default function BiensPage() {
                             )}
                         </View>
 
-                        {/* Surface slider */}
                         <DraggableSlider
                             label="Surface"
                             minValue={SURFACE_MIN}
@@ -519,7 +491,6 @@ export default function BiensPage() {
                             formatValue={(v) => `0 - ${v} m²${v >= SURFACE_MAX ? " et +" : ""}`}
                         />
 
-                        {/* Loyer slider */}
                         <DraggableSlider
                             label="Loyer"
                             minValue={LOYER_MIN}
@@ -529,7 +500,6 @@ export default function BiensPage() {
                             formatValue={(v) => `0 - ${v}€${v >= LOYER_MAX ? " et +" : ""}`}
                         />
 
-                        {/* Filter button */}
                         <Pressable
                             onPress={handleFilter}
                             style={{
@@ -547,7 +517,6 @@ export default function BiensPage() {
                         </Pressable>
                     </View>
 
-                    {/* Results count */}
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                         <Text style={{ fontSize: 13, color: "#6b7280" }}>
                             {filteredBiens.length} bien{filteredBiens.length > 1 ? "s" : ""} trouvé{filteredBiens.length > 1 ? "s" : ""}
@@ -557,7 +526,6 @@ export default function BiensPage() {
                         </Text>
                     </View>
 
-                    {/* === PROPERTY CARDS LIST (single column, mobile) === */}
                     {pagedBiens.length > 0 ? (
                         pagedBiens.map((bien) => (
                             <PropertyCard
@@ -588,7 +556,6 @@ export default function BiensPage() {
                         </View>
                     )}
 
-                    {/* === PAGINATION === */}
                     <PaginationBar
                         currentPage={safePage}
                         totalPages={totalPages}

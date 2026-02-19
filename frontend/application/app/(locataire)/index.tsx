@@ -30,8 +30,6 @@ const DOCUMENTS = [
     { titre: "Quittance Janvier 2024", date: "10/01/2024", type: "quittance" },
 ];
 
-// --- Components ---
-
 function StatCard({ label, value, trend, up, icon }: typeof STATS[0]) {
     return (
         <View
@@ -139,8 +137,6 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
     );
 }
 
-// --- Main Dashboard ---
-
 export default function DashboardLocataire() {
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
@@ -148,7 +144,6 @@ export default function DashboardLocataire() {
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-                {/* === HEADER === */}
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
@@ -190,7 +185,6 @@ export default function DashboardLocataire() {
                     </View>
                 </LinearGradient>
 
-                {/* === STATS 2×2 === */}
                 <View style={{ paddingHorizontal: 16, marginTop: -12 }}>
                     <View style={{ flexDirection: "row", gap: 10 }}>
                         <StatCard {...STATS[0]} />
@@ -202,7 +196,6 @@ export default function DashboardLocataire() {
                     </View>
                 </View>
 
-                {/* === MON LOGEMENT === */}
                 <View
                     style={{
                         marginHorizontal: 16,
@@ -255,7 +248,6 @@ export default function DashboardLocataire() {
                     </Button>
                 </View>
 
-                {/* === ÉTAT DES PAIEMENTS === */}
                 <View
                     style={{
                         marginHorizontal: 16,
@@ -273,7 +265,6 @@ export default function DashboardLocataire() {
                         <PaiementRow key={i} item={p} />
                     ))}
 
-                    {/* Progress */}
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
                         <Text style={{ fontSize: 12, color: "#6b7280" }}>Paiements à jour</Text>
                         <Text style={{ fontSize: 12, fontWeight: "600", color: "#1e293b" }}>
@@ -292,7 +283,6 @@ export default function DashboardLocataire() {
                     </View>
                 </View>
 
-                {/* === MES INCIDENTS === */}
                 <View
                     style={{
                         marginHorizontal: 16,
@@ -351,7 +341,6 @@ export default function DashboardLocataire() {
                     </Button>
                 </View>
 
-                {/* === MES DOCUMENTS === */}
                 <View
                     style={{
                         marginHorizontal: 16,

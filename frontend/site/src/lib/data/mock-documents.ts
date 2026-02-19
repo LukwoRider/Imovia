@@ -1,55 +1,70 @@
+export type DocumentType = "Contrats" | "Etat des lieux" | "Autres" | "CONTRACT" | "INVENTORY"
 
-export type DocumentType = "CONTRACT" | "INVENTORY" | "RECEIPT" | "OTHER"
-
-export interface Document {
+export interface DocumentMock {
     id: string
     title: string
     date: string
-    type: DocumentType
-    downloadUrl: string
+    category: DocumentType
+    type: DocumentType // For backward compatibility
+    propertyName?: string
+    tenantName?: string
 }
 
-export const mockDocuments: Document[] = [
+export type Document = DocumentMock // Alias for backward compatibility
+
+export const mockDocuments: DocumentMock[] = [
     {
-        id: "1",
+        id: "d1",
         title: "Contrat de location - Marais",
         date: "07/04/2025",
-        type: "CONTRACT",
-        downloadUrl: "#"
+        category: "Contrats",
+        type: "Contrats",
+        propertyName: "Marais",
+        tenantName: "Alex"
     },
     {
-        id: "2",
+        id: "d2",
         title: "État des lieux d'entrée",
         date: "01/01/2024",
-        type: "INVENTORY",
-        downloadUrl: "#"
+        category: "Etat des lieux",
+        type: "Etat des lieux",
+        propertyName: "Marais",
+        tenantName: "William"
     },
     {
-        id: "3",
+        id: "d3",
         title: "Quittance Janvier 2024",
         date: "10/01/2024",
-        type: "RECEIPT",
-        downloadUrl: "#"
+        category: "Autres",
+        type: "Autres",
+        propertyName: "Marais",
+        tenantName: "Alex"
     },
     {
-        id: "4",
-        title: "Contrat de location - Marais (Avenant)",
+        id: "d4",
+        title: "Contrat de location - Marais",
         date: "07/04/2025",
-        type: "CONTRACT",
-        downloadUrl: "#"
+        category: "Contrats",
+        type: "Contrats",
+        propertyName: "Marais",
+        tenantName: "William"
     },
     {
-        id: "5",
-        title: "Assurance Habitation 2024",
-        date: "05/01/2024",
-        type: "OTHER",
-        downloadUrl: "#"
+        id: "d5",
+        title: "Contrat de location - Marais",
+        date: "07/04/2025",
+        category: "Contrats",
+        type: "Contrats",
+        propertyName: "Marais",
+        tenantName: "Alex"
     },
     {
-        id: "6",
-        title: "Réglement de copropriété",
-        date: "01/01/2024",
-        type: "OTHER",
-        downloadUrl: "#"
+        id: "d6",
+        title: "Contrat de location - Marais",
+        date: "07/04/2025",
+        category: "Contrats",
+        type: "Contrats",
+        propertyName: "Marais",
+        tenantName: "William"
     }
 ]

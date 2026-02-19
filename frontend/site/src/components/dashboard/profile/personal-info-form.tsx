@@ -97,7 +97,7 @@ export function PersonalInfoForm() {
         } catch (err) {
             const error = err as Error
             console.error('Error uploading avatar:', error)
-            toast.error(error.message || "Erreur lors de l'upload de l'image.")
+            toast.error(error.message || "Erreur lors de l&apos;upload de l&apos;image.")
         }
     }
 
@@ -109,7 +109,7 @@ export function PersonalInfoForm() {
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-[#12182C]">
-                        {isAgency && "Informations de l'agence"}
+                        {isAgency && "Informations de l&apos;agence"}
                         {isOwner && "Informations du propriétaire"}
                         {!isAgency && !isOwner && "Informations personnelles"}
                     </h2>
@@ -156,7 +156,7 @@ export function PersonalInfoForm() {
                                             id="companyName"
                                             name="companyName"
                                             defaultValue={user.name || ""}
-                                            placeholder="Nom de l'agence"
+                                            placeholder="Nom de l&apos;agence"
                                             className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                             suppressHydrationWarning
                                             required

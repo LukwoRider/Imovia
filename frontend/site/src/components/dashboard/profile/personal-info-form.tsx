@@ -117,129 +117,133 @@ export function PersonalInfoForm() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-8 lg:gap-12">
-                <div className="flex flex-col items-center gap-4 shrink-0">
-                    <div
-                        className="relative group cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                            <AvatarImage src={user.avatar} className="object-cover" alt="Profile" />
-                            <AvatarFallback className="text-4xl bg-slate-100 text-slate-500">
-                                {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera className="h-8 w-8 text-white" />
+            <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
+                    <div className="flex flex-col items-center gap-4 shrink-0">
+                        <div
+                            className="relative group cursor-pointer"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <Avatar className="h-32 w-32 border-4 border-white shadow-lg transition-transform hover:scale-105">
+                                <AvatarImage src={user.avatar} className="object-cover" alt="Profile" />
+                                <AvatarFallback className="text-4xl bg-slate-100 text-slate-500">
+                                    {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="h-8 w-8 text-white" />
+                            </div>
                         </div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
+                        <p className="text-xs text-slate-400 mt-1">Cliquez pour modifier</p>
                     </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                    />
-                    <p className="text-xs text-slate-400">Cliquez pour modifier</p>
-                </div>
 
-                <div className="flex-1 space-y-5">
-                    {/* Role Based Fields */}
-                    {isAgency ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="companyName" className="sr-only">Nom de l&apos;agence</Label>
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <div className="flex-1 w-full space-y-5">
+                        {/* Role Based Fields */}
+                        {isAgency ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="companyName" className="sr-only">Nom de l&apos;agence</Label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            id="companyName"
+                                            name="companyName"
+                                            defaultValue={user.name || ""}
+                                            placeholder="Nom de l'agence"
+                                            className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            suppressHydrationWarning
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="siret" className="sr-only">SIRET</Label>
                                     <Input
-                                        id="companyName"
-                                        name="companyName"
-                                        defaultValue={user.name || ""}
-                                        placeholder="Nom de l'agence"
-                                        className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        id="siret"
+                                        name="siret"
+                                        defaultValue={user.siret || ""}
+                                        placeholder="Numéro SIRET"
+                                        className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         suppressHydrationWarning
+                                        onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
                                         required
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="siret" className="sr-only">SIRET</Label>
-                                <Input
-                                    id="siret"
-                                    name="siret"
-                                    defaultValue={user.siret || ""}
-                                    placeholder="Numéro SIRET"
-                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                    suppressHydrationWarning
-                                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
-                                    required
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="firstname" className="sr-only">Prénom</Label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="firstname" className="sr-only">Prénom</Label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            id="firstname"
+                                            name="firstname"
+                                            defaultValue={user.name?.split(' ')[0] || ""}
+                                            className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            placeholder="Prénom"
+                                            suppressHydrationWarning
+                                            onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-zÀ-ÿ-]/g, "")}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="lastname" className="sr-only">Nom</Label>
                                     <Input
-                                        id="firstname"
-                                        name="firstname"
-                                        defaultValue={user.name?.split(' ')[0] || ""}
-                                        className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                        placeholder="Prénom"
+                                        id="lastname"
+                                        name="lastname"
+                                        defaultValue={user.name?.split(' ')[1] || ""}
+                                        className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                        placeholder="Nom"
                                         suppressHydrationWarning
                                         onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-zÀ-ÿ-]/g, "")}
                                         required
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="lastname" className="sr-only">Nom</Label>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="sr-only">Email</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
-                                    id="lastname"
-                                    name="lastname"
-                                    defaultValue={user.name?.split(' ')[1] || ""}
-                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                    placeholder="Nom"
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    defaultValue={user.email}
+                                    className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                     suppressHydrationWarning
-                                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-zÀ-ÿ-]/g, "")}
+                                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
                                     required
                                 />
                             </div>
                         </div>
-                    )}
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="sr-only">Email</Label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                defaultValue={user.email}
-                                className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                suppressHydrationWarning
-                                onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s/g, "")}
-                                required
-                            />
+                        <div className="space-y-2">
+                            <Label htmlFor="phone" className="sr-only">Téléphone</Label>
+                            <div className="relative">
+                                <PhoneInput
+                                    id="phone"
+                                    name="phone"
+                                    defaultValue={user.phone || ""}
+                                    className="w-full"
+                                    required
+                                />
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="phone" className="sr-only">Téléphone</Label>
-                        <div className="relative">
-                            <PhoneInput
-                                id="phone"
-                                name="phone"
-                                defaultValue={user.phone || ""}
-                                className="w-full"
-                                required
-                            />
-                        </div>
-                    </div>
-
+                <div className="space-y-5">
                     {isOwner && (
                         <>
                             <div className="space-y-2">

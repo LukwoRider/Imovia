@@ -10,10 +10,14 @@ import { mockIncidents, IncidentStatus } from "@/lib/data/mock-incidents"
 
 export default function IncidentsPage() {
     const [filter, setFilter] = useState<IncidentStatus | "ALL">("ALL")
+    const [searchQuery, setSearchQuery] = useState("")
 
     const filteredIncidents = mockIncidents.filter((incident) => {
-        if (filter === "ALL") return true
-        return incident.status === filter
+        const matchesFilter = filter === "ALL" || incident.status === filter
+        const matchesSearch = incident.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            incident.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+        return matchesFilter && matchesSearch
     })
 
     return (
@@ -30,7 +34,11 @@ export default function IncidentsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-3 space-y-6">
-                    <IncidentFilters currentFilter={filter} onFilterChange={setFilter} />
+                    <IncidentFilters
+                        currentFilter={filter}
+                        onFilterChange={setFilter}
+                        onSearchChange={setSearchQuery}
+                    />
                     <IncidentList incidents={filteredIncidents} />
                 </div>
 

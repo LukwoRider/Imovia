@@ -15,7 +15,7 @@ const envFile = process.env.TEST_ENV_FILE
 
 if (!fs.existsSync(envFile)) {
   throw new Error(
-    `Missing env file: ${envFile}. Copy backend/.env.example to .env.local (or .env.staging) and fill values.`
+    `Missing env file: ${envFile}. Copy backend/.env.local.example, .env.staging.example, or .env.prod.example and fill values.`
   );
 }
 
@@ -35,8 +35,8 @@ if (!ownerEmail || !ownerPass) throw new Error(`Missing OWNER_EMAIL/OWNER_PASS i
 if (!tenantEmail || !tenantPass) throw new Error(`Missing TENANT_EMAIL/TENANT_PASS in ${envFile}`);
 
 const testTarget = (process.env.TEST_TARGET || "local").toLowerCase();
-if (!["local", "staging"].includes(testTarget)) {
-  throw new Error(`Invalid TEST_TARGET="${testTarget}". Allowed values: local, staging`);
+if (!["local", "staging", "prod"].includes(testTarget)) {
+  throw new Error(`Invalid TEST_TARGET="${testTarget}". Allowed values: local, staging, prod`);
 }
 
 let host;
@@ -61,6 +61,29 @@ if (testTarget === "staging") {
   if (process.env.ALLOW_REMOTE_TESTS !== "true") {
     throw new Error(
       "Remote write protection: set ALLOW_REMOTE_TESTS=true to run against staging."
+    );
+  }
+}
+
+if (testTarget === "prod") {
+  if (isLocalHost) {
+    throw new Error("Prod test requires a remote Supabase URL, not localhost.");
+  }
+  if (process.env.ALLOW_REMOTE_TESTS !== "true") {
+    throw new Error(
+      "Remote write protection: set ALLOW_REMOTE_TESTS=true to run against prod."
+    );
+  }
+  if (process.env.ALLOW_PROD_TESTS !== "true") {
+    throw new Error(
+      "Production protection: set ALLOW_PROD_TESTS=true only if you intentionally run this on prod."
+    );
+  }
+
+  const confirmProdHost = (process.env.CONFIRM_PROD_HOST || "").toLowerCase();
+  if (!confirmProdHost || confirmProdHost !== host) {
+    throw new Error(
+      `Production confirmation required: set CONFIRM_PROD_HOST=${host} to continue.`
     );
   }
 }

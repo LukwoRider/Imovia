@@ -49,23 +49,35 @@ npm install
 
 ## Environment Variables
 
-Create `backend/.env.local` for local tests (copy from `backend/.env.example`):
+Create environment files from templates:
 
-```env
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_ANON_KEY=<local-anon-key>
-
-OWNER_EMAIL=owner@imovia.test
-OWNER_PASS=test
-
-TENANT_EMAIL=tenant@imovia.test
-TENANT_PASS=test
+```bash
+cp backend/.env.local.example backend/.env.local
+cp backend/.env.staging.example backend/.env.staging
+cp backend/.env.prod.example backend/.env.prod
 ```
 
-For staging, copy `backend/.env.example` to `backend/.env.staging` and set staging values.
+PowerShell:
+
+```powershell
+Copy-Item backend/.env.local.example backend/.env.local
+Copy-Item backend/.env.staging.example backend/.env.staging
+Copy-Item backend/.env.prod.example backend/.env.prod
+```
+
+Then fill each file values:
+- `backend/.env.local` -> local Supabase (`127.0.0.1`)
+- `backend/.env.staging` -> staging Supabase project
+- `backend/.env.prod` -> production Supabase project
+
+Reference templates:
+- `backend/.env.example` (base required keys)
+- `backend/.env.local.example`
+- `backend/.env.staging.example`
+- `backend/.env.prod.example`
 
 Security rules:
-- never commit real env files (`backend/.env.local`, `backend/.env.staging`, etc.)
+- never commit real env files (`backend/.env.local`, `backend/.env.staging`, `backend/.env.prod`)
 - never expose service role key in frontend apps
 
 ## Run Integration Test
@@ -82,9 +94,38 @@ Staging (explicit opt-in):
 TEST_TARGET=staging TEST_ENV_FILE=.env.staging ALLOW_REMOTE_TESTS=true node backend/test.mjs
 ```
 
+Staging (PowerShell):
+
+```powershell
+$env:TEST_TARGET="staging"
+$env:TEST_ENV_FILE=".env.staging"
+$env:ALLOW_REMOTE_TESTS="true"
+node backend/test.mjs
+```
+
+Production (dangerous, triple confirmation):
+
+```bash
+TEST_TARGET=prod TEST_ENV_FILE=.env.prod ALLOW_REMOTE_TESTS=true ALLOW_PROD_TESTS=true CONFIRM_PROD_HOST=<your-prod-host> node backend/test.mjs
+```
+
+Production (PowerShell):
+
+```powershell
+$env:TEST_TARGET="prod"
+$env:TEST_ENV_FILE=".env.prod"
+$env:ALLOW_REMOTE_TESTS="true"
+$env:ALLOW_PROD_TESTS="true"
+$env:CONFIRM_PROD_HOST="<your-prod-host>"
+node backend/test.mjs
+```
+
 Notes:
 - default mode is `TEST_TARGET=local` and expects `backend/.env.local`
 - script refuses remote writes unless `ALLOW_REMOTE_TESTS=true`
+- production mode also requires `ALLOW_PROD_TESTS=true` and `CONFIRM_PROD_HOST`
+- `TEST_TARGET`, `TEST_ENV_FILE`, `ALLOW_REMOTE_TESTS`, `ALLOW_PROD_TESTS`, and `CONFIRM_PROD_HOST` are terminal environment variables (not values hardcoded in the script)
+- `backend/.env` is legacy and not used by `backend/test.mjs`
 
 Expected success marker:
 
@@ -120,13 +161,17 @@ Frontend guidance:
 Contract source of truth:
 - `backend/BACKEND_CONTRACT.md` (current: `v1.0.0`)
 
-## Storage Contract (Documents)
+## Storage Contract
 
-Bucket:
+Buckets:
 - `documents` (private)
+- `property-images` (private)
+- `avatars` (private)
 
 Object key convention:
 - `leases/{leaseId}/{uuid}-{filename}`
+- `properties/{propertyId}/{uuid}-{filename}`
+- `profiles/{userId}/{uuid}-{filename}`
 
 Read/download:
 - use signed URLs (`createSignedUrl`)
@@ -239,7 +284,7 @@ Before merging to production branch:
 
 ## Troubleshooting
 
-- `Missing SUPABASE_URL or SUPABASE_ANON_KEY`: verify `backend/.env`.
+- `Missing SUPABASE_URL or SUPABASE_ANON_KEY`: verify the selected env file (`backend/.env.local`, `.env.staging`, or `.env.prod`).
 - `password authentication failed for user cli_login_postgres`: relink project and provide the correct DB password.
 - `Remote migration versions not found in local migrations directory`: run `supabase migration repair` then re-check migration list.
 - RLS rejection on documents/incidents/maintenance: verify lease membership and storage path convention.

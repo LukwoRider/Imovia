@@ -2,9 +2,9 @@
 "use client"
 
 import { useState } from "react"
-import { DocumentFilters } from "@/components/dashboard/documents/document-filters"
-import { DocumentList } from "@/components/dashboard/documents/document-list"
-import { QuickActions } from "@/components/dashboard/documents/quick-actions"
+import { DocumentFilters } from "@/components/dashboard/tenant/documents/document-filters"
+import { DocumentList } from "@/components/dashboard/tenant/documents/document-list"
+import { QuickActions } from "@/components/dashboard/shared/quick-actions"
 import { HelpCenter } from "@/components/dashboard/shared/help-center"
 import { mockDocuments, DocumentType } from "@/lib/data/mock-documents"
 

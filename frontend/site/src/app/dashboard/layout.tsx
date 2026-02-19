@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Logo } from "@/components/ui/logo"
 import { LogOut } from "lucide-react"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { UserProvider, useUser } from "@/contexts/user-context"
 import { logout } from "@/app/auth/actions"
 import { DashboardHeader } from "@/components/dashboard/shared/dashboard-header"
@@ -76,6 +76,7 @@ function DashboardContent({
             {/* Mobile Sidebar (Sheet) */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetContent side="left" className="p-0 bg-[#12182C] text-white w-64 border-r-0">
+                    <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
                     <div className="p-6 flex items-center gap-2">
                         <Logo className="h-8 w-auto" variant="white" />
                     </div>

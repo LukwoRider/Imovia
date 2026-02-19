@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { Logo } from "@/components/ui/logo"
 import { Building2, Key, User, ArrowLeft } from "lucide-react"
@@ -9,14 +9,33 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { signup } from "../actions"
+import { toast } from "sonner"
 
 type Role = "tenant" | "owner" | "agency" | null
 
 export default function RegisterPage() {
     const [role, setRole] = useState<Role>(null)
+    const [isPending, startTransition] = useTransition()
+    const [error, setError] = useState<string | null>(null)
 
     const handleRoleSelect = (selectedRole: Role) => {
         setRole(selectedRole)
+    }
+
+    async function handleSubmit(formData: FormData) {
+        setError(null)
+        if (role) {
+            formData.append("role", role)
+        }
+
+        startTransition(async () => {
+            const result = await signup(null, formData)
+            if (result?.error) {
+                setError(result.error)
+                toast.error(result.error)
+            }
+        })
     }
 
     return (
@@ -79,11 +98,19 @@ export default function RegisterPage() {
                         </Button>
                     </div>
 
-                    {role === "agency" ? <AgencyForm /> : <UserForm />}
+                    <form action={handleSubmit} className="grid gap-4">
+                        {role === "agency" ? <AgencyForm /> : <UserForm />}
 
-                    <Button className="w-full bg-[#25468d] hover:bg-[#1e3a75] text-white mt-4">
-                        Créer votre compte
-                    </Button>
+                        {error && (
+                            <div className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-200">
+                                {error}
+                            </div>
+                        )}
+
+                        <Button className="w-full bg-[#25468d] hover:bg-[#1e3a75] text-white mt-4" disabled={isPending}>
+                            {isPending ? "Création en cours..." : "Créer votre compte"}
+                        </Button>
+                    </form>
 
                     <div className="relative w-full py-4">
                         <div className="absolute inset-0 flex items-center">
@@ -134,32 +161,33 @@ function UserForm() {
         <div className="grid gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="lastname">Nom</Label>
-                <Input id="lastname" placeholder="Votre nom" />
+                <Input id="lastname" name="lastname" placeholder="Votre nom" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="firstname">Prénom</Label>
-                <Input id="firstname" placeholder="Votre prénom" />
+                <Input id="firstname" name="firstname" placeholder="Votre prénom" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="nom@exemple.com" type="email" />
+                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="phone">Numéro de téléphone</Label>
                 <Input
                     id="phone"
+                    name="phone"
                     placeholder="+33"
                     type="tel"
-                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "")}
+                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9+]/g, "")}
                 />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="password">Mot de passe</Label>
-                <PasswordInput id="password" placeholder="Votre mot de passe" />
+                <PasswordInput id="password" name="password" placeholder="Votre mot de passe" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                <PasswordInput id="confirm-password" placeholder="Confirmez votre mot de passe" />
+                <PasswordInput id="confirm-password" name="confirm-password" placeholder="Confirmez votre mot de passe" required />
             </div>
         </div>
     )
@@ -170,32 +198,34 @@ function AgencyForm() {
         <div className="grid gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="agency-name">Nom de l&apos;agence</Label>
-                <Input id="agency-name" placeholder="Nom de l'agence" />
+                <Input id="agency-name" name="lastname" placeholder="Nom de l'agence" required />
+                <input type="hidden" name="firstname" value="Agence" />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="siret">Siret</Label>
-                <Input id="siret" placeholder="Votre numéro de siret" />
+                <Input id="siret" name="siret" placeholder="Votre numéro de siret" />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="nom@exemple.com" type="email" />
+                <Input id="email" name="email" placeholder="nom@exemple.com" type="email" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="phone">Numéro de téléphone</Label>
                 <Input
                     id="phone"
+                    name="phone"
                     placeholder="+33"
                     type="tel"
-                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "")}
+                    onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9+]/g, "")}
                 />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="password">Mot de passe</Label>
-                <PasswordInput id="password" placeholder="Votre mot de passe" />
+                <PasswordInput id="password" name="password" placeholder="Votre mot de passe" required />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                <PasswordInput id="confirm-password" placeholder="Confirmez votre mot de passe" />
+                <PasswordInput id="confirm-password" name="confirm-password" placeholder="Confirmez votre mot de passe" required />
             </div>
         </div>
     )

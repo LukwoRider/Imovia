@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "supabase": "^2.76.9"
+  },
+  "dependencies": {
+    "expo-linear-gradient": "^15.0.8"
   }
 }

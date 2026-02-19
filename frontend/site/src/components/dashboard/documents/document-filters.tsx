@@ -10,9 +10,10 @@ import { DocumentType } from "@/lib/data/mock-documents"
 interface DocumentFiltersProps {
     currentFilter: DocumentType | "ALL"
     onFilterChange: (filter: DocumentType | "ALL") => void
+    onSearchChange: (query: string) => void
 }
 
-export function DocumentFilters({ currentFilter, onFilterChange }: DocumentFiltersProps) {
+export function DocumentFilters({ currentFilter, onFilterChange, onSearchChange }: DocumentFiltersProps) {
     const filters = [
         { id: "ALL", label: "Tous", icon: FileText },
         { id: "CONTRACT", label: "Contrats", icon: Briefcase },
@@ -28,6 +29,7 @@ export function DocumentFilters({ currentFilter, onFilterChange }: DocumentFilte
                 <Input
                     placeholder="Rechercher..."
                     className="pl-10 bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
+                    onChange={(e) => onSearchChange(e.target.value)}
                 />
             </div>
 

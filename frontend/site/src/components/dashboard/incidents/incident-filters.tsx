@@ -10,9 +10,10 @@ import { IncidentStatus } from "@/lib/data/mock-incidents"
 interface IncidentFiltersProps {
     currentFilter: IncidentStatus | "ALL"
     onFilterChange: (filter: IncidentStatus | "ALL") => void
+    onSearchChange: (query: string) => void
 }
 
-export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFiltersProps) {
+export function IncidentFilters({ currentFilter, onFilterChange, onSearchChange }: IncidentFiltersProps) {
     const filters = [
         { id: "ALL", label: "Tous", icon: null },
         { id: "RESOLVED", label: "Résolus", icon: CheckCircle2 },
@@ -27,6 +28,7 @@ export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFilte
                 <Input
                     placeholder="Rechercher..."
                     className="pl-10 bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
+                    onChange={(e) => onSearchChange(e.target.value)}
                 />
             </div>
 

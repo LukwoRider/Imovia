@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 
 // --- Mock Data ---
 const STATS = [
@@ -308,9 +308,12 @@ export default function DashboardLocataire() {
                 >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                         <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
-                        <View style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}>
+                        <Pressable
+                            onPress={() => router.push("/(locataire)/incidents")}
+                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                        >
                             <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </View>
+                        </Pressable>
                     </View>
 
                     {INCIDENTS.map((inc, i) => (

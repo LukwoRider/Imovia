@@ -321,6 +321,7 @@ export default function BiensPage() {
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchFocused, setSearchFocused] = useState(false);
     const [favoris, setFavoris] = useState<Set<number>>(
         new Set(ALL_BIENS.filter((b) => b.favori).map((b) => b.id))
     );
@@ -451,7 +452,7 @@ export default function BiensPage() {
                                 backgroundColor: "#f9fafb",
                                 borderRadius: 10,
                                 borderWidth: 1,
-                                borderColor: "#e5e7eb",
+                                borderColor: searchFocused ? "#3153A1" : "#e5e7eb",
                                 paddingHorizontal: 12,
                                 paddingVertical: 10,
                                 marginBottom: 16,
@@ -459,6 +460,8 @@ export default function BiensPage() {
                         >
                             <Ionicons name="search-outline" size={18} color="#9ca3af" />
                             <TextInput
+                                onFocus={() => setSearchFocused(true)}
+                                onBlur={() => setSearchFocused(false)}
                                 value={search}
                                 onChangeText={(text) => {
                                     setSearch(text);
@@ -466,13 +469,17 @@ export default function BiensPage() {
                                 }}
                                 placeholder="Ville, code postal..."
                                 placeholderTextColor="#9ca3af"
+                                selectionColor="#3153A1"
+                                cursorColor="#3153A1"
                                 style={{
                                     flex: 1,
                                     marginLeft: 8,
                                     fontSize: 14,
                                     color: "#1e293b",
                                     paddingVertical: 0,
-                                }}
+                                    fontFamily: "Montserrat_400Regular",
+                                    outlineStyle: "none",
+                                } as any}
                                 returnKeyType="search"
                             />
                             {search.length > 0 && (

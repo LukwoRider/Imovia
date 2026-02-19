@@ -1,5 +1,5 @@
-import { FilterBar } from "@/components/dashboard/search/filter-bar"
-import { PropertyGrid } from "@/components/dashboard/search/property-grid"
+import { FilterBar } from "@/components/dashboard/tenant/search/filter-bar"
+import { PropertyGrid } from "@/components/dashboard/tenant/search/property-grid"
 
 export default function SearchPage() {
     return (

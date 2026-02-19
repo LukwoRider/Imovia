@@ -2,9 +2,9 @@
 "use client"
 
 import { useState } from "react"
-import { IncidentFilters } from "@/components/dashboard/incidents/incident-filters"
-import { IncidentList } from "@/components/dashboard/incidents/incident-list"
-import { CreateIncidentDialog } from "@/components/dashboard/incidents/create-incident-dialog"
+import { IncidentFilters } from "@/components/dashboard/tenant/incidents/incident-filters"
+import { IncidentList } from "@/components/dashboard/tenant/incidents/incident-list"
+import { CreateIncidentDialog } from "@/components/dashboard/tenant/incidents/create-incident-dialog"
 import { HelpCenter } from "@/components/dashboard/shared/help-center"
 import { mockIncidents, IncidentStatus } from "@/lib/data/mock-incidents"
 

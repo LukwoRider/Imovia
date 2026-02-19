@@ -348,7 +348,7 @@ export default function DashboardLocataire() {
                     ))}
 
                     <Button
-                        onPress={() => { }}
+                        onPress={() => router.push("/(locataire)/incidents")}
                         style={{ marginTop: 14 }}
                     >
                         <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
@@ -370,9 +370,12 @@ export default function DashboardLocataire() {
                 >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                         <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
-                        <View style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}>
+                        <Pressable
+                            onPress={() => router.push("/(locataire)/documents")}
+                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                        >
                             <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </View>
+                        </Pressable>
                     </View>
 
                     {DOCUMENTS.map((doc, i) => (

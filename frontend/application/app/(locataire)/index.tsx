@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, View } from "react-native";
 
@@ -19,8 +20,8 @@ const PAIEMENTS = [
 ];
 
 const INCIDENTS = [
-    { titre: "Fuite d'eau sous l'évier", desc: "Une fuite d'eau a été constatée sous l'évier.", statut: "En cours", color: "#f59e0b" },
-    { titre: "Problème électrique", desc: "Problème de fusible", statut: "Résolu", color: "#22c55e" },
+    { titre: "Fuite d'eau sous l'évier", desc: "Une fuite d'eau a été constatée sous l'évier.", statut: "En cours", color: "#E17100" },
+    { titre: "Problème électrique", desc: "Problème de fusible", statut: "Résolu", color: "#08CB56" },
 ];
 
 const DOCUMENTS = [
@@ -56,10 +57,10 @@ function StatCard({ label, value, trend, up, icon }: typeof STATS[0]) {
                 >
                     <Ionicons name={icon} size={16} color="#3153A1" />
                 </View>
-                <Text style={{ fontSize: 11, color: "#6b7280", marginLeft: 8 }}>{label}</Text>
+                <Text style={{ fontSize: 11, color: "#6b7280", marginLeft: 8, fontFamily: "Montserrat_400Regular" }}>{label}</Text>
             </View>
-            <Text style={{ fontSize: 22, fontWeight: "700", color: "#1e293b" }}>{value}</Text>
-            <Text style={{ fontSize: 11, color: up ? "#22c55e" : "#ef4444", marginTop: 2 }}>
+            <Text style={{ fontSize: 22, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>{value}</Text>
+            <Text style={{ fontSize: 11, color: up ? "#08CB56" : "#FF0000", marginTop: 2, fontFamily: "Montserrat_400Regular" }}>
                 {up ? "↑" : "↓"} {trend}
             </Text>
         </View>
@@ -83,8 +84,8 @@ function SectionHeader({ icon, title, subtitle }: { icon: string; title: string;
                 <Ionicons name={icon as any} size={18} color="#3153A1" />
             </View>
             <View>
-                <Text style={{ fontSize: 15, fontWeight: "700", color: "#1e293b" }}>{title}</Text>
-                <Text style={{ fontSize: 11, color: "#9ca3af" }}>{subtitle}</Text>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>{title}</Text>
+                <Text style={{ fontSize: 11, color: "#9ca3af", fontFamily: "Montserrat_400Regular" }}>{subtitle}</Text>
             </View>
         </View>
     );
@@ -106,7 +107,7 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
                     width: 28,
                     height: 28,
                     borderRadius: 14,
-                    backgroundColor: item.paid ? "#dcfce7" : "#fef3c7",
+                    backgroundColor: item.paid ? "rgba(8,203,86,0.15)" : "rgba(225,113,0,0.15)",
                     alignItems: "center",
                     justifyContent: "center",
                     marginRight: 10,
@@ -115,7 +116,7 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
                 <Ionicons
                     name={item.paid ? "checkmark-circle" : "time"}
                     size={16}
-                    color={item.paid ? "#22c55e" : "#f59e0b"}
+                    color={item.paid ? "#08CB56" : "#E17100"}
                 />
             </View>
             <View style={{ flex: 1 }}>
@@ -162,13 +163,15 @@ export default function DashboardLocataire() {
                 >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <View>
-                            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600", letterSpacing: 1, opacity: 0.8, marginBottom: 2 }}>
-                                imovia
-                            </Text>
-                            <Text style={{ color: "#fff", fontSize: 24, fontWeight: "700" }}>
+                            <Image
+                                source={require("@/assets/images/logo-white.svg")}
+                                style={{ width: 90, height: 24, marginBottom: 2 }}
+                                contentFit="contain"
+                            />
+                            <Text style={{ color: "#fff", fontSize: 24, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
                                 Bonjour, David !
                             </Text>
-                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 4 }}>
+                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 4, fontFamily: "Montserrat_400Regular" }}>
                                 Bienvenue sur votre espace locataire imovia
                             </Text>
                         </View>
@@ -329,6 +332,7 @@ export default function DashboardLocataire() {
                                     borderRadius: 12,
                                     paddingHorizontal: 10,
                                     paddingVertical: 3,
+                                    backgroundColor: "#FDF8F2",
                                     borderWidth: 1,
                                     borderColor: inc.color,
                                 }}

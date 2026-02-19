@@ -3,7 +3,8 @@ import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, View } from "react-native";
 
 // --- Mock Data ---
 const STATS = [
@@ -142,6 +143,7 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
 // --- Main Dashboard ---
 
 export default function DashboardLocataire() {
+    const router = useRouter();
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
 
@@ -249,7 +251,7 @@ export default function DashboardLocataire() {
                         ))}
                     </View>
 
-                    <Button onPress={() => { }}>
+                    <Button onPress={() => router.push("/(locataire)/logement")}>
                         <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                         <Text>Voir les détails</Text>
                     </Button>
@@ -306,9 +308,12 @@ export default function DashboardLocataire() {
                 >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                         <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
-                        <View style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}>
+                        <Pressable
+                            onPress={() => router.push("/(locataire)/incidents")}
+                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                        >
                             <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </View>
+                        </Pressable>
                     </View>
 
                     {INCIDENTS.map((inc, i) => (
@@ -343,7 +348,7 @@ export default function DashboardLocataire() {
                     ))}
 
                     <Button
-                        onPress={() => { }}
+                        onPress={() => router.push("/(locataire)/incidents")}
                         style={{ marginTop: 14 }}
                     >
                         <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
@@ -365,9 +370,12 @@ export default function DashboardLocataire() {
                 >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                         <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
-                        <View style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}>
+                        <Pressable
+                            onPress={() => router.push("/(locataire)/documents")}
+                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                        >
                             <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </View>
+                        </Pressable>
                     </View>
 
                     {DOCUMENTS.map((doc, i) => (

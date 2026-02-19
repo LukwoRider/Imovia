@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
-import { Wrench, Zap, AlertTriangle, HelpCircle } from "lucide-react"
+import { Wrench, Zap, AlertTriangle, HelpCircle, FireExtinguisher } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function CreateIncidentDialog() {
@@ -42,7 +42,7 @@ export function CreateIncidentDialog() {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-[#3153A1] hover:bg-[#25468d] text-white" suppressHydrationWarning>
-                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    <FireExtinguisher className="mr-2 h-4 w-4" />
                     Déclarer un incident
                 </Button>
             </DialogTrigger>
@@ -96,7 +96,6 @@ export function CreateIncidentDialog() {
                         <Label className="text-base font-semibold text-[#12182C]">Indiquer vos informations</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="relative">
-                                {/* <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" /> */}
                                 <Input
                                     type="tel"
                                     placeholder="+33 6 24 87 12 97"

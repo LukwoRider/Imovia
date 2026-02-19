@@ -75,7 +75,11 @@ export async function signup(_prevState: unknown, formData: FormData) {
 
     if (data.session) {
         revalidatePath('/', 'layout')
-        redirect('/dashboard')
+        if (role === 'owner' || role === 'agency') {
+            redirect('/dashboard/owner')
+        } else {
+            redirect('/dashboard/tenant')
+        }
     } else {
 
         return { success: true, message: "Veuillez vérifier votre email pour confirmer votre compte." }

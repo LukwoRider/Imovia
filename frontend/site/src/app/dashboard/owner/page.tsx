@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Users, AlertCircle, Building2, Wallet, ArrowUpRight, LucideIcon } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts"
+import Link from "next/link"
 
 const revenueData = [
     { month: "Jan", revenue: 8500 },
@@ -64,8 +65,8 @@ export default function OwnerDashboard() {
                                 <CardTitle className="text-lg font-bold text-[#12182C]">Evolution des revenus</CardTitle>
                                 <CardDescription>Revenus nets sur les 6 derniers mois</CardDescription>
                             </div>
-                            <Button variant="outline" size="sm" className="hidden sm:flex">
-                                Voir rapport complet <ArrowUpRight className="ml-2 h-4 w-4" />
+                            <Button asChild variant="outline" size="sm" className="hidden sm:flex">
+                                <Link href="/dashboard/owner/finances">Voir rapport complet <ArrowUpRight className="ml-2 h-4 w-4" /></Link>
                             </Button>
                         </div>
                     </CardHeader>
@@ -140,8 +141,8 @@ export default function OwnerDashboard() {
                                 price="1 400 €"
                             />
                         </div>
-                        <Button className="w-full mt-6 bg-[#12182C] text-white hover:bg-[#25468d]">
-                            Voir tout le parc
+                        <Button asChild className="w-full mt-6 bg-[#12182C] text-white hover:bg-[#25468d]">
+                            <Link href="/dashboard/owner/properties">Voir tout le parc</Link>
                         </Button>
                     </CardContent>
                 </Card>

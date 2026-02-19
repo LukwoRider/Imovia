@@ -26,7 +26,7 @@ export function CreateIncidentDialog() {
     const incidentTypes = [
         { id: "plumbing", label: "Plomberie", icon: Wrench },
         { id: "electricity", label: "Probleme electrique", icon: Zap },
-        { id: "appliance", label: "Panne d'appareil", icon: AlertTriangle },
+        { id: "appliance", label: "Panne d&apos;appareil", icon: AlertTriangle },
         { id: "other", label: "Autre", icon: HelpCircle },
     ]
 

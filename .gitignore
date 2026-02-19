@@ -30,6 +30,7 @@ yarn-error.*
 # local env files
 .env*.local
 .env
+backend/.env.local
 backend/.env.staging
 backend/.env.prod
 

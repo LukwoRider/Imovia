@@ -11,9 +11,7 @@ import {
     FileText,
     FireExtinguisher,
     User,
-    Wallet,
-    Building2,
-    Users
+    Building2
 } from "lucide-react"
 
 const tenantItems = [
@@ -25,11 +23,11 @@ const tenantItems = [
 ]
 
 const ownerItems = [
-    { icon: LayoutDashboard, label: "Tableau de bord", href: "/dashboard/owner" },
-    { icon: Building2, label: "Mes Biens", href: "/dashboard/owner/properties" },
-    { icon: Users, label: "Locataires", href: "/dashboard/owner/tenants" },
-    { icon: Wallet, label: "Finances", href: "/dashboard/owner/finances" },
-    { icon: FileText, label: "Documents", href: "/dashboard/owner/documents" },
+    { icon: LayoutDashboard, label: "Accueil", href: "/dashboard/owner" },
+    { icon: Building2, label: "Liste des biens", href: "/dashboard/owner/properties" },
+    { icon: Home, label: "Mes locations", href: "/dashboard/owner/rentals" },
+    { icon: FileText, label: "Mes Documents", href: "/dashboard/owner/documents" },
+    { icon: FireExtinguisher, label: "Incidents", href: "/dashboard/owner/incidents" },
 ]
 
 export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {

@@ -25,7 +25,7 @@ export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFilte
             <div className="relative w-full md:flex-1 md:max-w-2xl">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                    placeholder="Search..."
+                    placeholder="Rechercher..."
                     className="pl-10 bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
                 />
             </div>

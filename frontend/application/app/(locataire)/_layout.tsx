@@ -38,6 +38,10 @@ export default function LocataireLayout() {
                     marginTop: 2,
                     includeFontPadding: false,
                 },
+                sceneStyle: {
+                    backgroundColor: "#f9fafb",
+                    paddingBottom: 90 + insets.bottom,
+                },
             }}
         >
             <Tabs.Screen

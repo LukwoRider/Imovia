@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 // --- Mock Data ---
@@ -142,12 +144,14 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
 
 export default function DashboardLocataire() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
+    useScrollToTopOnFocus(scrollViewRef);
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: 32 }}>
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}

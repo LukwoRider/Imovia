@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
@@ -18,11 +19,13 @@ import {
 } from "@/components/incidents/types";
 
 export default function IncidentsPage() {
+    const scrollViewRef = useRef<ScrollView>(null);
     const [search, setSearch] = useState("");
     const [activeFilter, setActiveFilter] = useState<IncidentStatus>("tous");
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
     const [showDeclarer, setShowDeclarer] = useState(false);
+    useScrollToTopOnFocus(scrollViewRef);
 
     const filteredIncidents = useMemo(() => {
         let incidents = ALL_INCIDENTS;
@@ -60,7 +63,7 @@ export default function IncidentsPage() {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
                 {showDeclarer ? (
                     <>
                         <LinearGradient

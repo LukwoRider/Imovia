@@ -4,6 +4,7 @@ import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { useMemo, useRef, useState } from "react";
 import {
     Dimensions,
@@ -319,6 +320,7 @@ function PaginationBar({
 
 export default function BiensPage() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
     const [search, setSearch] = useState("");
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
@@ -327,6 +329,7 @@ export default function BiensPage() {
     const [favoris, setFavoris] = useState<Set<number>>(
         new Set(ALL_BIENS.filter((b) => b.favori).map((b) => b.id))
     );
+    useScrollToTopOnFocus(scrollViewRef);
 
     const toggleFavori = (id: number) => {
         setFavoris((prev) => {
@@ -373,6 +376,7 @@ export default function BiensPage() {
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView
+                ref={scrollViewRef}
                 contentContainerStyle={{ paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"

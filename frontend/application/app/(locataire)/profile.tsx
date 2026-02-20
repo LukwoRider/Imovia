@@ -3,10 +3,11 @@ import { Input } from "@/components/ui/input";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ScrollView, TextInput, View } from "react-native";
 
 const AVATAR_URI =
@@ -27,17 +28,17 @@ function InfoField({
 }) {
   return (
     <View
-      className={`h-14 rounded-2xl border border-[#D7D9DE] bg-[#F7F7F8] px-4 flex-row items-center ${
+      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${
         split ? "flex-1 min-w-0" : ""
       }`}
     >
-      <Feather name={icon} size={20} color="#3158B8" />
+      <Feather name={icon} size={18} color="#3158B8" />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#7A7D85"
-        className="flex-1 ml-3 text-[17px] text-[#1C2233]"
+        className="flex-1 ml-2 text-[15px] text-[#1C2233]"
         style={{ minWidth: 0, flexShrink: 1 }}
       />
     </View>
@@ -45,6 +46,7 @@ function InfoField({
 }
 
 export default function ProfilePage() {
+  const scrollViewRef = useRef<ScrollView>(null);
   const [firstName, setFirstName] = useState("David");
   const [lastName, setLastName] = useState("Martin");
   const [email, setEmail] = useState("David.martin@imovia.com");
@@ -54,10 +56,12 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  useScrollToTopOnFocus(scrollViewRef);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
@@ -115,27 +119,27 @@ export default function ProfilePage() {
           </View>
         </LinearGradient>
 
-        <View className="px-5 mt-4 gap-6">
-          <View className="mx-1 rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
-            <View className="px-5 py-6 flex-row items-center border-b border-[#D0D2D8]">
-              <View className="h-16 w-16 rounded-2xl border border-[#C8CAD1] items-center justify-center bg-[#F4F4F6]">
-                <Feather name="user" size={25} color="#3158B8" />
+        <View className="px-4 mt-5 gap-4">
+          <View className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+            <View className="px-4 py-4 flex-row items-center border-b border-[#f3f4f6]">
+              <View className="h-10 w-10 rounded-xl border border-[#e5e7eb] items-center justify-center bg-[#eef2ff]">
+                <Feather name="user" size={18} color="#3158B8" />
               </View>
-              <View className="ml-4">
-                <Text className="text-[#1C2233] text-[36px] leading-[40px] font-bold">
+              <View className="ml-3 flex-1">
+                <Text className="text-[#1C2233] text-[18px] leading-[22px] font-bold">
                   Informations personnelles
                 </Text>
-                <Text className="text-[#434C63] text-[18px] mt-1">
+                <Text className="text-[#6b7280] text-[12px] mt-1">
                   Informations de contacts
                 </Text>
               </View>
             </View>
 
-            <View className="px-5 py-8 gap-4">
-              <View className="items-center mb-4">
+            <View className="px-4 py-4 gap-3">
+              <View className="items-center mb-3">
                 <Image
                   source={{ uri: AVATAR_URI }}
-                  style={{ width: 140, height: 140, borderRadius: 70 }}
+                  style={{ width: 104, height: 104, borderRadius: 52 }}
                   contentFit="cover"
                 />
               </View>
@@ -176,10 +180,10 @@ export default function ProfilePage() {
                 placeholder="Adresse"
               />
 
-              <Button className="h-16 mt-4 rounded-2xl">
+              <Button className="h-12 mt-2 rounded-xl">
                 <View className="flex-row items-center gap-2">
-                  <Feather name="save" size={22} color="#FFFFFF" />
-                  <Text className="text-white text-[38px] leading-[42px] font-semibold">
+                  <Feather name="save" size={16} color="#FFFFFF" />
+                  <Text className="text-white text-[14px] font-semibold">
                     Enregistrer
                   </Text>
                 </View>
@@ -191,48 +195,48 @@ export default function ProfilePage() {
             </View>
           </View>
 
-          <View className="mx-1 rounded-3xl border border-[#D0D2D8] bg-[#F1F1F3] shadow-sm overflow-hidden">
-            <View className="px-5 py-6 flex-row items-center border-b border-[#D0D2D8]">
-              <View className="h-16 w-16 rounded-2xl border border-[#C8CAD1] items-center justify-center bg-[#F4F4F6]">
-                <Feather name="lock" size={25} color="#3158B8" />
+          <View className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+            <View className="px-4 py-4 flex-row items-center border-b border-[#f3f4f6]">
+              <View className="h-10 w-10 rounded-xl border border-[#e5e7eb] items-center justify-center bg-[#eef2ff]">
+                <Feather name="lock" size={18} color="#3158B8" />
               </View>
-              <View className="ml-4">
-                <Text className="text-[#1C2233] text-[36px] leading-[40px] font-bold">
-                  Informations personnelles
+              <View className="ml-3 flex-1">
+                <Text className="text-[#1C2233] text-[18px] leading-[22px] font-bold">
+                  Securite du compte
                 </Text>
-                <Text className="text-[#434C63] text-[18px] mt-1">
+                <Text className="text-[#6b7280] text-[12px] mt-1">
                   Modifier votre mot de passe
                 </Text>
               </View>
             </View>
 
-            <View className="px-5 py-8 gap-4">
+            <View className="px-4 py-4 gap-3">
               <Input
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 placeholder="Votre mot de passe actuel"
                 secureTextEntry
-                className="h-14 rounded-2xl border-[#D7D9DE] bg-[#F7F7F8] text-[17px]"
+                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
               />
               <Input
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="Nouveau mot de passe"
                 secureTextEntry
-                className="h-14 rounded-2xl border-[#D7D9DE] bg-[#F7F7F8] text-[17px]"
+                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
               />
               <Input
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Confirmer votre mot de passe"
                 secureTextEntry
-                className="h-14 rounded-2xl border-[#D7D9DE] bg-[#F7F7F8] text-[17px]"
+                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
               />
 
-              <Button className="h-16 mt-4 rounded-2xl">
+              <Button className="h-12 mt-2 rounded-xl">
                 <View className="flex-row items-center gap-2">
-                  <Feather name="save" size={22} color="#FFFFFF" />
-                  <Text className="text-white text-[38px] leading-[42px] font-semibold">
+                  <Feather name="save" size={16} color="#FFFFFF" />
+                  <Text className="text-white text-[14px] font-semibold">
                     Enregistrer
                   </Text>
                 </View>

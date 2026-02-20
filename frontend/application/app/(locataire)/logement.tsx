@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
@@ -168,9 +170,13 @@ function Badge({ icon, label }: { icon: string; label: string }) {
 }
 
 export default function LogementPage() {
+    const scrollViewRef = useRef<ScrollView>(null);
+    useScrollToTopOnFocus(scrollViewRef);
+
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView
+                ref={scrollViewRef}
                 showsVerticalScrollIndicator={false}
             >
                 <LinearGradient

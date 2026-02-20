@@ -158,31 +158,45 @@ export default function DashboardLocataire() {
                         borderBottomRightRadius: 24,
                     }}
                 >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <View style={{ flex: 1, marginRight: 12 }}>
                             <Image
                                 source={require("@/assets/images/logo-white.svg")}
                                 style={{ width: 90, height: 24, marginBottom: 2 }}
                                 contentFit="contain"
                             />
-                            <Text style={{ color: "#fff", fontSize: 24, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
+                            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginTop: 4, fontFamily: "Montserrat_700Bold" }}>
                                 Bonjour, David !
                             </Text>
-                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 4, fontFamily: "Montserrat_400Regular" }}>
+                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
                                 Bienvenue sur votre espace locataire imovia
                             </Text>
                         </View>
-                        <View
-                            style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 22,
-                                backgroundColor: "rgba(255,255,255,0.2)",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Ionicons name="person" size={22} color="#fff" />
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            <View
+                                style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 18,
+                                    backgroundColor: "rgba(255,255,255,0.2)",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Ionicons name="notifications-outline" size={17} color="#fff" />
+                            </View>
+                            <View
+                                style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 18,
+                                    backgroundColor: "rgba(255,255,255,0.2)",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Ionicons name="person" size={17} color="#fff" />
+                            </View>
                         </View>
                     </View>
                 </LinearGradient>

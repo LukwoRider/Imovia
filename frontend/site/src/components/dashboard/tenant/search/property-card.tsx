@@ -1,6 +1,5 @@
 "use client"
 
-import { Property } from "@/lib/data/mock-properties"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -8,7 +7,21 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-export function PropertyCard({ property }: { property: Property }) {
+export interface PropertyCardProps {
+    property: {
+        id: string
+        title: string
+        address: string
+        price: number
+        surface: number
+        rooms: number
+        type: string
+        images: string[]
+        description: string
+    }
+}
+
+export function PropertyCard({ property }: PropertyCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
 
@@ -34,8 +47,8 @@ export function PropertyCard({ property }: { property: Property }) {
                 {/* Image Carousel */}
                 <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                     <Image
-                        src={property.images[currentImageIndex]}
-                        alt={property.title}
+                        src={property.images[currentImageIndex] || "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop"}
+                        alt={property.title || "Image du bien"}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />

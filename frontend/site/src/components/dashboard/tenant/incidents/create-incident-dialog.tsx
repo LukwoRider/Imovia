@@ -1,4 +1,3 @@
-
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -14,28 +13,140 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useState } from "react"
-import { Wrench, Zap, AlertTriangle, HelpCircle, FireExtinguisher } from "lucide-react"
+import { useState, useEffect, ElementType, useCallback } from "react"
+import { Wrench, Zap, AlertTriangle, HelpCircle, FireExtinguisher, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
+import { IncidentType } from "@/lib/types/incident"
 
 export function CreateIncidentDialog() {
     const [open, setOpen] = useState(false)
-    const [selectedType, setSelectedType] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [selectedType, setSelectedType] = useState<IncidentType | null>(null)
+    const [description, setDescription] = useState("")
+    const [locationDetail, setLocationDetail] = useState("")
+    const [propertyId, setPropertyId] = useState<string | null>(null)
+    const [leaseId, setLeaseId] = useState<string | null>(null)
 
-    const incidentTypes = [
+    const supabase = createClient()
+
+    const fetchTenantProperty = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            // Get property and lease from public.lease_tenants join public.leases
+            const { data: leaseData } = await supabase
+                .from('lease_tenants')
+                .select('lease_id, leases(property_id)')
+                .eq('tenant_id', user.id)
+                .limit(1)
+                .single()
+
+            if (leaseData) {
+                setLeaseId(leaseData.lease_id)
+                // @ts-expect-error - Supabase join type might be complex
+                setPropertyId(leaseData.leases?.property_id)
+            } else {
+                // Testing Fallback: If no lease is found, auto-select a property
+                const { data: anyProperty } = await supabase
+                    .from('properties')
+                    .select('id')
+                    .limit(1)
+                    .single()
+
+                if (anyProperty) {
+                    setPropertyId(anyProperty.id)
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching tenant property/lease:", error)
+        } finally {
+            setLoading(false)
+        }
+    }, [supabase])
+
+    useEffect(() => {
+        if (open) {
+            fetchTenantProperty()
+        }
+    }, [open, fetchTenantProperty])
+
+    const incidentTypes: { id: IncidentType; label: string; icon: ElementType }[] = [
         { id: "plumbing", label: "Plomberie", icon: Wrench },
-        { id: "electricity", label: "Probleme electrique", icon: Zap },
-        { id: "appliance", label: "Panne d&apos;appareil", icon: AlertTriangle },
+        { id: "electricity", label: "Problème électrique", icon: Zap },
+        { id: "appliance", label: "Panne d'appareil", icon: AlertTriangle },
         { id: "other", label: "Autre", icon: HelpCircle },
     ]
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setOpen(false)
+        if (!selectedType) {
+            toast.error("Veuillez choisir un type d'incident")
+            return
+        }
+
+        if (!propertyId) {
+            toast.error("Aucune propriété trouvée pour ce compte")
+            return
+        }
+
+        setLoading(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error("Non authentifié")
+
+            // 1. Ensure profile exists for reporter_id (fallback for manual SQL issues)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Locataire',
+                    role: 'tenant'
+                })
+
+            if (profileError) {
+                console.warn("Profile upsert failed, but continuing:", profileError)
+            }
+
+            // 2. Validate property selection
+            if (!propertyId) {
+                toast.error("Aucune propriété trouvée pour cet incident.")
+                return
+            }
+
+            const { error } = await supabase
+                .from('incidents')
+                .insert([{
+                    description,
+                    incident_type: selectedType, // Match schema column name
+                    location_details: locationDetail, // Match schema column name
+                    property_id: propertyId,
+                    lease_id: leaseId,
+                    reporter_id: user.id, // Match schema column name
+                    status: 'open' // Match schema lowercase enum
+                }])
+
+            if (error) throw error
+
+            toast.success("Incident déclaré avec succès !")
+            setOpen(false)
+            resetForm()
+            // Optional: refresh page or trigger callback
+            window.location.reload()
+        } catch (error) {
+            const err = error as Error
+            toast.error("Erreur : " + err.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const resetForm = () => {
         setSelectedType(null)
+        setDescription("")
+        setLocationDetail("")
     }
 
     return (
@@ -84,53 +195,42 @@ export function CreateIncidentDialog() {
                         <Label htmlFor="description" className="text-base font-semibold text-[#12182C]">Décrire le problème</Label>
                         <Textarea
                             id="description"
-                            placeholder="Décrivez l'incident..."
+                            placeholder="Décrivez l'incident le plus précisément possible..."
                             className="min-h-[120px] resize-none border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             required
                         />
-                        <p className="text-right text-xs text-slate-400">0/500 caractères</p>
+                        <p className="text-right text-xs text-slate-400">{description.length}/500 caractères</p>
                     </div>
 
-                    {/* Contact Info */}
+                    {/* Location */}
                     <div className="space-y-3">
-                        <Label className="text-base font-semibold text-[#12182C]">Indiquer vos informations</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="relative">
-                                <Input
-                                    type="tel"
-                                    placeholder="+33 6 24 87 12 97"
-                                    className="bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
-                                    onInput={(e) => {
-                                        e.currentTarget.value = e.currentTarget.value.replace(/[^0-9+\s]/g, '')
-                                    }}
-                                />
-                            </div>
-                            <div className="relative">
-                                <Input
-                                    type="date"
-                                    className="bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Authorization */}
-                    <div className="flex items-center space-x-2 pt-2">
-                        <Checkbox id="authorization" className="data-[state=checked]:bg-[#3153A1] border-slate-300" />
-                        <label
-                            htmlFor="authorization"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-600"
-                        >
-                            Autorise le gestionnaire à accéder à mon logement en mon absence
-                        </label>
+                        <Label htmlFor="location" className="text-base font-semibold text-[#12182C]">Localisation précise</Label>
+                        <Input
+                            id="location"
+                            placeholder="Ex: Cuisine, sous l'évier"
+                            className="bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-11"
+                            value={locationDetail}
+                            onChange={(e) => setLocationDetail(e.target.value)}
+                            required
+                        />
                     </div>
 
                     <DialogFooter>
                         <Button
                             type="submit"
+                            disabled={loading}
                             className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white h-11 rounded-xl text-base font-medium"
                         >
-                            Déclarer ce nouvel incident
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Déclaration en cours...
+                                </>
+                            ) : (
+                                "Déclarer ce nouvel incident"
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

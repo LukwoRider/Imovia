@@ -10,7 +10,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Alert,
-    Dimensions,
     GestureResponderEvent,
     LayoutChangeEvent,
     Pressable,
@@ -31,44 +30,60 @@ type Property = {
 };
 
 const ITEMS_PER_PAGE = 4;
-const screenWidth = Dimensions.get("window").width;
 
 const SURFACE_MIN = 0;
 const SURFACE_MAX = 300;
 const LOYER_MIN = 0;
 const LOYER_MAX = 5000;
 
-function DraggableSlider({
+function RangeSlider({
     label,
     minValue,
     maxValue,
-    value,
-    onValueChange,
-    formatValue,
+    startValue,
+    endValue,
+    onRangeChange,
+    formatRange,
 }: {
     label: string;
     minValue: number;
     maxValue: number;
-    value: number;
-    onValueChange: (v: number) => void;
-    formatValue: (v: number) => string;
+    startValue: number;
+    endValue: number;
+    onRangeChange: (start: number, end: number) => void;
+    formatRange: (start: number, end: number) => string;
 }) {
     const trackWidth = useRef(0);
-    const trackX = useRef(0);
+    const activeThumb = useRef<"start" | "end" | null>(null);
 
-    const percent = ((value - minValue) / (maxValue - minValue)) * 100;
+    const getPercent = (v: number) => ((v - minValue) / (maxValue - minValue)) * 100;
+    const startPercent = getPercent(startValue);
+    const endPercent = getPercent(endValue);
 
     const handleTrackLayout = (e: LayoutChangeEvent) => {
         trackWidth.current = e.nativeEvent.layout.width;
-        trackX.current = e.nativeEvent.layout.x;
     };
 
-    const handleMove = (e: GestureResponderEvent) => {
+    const updateRangeFromTouch = (e: GestureResponderEvent) => {
         if (trackWidth.current === 0) return;
-        const touchX = e.nativeEvent.locationX;
+
+        const touchX = Math.max(0, Math.min(trackWidth.current, e.nativeEvent.locationX));
         const ratio = Math.max(0, Math.min(1, touchX / trackWidth.current));
-        const newValue = Math.round(minValue + ratio * (maxValue - minValue));
-        onValueChange(newValue);
+        const nextValue = Math.round(minValue + ratio * (maxValue - minValue));
+
+        if (!activeThumb.current) {
+            const startX = (startPercent / 100) * trackWidth.current;
+            const endX = (endPercent / 100) * trackWidth.current;
+            activeThumb.current =
+                Math.abs(touchX - startX) <= Math.abs(touchX - endX) ? "start" : "end";
+        }
+
+        if (activeThumb.current === "start") {
+            onRangeChange(Math.min(nextValue, endValue), endValue);
+            return;
+        }
+
+        onRangeChange(startValue, Math.max(nextValue, startValue));
     };
 
     return (
@@ -76,15 +91,20 @@ function DraggableSlider({
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>{label}</Text>
                 <View style={{ backgroundColor: "#f0f2f5", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>{formatValue(value)}</Text>
+                    <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>
+                        {formatRange(startValue, endValue)}
+                    </Text>
                 </View>
             </View>
             <View
                 onLayout={handleTrackLayout}
                 onStartShouldSetResponder={() => true}
                 onMoveShouldSetResponder={() => true}
-                onResponderGrant={handleMove}
-                onResponderMove={handleMove}
+                onResponderGrant={updateRangeFromTouch}
+                onResponderMove={updateRangeFromTouch}
+                onResponderRelease={() => {
+                    activeThumb.current = null;
+                }}
                 style={{
                     height: 32,
                     justifyContent: "center",
@@ -93,17 +113,37 @@ function DraggableSlider({
                 <View style={{ height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
                     <View
                         style={{
+                            position: "absolute",
                             height: 4,
                             backgroundColor: "#3153A1",
                             borderRadius: 2,
-                            width: `${percent}%`,
+                            left: `${startPercent}%`,
+                            width: `${Math.max(0, endPercent - startPercent)}%`,
                         }}
                     />
                 </View>
                 <View
                     style={{
                         position: "absolute",
-                        left: `${percent}%`,
+                        left: `${startPercent}%`,
+                        marginLeft: -10,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: "#fff",
+                        borderWidth: 3,
+                        borderColor: "#3153A1",
+                        shadowColor: "#000",
+                        shadowOpacity: 0.12,
+                        shadowRadius: 4,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: 3,
+                    }}
+                />
+                <View
+                    style={{
+                        position: "absolute",
+                        left: `${endPercent}%`,
                         marginLeft: -10,
                         width: 20,
                         height: 20,
@@ -311,7 +351,9 @@ export default function BiensPage() {
     const [biens, setBiens] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [surfaceMin, setSurfaceMin] = useState(SURFACE_MIN);
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
+    const [loyerMin, setLoyerMin] = useState(LOYER_MIN);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
@@ -371,11 +413,11 @@ export default function BiensPage() {
                     bien.ville.toLowerCase().includes(searchLower);
                 if (!matchSearch) return false;
             }
-            if (bien.surface > surfaceMax) return false;
-            if (bien.prix > loyerMax) return false;
+            if (bien.surface < surfaceMin || bien.surface > surfaceMax) return false;
+            if (bien.prix < loyerMin || bien.prix > loyerMax) return false;
             return true;
         });
-    }, [search, surfaceMax, loyerMax, biens]);
+    }, [search, surfaceMin, surfaceMax, loyerMin, loyerMax, biens]);
 
     const totalPages = Math.max(1, Math.ceil(filteredBiens.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
@@ -492,22 +534,30 @@ export default function BiensPage() {
                             )}
                         </View>
 
-                        <DraggableSlider
+                        <RangeSlider
                             label="Surface"
                             minValue={SURFACE_MIN}
                             maxValue={SURFACE_MAX}
-                            value={surfaceMax}
-                            onValueChange={setSurfaceMax}
-                            formatValue={(v) => `0 - ${v} m²${v >= SURFACE_MAX ? " et +" : ""}`}
+                            startValue={surfaceMin}
+                            endValue={surfaceMax}
+                            onRangeChange={(min, max) => {
+                                setSurfaceMin(min);
+                                setSurfaceMax(max);
+                            }}
+                            formatRange={(min, max) => `${min} - ${max} m²${max >= SURFACE_MAX ? " et +" : ""}`}
                         />
 
-                        <DraggableSlider
+                        <RangeSlider
                             label="Loyer"
                             minValue={LOYER_MIN}
                             maxValue={LOYER_MAX}
-                            value={loyerMax}
-                            onValueChange={setLoyerMax}
-                            formatValue={(v) => `0 - ${v}€${v >= LOYER_MAX ? " et +" : ""}`}
+                            startValue={loyerMin}
+                            endValue={loyerMax}
+                            onRangeChange={(min, max) => {
+                                setLoyerMin(min);
+                                setLoyerMax(max);
+                            }}
+                            formatRange={(min, max) => `${min}€ - ${max}€${max >= LOYER_MAX ? " et +" : ""}`}
                         />
 
                         <Pressable

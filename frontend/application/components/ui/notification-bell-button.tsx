@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Animated, Easing, Pressable } from "react-native";
+import { useNotificationBell } from "@/components/ui/notification-bell-context";
 
 export default function NotificationBellButton() {
-    const [active, setActive] = useState(false);
+    const { active, toggle } = useNotificationBell();
     const scale = useRef(new Animated.Value(1)).current;
     const tilt = useRef(new Animated.Value(0)).current;
 
@@ -50,7 +51,7 @@ export default function NotificationBellButton() {
     };
 
     const handlePress = () => {
-        setActive((prev) => !prev);
+        toggle();
         runAnimation();
     };
 

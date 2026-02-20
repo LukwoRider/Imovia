@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
+import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -109,18 +110,7 @@ export default function ProfilePage() {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <NotificationBellButton />
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="person" size={17} color="#fff" />
-              </View>
+              <ProfileHeaderButton />
             </View>
           </View>
         </LinearGradient>

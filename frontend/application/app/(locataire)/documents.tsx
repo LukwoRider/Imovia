@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
+import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
@@ -396,18 +397,7 @@ export default function DocumentsPage() {
                             }}
                         >
                             <NotificationBellButton />
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="person" size={17} color="#fff" />
-                            </View>
+                            <ProfileHeaderButton />
                         </View>
                     </View>
                 </LinearGradient>

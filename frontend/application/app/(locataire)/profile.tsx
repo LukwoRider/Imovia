@@ -10,8 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRef, useState } from "react";
 import { ScrollView, TextInput, View } from "react-native";
 
-const AVATAR_URI =
-  "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80";
+const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
 
 function InfoField({
   icon,
@@ -138,7 +137,7 @@ export default function ProfilePage() {
             <View className="px-4 py-4 gap-3">
               <View className="items-center mb-3">
                 <Image
-                  source={{ uri: AVATAR_URI }}
+                  source={AVATAR_SOURCE}
                   style={{ width: 104, height: 104, borderRadius: 52 }}
                   contentFit="cover"
                 />

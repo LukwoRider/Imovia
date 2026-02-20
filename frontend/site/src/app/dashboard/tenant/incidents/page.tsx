@@ -35,8 +35,7 @@ export default function IncidentsPage() {
 
             if (error) throw error
             setIncidents(data || [])
-        } catch (error) {
-            console.error("Error fetching incidents:", error)
+        } catch {
             toast.error("Erreur lors du chargement des incidents")
         } finally {
             setLoading(false)

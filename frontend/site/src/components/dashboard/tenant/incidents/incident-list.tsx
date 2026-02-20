@@ -49,7 +49,8 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
                 const status = statusConfig[incident.status] || statusConfig.open
                 const type = typeConfig[incident.incident_type] || typeConfig.other
                 const contactInitial = (incident.tenant?.full_name || "L").split(' ').map((n) => n[0]).join('')
-                const timeAgo = formatDistanceToNow(new Date(incident.created_at), { addSuffix: true, locale: fr })
+                const createdDate = new Date(incident.created_at)
+                const timeAgo = isNaN(createdDate.getTime()) ? "récemment" : formatDistanceToNow(createdDate, { addSuffix: true, locale: fr })
 
                 return (
                     <Card key={incident.id} className="border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">

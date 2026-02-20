@@ -48,20 +48,9 @@ export function CreateIncidentDialog() {
                 setLeaseId(leaseData.lease_id)
                 // @ts-expect-error - Supabase join type might be complex
                 setPropertyId(leaseData.leases?.property_id)
-            } else {
-                // Testing Fallback: If no lease is found, auto-select a property
-                const { data: anyProperty } = await supabase
-                    .from('properties')
-                    .select('id')
-                    .limit(1)
-                    .single()
-
-                if (anyProperty) {
-                    setPropertyId(anyProperty.id)
-                }
             }
-        } catch (error) {
-            console.error("Error fetching tenant property/lease:", error)
+        } catch {
+            // Silently fail or handle error appropriately for UI
         } finally {
             setLoading(false)
         }
@@ -97,22 +86,9 @@ export function CreateIncidentDialog() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error("Non authentifié")
 
-            // 1. Ensure profile exists for reporter_id (fallback for manual SQL issues)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Locataire',
-                    role: 'tenant'
-                })
-
-            if (profileError) {
-                console.warn("Profile upsert failed, but continuing:", profileError)
-            }
-
-            // 2. Validate property selection
+            // Validate property selection
             if (!propertyId) {
-                toast.error("Aucune propriété trouvée pour cet incident.")
+                toast.error("Aucune propriété trouvée pour déclarer cet incident.")
                 return
             }
 

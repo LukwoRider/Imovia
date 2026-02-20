@@ -23,7 +23,7 @@ export default function LocataireLayout() {
             <Tabs
                 screenOptions={{
                     headerShown: false,
-                    unmountOnBlur: true,
+                    popToTopOnBlur: true,
                     tabBarActiveTintColor: "#3153A1",
                     tabBarInactiveTintColor: "#7a7a7a",
                     tabBarStyle: {

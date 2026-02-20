@@ -3,11 +3,12 @@ import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 // --- Mock Data ---
@@ -148,6 +149,22 @@ export default function DashboardLocataire() {
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
     useScrollToTopOnFocus(scrollViewRef);
+
+    useEffect(() => {
+        const checkConnection = async () => {
+            try {
+                const { data, error } = await supabase.from("profiles").select("id").limit(1);
+                if (error) {
+                    console.log("Supabase connection error (expected if not logged in):", error.message);
+                } else {
+                    console.log("Supabase connection successful!");
+                }
+            } catch (err) {
+                console.log("Supabase check failed:", err);
+            }
+        };
+        checkConnection();
+    }, []);
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>

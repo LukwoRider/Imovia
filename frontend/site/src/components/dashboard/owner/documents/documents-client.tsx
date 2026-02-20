@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Search, FileText, Briefcase, FileSearch, MoreHorizontal } from "lucide-react"
+import { useState, useMemo, useEffect, useCallback } from "react"
+import { Search, FileText, Briefcase, FileSearch, MoreHorizontal, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { mockDocuments, DocumentType } from "@/lib/data/mock-documents"
+import { DocumentType, DocumentMock } from "@/lib/data/mock-documents"
 import { DocumentList } from "./document-list"
 import { AddDocumentDialog } from "./add-document-dialog"
+import { createClient } from "@/lib/supabase/client"
 
 const categories = [
     { label: "Tous", value: "all", icon: MoreHorizontal },
@@ -15,17 +16,65 @@ const categories = [
     { label: "Autres", value: "Autres", icon: FileText },
 ] as const
 
+const supabase = createClient()
+
 export function DocumentsClient() {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<DocumentType | "all">("all")
+    const [documents, setDocuments] = useState<DocumentMock[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    const fetchDocuments = useCallback(async () => {
+        try {
+            setIsLoading(true)
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data, error } = await supabase
+                .from('documents')
+                .select('*')
+                .eq('uploader_id', user.id)
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+
+            const formattedDocs: DocumentMock[] = (data || []).map(doc => ({
+                id: doc.id,
+                title: doc.title || "Document sans titre",
+                date: new Date(doc.created_at).toLocaleDateString(),
+                category: (doc.doc_type || "Autres") as DocumentType,
+                type: (doc.doc_type || "Autres") as DocumentType,
+                propertyName: doc.property_name || "N/A",
+                tenantName: doc.tenant_name || "N/A",
+                storagePath: doc.storage_path
+            }))
+
+            setDocuments(formattedDocs)
+        } catch (error: unknown) {
+            const err = error as any
+            console.error("Error fetching documents (Raw):", err)
+            console.error("Error fetching documents (Message):", err?.message || "No message")
+            console.error("Error fetching documents (Full):", JSON.stringify(err, null, 2))
+        } finally {
+            setIsLoading(false)
+        }
+    }, [supabase])
+
+    useEffect(() => {
+        fetchDocuments()
+    }, [fetchDocuments])
+
+    const handleDeleteOptimistic = useCallback((id: string) => {
+        setDocuments(prev => prev.filter(doc => doc.id !== id))
+    }, [])
 
     const filteredDocuments = useMemo(() => {
-        return mockDocuments.filter((doc) => {
+        return documents.filter((doc) => {
             const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory
             return matchesSearch && matchesCategory
         })
-    }, [searchQuery, selectedCategory])
+    }, [documents, searchQuery, selectedCategory])
 
     return (
         <div className="space-y-6">
@@ -40,7 +89,7 @@ export function DocumentsClient() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <AddDocumentDialog />
+                <AddDocumentDialog onSuccess={() => fetchDocuments()} />
             </div>
 
             {/* Content Container with Tabs */}
@@ -70,7 +119,18 @@ export function DocumentsClient() {
                 </div>
 
                 <div className="p-6">
-                    <DocumentList documents={filteredDocuments} />
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-24 gap-4">
+                            <Loader2 className="h-8 w-8 text-[#3153A1] animate-spin" />
+                            <p className="text-slate-500 font-medium">Chargement de vos documents...</p>
+                        </div>
+                    ) : (
+                        <DocumentList
+                            documents={filteredDocuments}
+                            onRefresh={() => fetchDocuments()}
+                            onDeleteOptimistic={handleDeleteOptimistic}
+                        />
+                    )}
                 </div>
             </div>
         </div>

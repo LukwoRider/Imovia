@@ -1,10 +1,22 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AnimatedTabIcon from "@/components/ui/animated-tab-icon";
 import { NotificationBellProvider } from "@/components/ui/notification-bell-context";
+import { Tabs } from "expo-router";
+import { useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LocataireLayout() {
     const insets = useSafeAreaInsets();
+    const [tabPulse, setTabPulse] = useState({
+        index: 0,
+        biens: 0,
+        logement: 0,
+        documents: 0,
+        incidents: 0,
+    });
+
+    const bumpTabPulse = (tab: keyof typeof tabPulse) => {
+        setTabPulse((prev) => ({ ...prev, [tab]: prev[tab] + 1 }));
+    };
 
     return (
         <NotificationBellProvider>
@@ -50,45 +62,90 @@ export default function LocataireLayout() {
                     name="index"
                     options={{
                         title: "Accueil",
-                        tabBarIcon: ({ color }) => (
-                            <Ionicons name="time-outline" size={21} color={color} />
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="time-outline"
+                                size={21}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.index}
+                            />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("index"),
                     }}
                 />
                 <Tabs.Screen
                     name="biens"
                     options={{
                         title: "Biens",
-                        tabBarIcon: ({ color }) => (
-                            <Ionicons name="business-outline" size={21} color={color} />
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="business-outline"
+                                size={21}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.biens}
+                            />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("biens"),
                     }}
                 />
                 <Tabs.Screen
                     name="logement"
                     options={{
                         title: "Mon logement",
-                        tabBarIcon: ({ color }) => (
-                            <Ionicons name="home-outline" size={20} color={color} />
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="home-outline"
+                                size={20}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.logement}
+                            />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("logement"),
                     }}
                 />
                 <Tabs.Screen
                     name="documents"
                     options={{
                         title: "Documents",
-                        tabBarIcon: ({ color }) => (
-                            <Ionicons name="document-outline" size={20} color={color} />
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="document-outline"
+                                size={20}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.documents}
+                            />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("documents"),
                     }}
                 />
                 <Tabs.Screen
                     name="incidents"
                     options={{
                         title: "Incidents",
-                        tabBarIcon: ({ color }) => (
-                            <Ionicons name="flame-outline" size={20} color={color} />
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="flame-outline"
+                                size={20}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.incidents}
+                            />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("incidents"),
                     }}
                 />
                 <Tabs.Screen

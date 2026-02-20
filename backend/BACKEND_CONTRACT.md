@@ -111,6 +111,26 @@ Returns owner KPI payload.
 await supabase.rpc("get_owner_dashboard");
 ```
 
+### `get_owner_property_tenants`
+
+Returns the owner mapping between properties, leases, and tenant members.
+Use this to list each owner property with corresponding tenants (if any).
+
+```ts
+await supabase.rpc("get_owner_property_tenants", {
+  p_property_id: null, // optional: pass a property UUID to filter
+});
+```
+
+Returned payload includes:
+- `properties_total`, `leases_total`, `tenants_total`
+- `items[]` with:
+  - property fields (`property_id`, `property_title`, `property_address`, `property_city`, `property_status`)
+  - lease fields (`lease_id`, `lease_status`, dates, rent/charges, `payment_day`)
+  - tenant fields (`tenant_id`, `tenant_full_name`, `tenant_phone`, `tenant_share_percent`, `tenant_joined_at`)
+
+When a property has no tenant yet, lease/tenant fields are `null` for that item.
+
 ### Also available
 
 - `apply_to_property`
@@ -118,24 +138,26 @@ await supabase.rpc("get_owner_dashboard");
 - `create_maintenance_request`
 - `owner_update_incident_status`
 
-### `create_incident` (extended)
+### `create_incident` (recommended)
 
-Tenant declares an incident with optional typed metadata.
+Tenant declaration flow can use a simplified call (lease-based, property auto-resolved):
 
 ```ts
 await supabase.rpc("create_incident", {
   p_lease_id: "<lease-uuid>",
-  p_property_id: "<property-uuid>",
-  p_title: "Kitchen leak",
   p_description: "Water leaking under the sink.",
   p_incident_type: "plumbing", // optional, default: "other"
-  p_priority: "medium", // optional, default: "medium"
-  p_location_details: "Floor 1 - Kitchen", // optional
   p_contact_phone: "+33 6 12 34 56 78", // optional
   p_preferred_visit_date: "2026-03-04", // optional
   p_allow_access_without_presence: false, // optional
 });
 ```
+
+Notes:
+- `description` is required.
+- `property_id` is derived from the lease in DB (prevents lease/property mismatch).
+- `title` is auto-generated when not provided.
+- Legacy overloaded signatures are still available for backward compatibility.
 
 ### `owner_update_incident_status` (extended)
 
@@ -162,6 +184,7 @@ Use normal `select` on:
 - `incidents`
 - `maintenance_requests`
 - `documents`
+- `document_users`
 - `profiles`
 - `owner_kpis` (view)
 
@@ -201,6 +224,11 @@ await supabase.storage.from("documents").createSignedUrl(storagePath, 60);
 
 Important:
 - DB row in `public.documents` must stay consistent with `lease_id` and `property_id`.
+- `public.document_users` is auto-maintained to link each document to the concerned users:
+  - owner of the lease/property
+  - tenant members of the lease
+  - uploader
+- Owner/tenant housing relationship is available through `public.get_owner_property_tenants`.
 
 ## Common Frontend Sequence
 

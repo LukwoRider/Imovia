@@ -1,13 +1,13 @@
 # Backend Contract (Frontend Integration)
 
-Contract version: `v1.0.0`  
+Contract version: `v1.1.0`  
 Status: `stable`  
-Last updated: `2026-02-18`
+Last updated: `2026-02-20`
 This document is the practical contract for frontend developers using Supabase directly.
 
 ## Scope
 
-- Authenticated user flows for `owner` and `tenant`
+- Authenticated user flows for `owner`, `agency`, and `tenant`
 - Business writes through RPCs
 - Reads through RLS-protected tables/views
 - Private document storage access through signed URLs
@@ -15,8 +15,51 @@ This document is the practical contract for frontend developers using Supabase d
 ## Auth And Roles
 
 - All writes require an authenticated session.
-- Roles are stored in `public.profiles.role` (`tenant`, `owner`, `admin`).
+- Roles are stored in `public.profiles.role` (`tenant`, `owner`, `agency`, `admin`).
 - Client apps must not use the service role key.
+
+## Agency Profile Model
+
+Agency legal/business fields are stored in a dedicated table:
+- `public.agency_profiles` (one row per `profiles.id`)
+
+Read helper view:
+- `public.agency_account` (joins `profiles` + `agency_profiles` for agency users)
+
+Why this model:
+- keeps `profiles` clean for all roles
+- gives frontend a single place for agency-specific fields (`siret`, legal info, insurance, etc.)
+- enforces role/ownership in DB (RLS + trigger guard)
+
+Recommended write pattern (authenticated agency user):
+
+```ts
+await supabase
+  .from("agency_profiles")
+  .upsert(
+    {
+      profile_id: user.id,
+      agency_name: "Imovia Gestion",
+      siret: "12345678901234",
+      legal_form: "SAS",
+      business_email: "contact@imovia.fr",
+      business_phone: "+33 1 23 45 67 89",
+      professional_card_number: "CPI75012024000000000",
+    },
+    { onConflict: "profile_id" }
+  )
+  .select()
+  .single();
+```
+
+Recommended read pattern:
+
+```ts
+await supabase
+  .from("agency_account")
+  .select("*")
+  .single();
+```
 
 ## Write Contract (RPC First)
 
@@ -75,6 +118,37 @@ await supabase.rpc("get_owner_dashboard");
 - `create_maintenance_request`
 - `owner_update_incident_status`
 
+### `create_incident` (extended)
+
+Tenant declares an incident with optional typed metadata.
+
+```ts
+await supabase.rpc("create_incident", {
+  p_lease_id: "<lease-uuid>",
+  p_property_id: "<property-uuid>",
+  p_title: "Kitchen leak",
+  p_description: "Water leaking under the sink.",
+  p_incident_type: "plumbing", // optional, default: "other"
+  p_priority: "medium", // optional, default: "medium"
+  p_location_details: "Floor 1 - Kitchen", // optional
+  p_contact_phone: "+33 6 12 34 56 78", // optional
+  p_preferred_visit_date: "2026-03-04", // optional
+  p_allow_access_without_presence: false, // optional
+});
+```
+
+### `owner_update_incident_status` (extended)
+
+Owner/manager updates status and can add resolution notes.
+
+```ts
+await supabase.rpc("owner_update_incident_status", {
+  p_incident_id: "<incident-uuid>",
+  p_status: "resolved",
+  p_resolution_notes: "Plumber replaced the faulty joint.",
+});
+```
+
 ## Read Contract (RLS Protected)
 
 Use normal `select` on:
@@ -92,6 +166,13 @@ Use normal `select` on:
 - `owner_kpis` (view)
 
 RLS decides visibility based on authenticated user ownership/membership.
+
+Schema additions used by the flows:
+- `properties.monthly_rent`, `properties.rooms`, `properties.bathrooms`, `properties.energy_class`, `properties.is_furnished`, `properties.available_from`
+- `leases.security_deposit_amount`
+- `incidents.incident_type`, `incidents.priority`, `incidents.location_details`, `incidents.contact_phone`, `incidents.preferred_visit_date`, `incidents.allow_access_without_presence`, `incidents.resolution_notes`, `incidents.resolved_at`, `incidents.resolved_by`
+- `maintenance_requests.incident_id`
+- `documents.title`, `documents.document_type`
 
 ## Storage Contract
 

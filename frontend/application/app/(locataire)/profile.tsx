@@ -4,11 +4,13 @@ import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
 
@@ -45,6 +47,7 @@ function InfoField({
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const [firstName, setFirstName] = useState("David");
   const [lastName, setLastName] = useState("Martin");
@@ -55,7 +58,24 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSigningOut, setIsSigningOut] = useState(false);
   useScrollToTopOnFocus(scrollViewRef);
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      Alert.alert("Erreur", "Impossible de se deconnecter pour le moment.");
+      setIsSigningOut(false);
+      return;
+    }
+
+    router.replace("/login");
+    setIsSigningOut(false);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -113,6 +133,22 @@ export default function ProfilePage() {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <NotificationBellButton />
+              <Pressable
+                onPress={handleSignOut}
+                disabled={isSigningOut}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: isSigningOut ? 0.6 : 1,
+                }}
+                hitSlop={6}
+              >
+                <Feather name="log-out" size={17} color="#fff" />
+              </Pressable>
               <ProfileHeaderButton />
             </View>
           </View>

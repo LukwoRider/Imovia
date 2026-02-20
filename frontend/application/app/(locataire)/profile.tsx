@@ -9,7 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
@@ -29,9 +29,8 @@ function InfoField({
 }) {
   return (
     <View
-      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${
-        split ? "flex-1 min-w-0" : ""
-      }`}
+      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${split ? "flex-1 min-w-0" : ""
+        }`}
     >
       <Feather name={icon} size={18} color="#3158B8" />
       <TextInput
@@ -49,32 +48,68 @@ function InfoField({
 export default function ProfilePage() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
-  const [firstName, setFirstName] = useState("David");
-  const [lastName, setLastName] = useState("Martin");
-  const [email, setEmail] = useState("David.martin@imovia.com");
-  const [phone, setPhone] = useState("+33 6 24 87 12 97");
-  const [address, setAddress] = useState("Rue des Marais; 73000 Paris");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  async function fetchProfile() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setEmail(user.email || "");
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (profile) {
+        const names = (profile.full_name || "").split(" ");
+        setFirstName(names[0] || "");
+        setLastName(names.slice(1).join(" ") || "");
+        setPhone(profile.phone || "");
+      }
+    } catch (error: any) {
+      console.error("[Profile] Error fetching profile:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }
   useScrollToTopOnFocus(scrollViewRef);
 
   async function handleSignOut() {
+    console.log("[Logout] Starting signOut process...");
     if (isSigningOut) return;
     setIsSigningOut(true);
 
-    const { error } = await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
 
-    if (error) {
-      Alert.alert("Erreur", "Impossible de se deconnecter pour le moment.");
+      console.log("[Logout] SignOut successful, redirecting to /login...");
+      router.replace("/login");
+    } catch (error: any) {
+      console.error("[Logout] SignOut error:", error);
+      Alert.alert("Erreur", "Impossible de se déconnecter : " + error.message);
+    } finally {
       setIsSigningOut(false);
-      return;
     }
-
-    router.replace("/login");
-    setIsSigningOut(false);
   }
 
   return (

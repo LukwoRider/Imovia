@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import NotificationBellButton from "@/components/ui/notification-bell-button";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -402,18 +403,7 @@ export default function BiensPage() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={17} color="#fff" />
-                            </View>
+                            <NotificationBellButton />
                             <View
                                 style={{
                                     width: 36,

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import NotificationBellButton from "@/components/ui/notification-bell-button";
 import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -173,18 +174,7 @@ export default function DashboardLocataire() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={17} color="#fff" />
-                            </View>
+                            <NotificationBellButton />
                             <View
                                 style={{
                                     width: 36,

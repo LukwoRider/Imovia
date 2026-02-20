@@ -125,7 +125,7 @@ await supabase.rpc("get_owner_property_tenants", {
 Returned payload includes:
 - `properties_total`, `leases_total`, `tenants_total`
 - `items[]` with:
-  - property fields (`property_id`, `property_title`, `property_address`, `property_city`, `property_status`)
+  - property fields (`property_id`, `property_address`, `property_postal_code`, `property_city`, `property_status`, `property_type`, `surface_m2`, `rooms`, `monthly_rent`, `floor_number`, `is_furnished`, `has_elevator`, `energy_class`)
   - lease fields (`lease_id`, `lease_status`, dates, rent/charges, `payment_day`)
   - tenant fields (`tenant_id`, `tenant_full_name`, `tenant_phone`, `tenant_share_percent`, `tenant_joined_at`)
 
@@ -156,7 +156,6 @@ await supabase.rpc("create_incident", {
 Notes:
 - `description` is required.
 - `property_id` is derived from the lease in DB (prevents lease/property mismatch).
-- `title` is auto-generated when not provided.
 - Legacy overloaded signatures are still available for backward compatibility.
 
 ### `owner_update_incident_status` (extended)
@@ -183,6 +182,7 @@ Use normal `select` on:
 - `rent_payments`
 - `incidents`
 - `maintenance_requests`
+- `property_tenant_contacts`
 - `documents`
 - `document_users`
 - `profiles`
@@ -191,10 +191,11 @@ Use normal `select` on:
 RLS decides visibility based on authenticated user ownership/membership.
 
 Schema additions used by the flows:
-- `properties.monthly_rent`, `properties.rooms`, `properties.bathrooms`, `properties.energy_class`, `properties.is_furnished`, `properties.available_from`
+- `properties.monthly_rent`, `properties.rooms`, `properties.bathrooms`, `properties.energy_class`, `properties.is_furnished`, `properties.has_elevator`, `properties.floor_number`, `properties.available_from`, `properties.postal_code`
 - `leases.security_deposit_amount`
 - `incidents.incident_type`, `incidents.priority`, `incidents.location_details`, `incidents.contact_phone`, `incidents.preferred_visit_date`, `incidents.allow_access_without_presence`, `incidents.resolution_notes`, `incidents.resolved_at`, `incidents.resolved_by`
 - `maintenance_requests.incident_id`
+- `property_tenant_contacts.first_name`, `property_tenant_contacts.last_name`, `property_tenant_contacts.phone`, `property_tenant_contacts.email`, `property_tenant_contacts.tenant_profile_id`
 - `documents.title`, `documents.document_type`
 
 ## Storage Contract

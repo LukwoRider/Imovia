@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import NotificationBellButton from "@/components/ui/notification-bell-button";
+import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { useMemo, useRef, useState } from "react";
 import {
     Dimensions,
@@ -317,6 +320,7 @@ function PaginationBar({
 
 export default function BiensPage() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
     const [search, setSearch] = useState("");
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
@@ -325,6 +329,7 @@ export default function BiensPage() {
     const [favoris, setFavoris] = useState<Set<number>>(
         new Set(ALL_BIENS.filter((b) => b.favori).map((b) => b.id))
     );
+    useScrollToTopOnFocus(scrollViewRef);
 
     const toggleFavori = (id: number) => {
         setFavoris((prev) => {
@@ -371,6 +376,7 @@ export default function BiensPage() {
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView
+                ref={scrollViewRef}
                 contentContainerStyle={{ paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
@@ -402,30 +408,8 @@ export default function BiensPage() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={17} color="#fff" />
-                            </View>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="person" size={17} color="#fff" />
-                            </View>
+                            <NotificationBellButton />
+                            <ProfileHeaderButton />
                         </View>
                     </View>
                 </LinearGradient>

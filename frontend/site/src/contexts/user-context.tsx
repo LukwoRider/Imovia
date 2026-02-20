@@ -1,36 +1,118 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react"
+import { createClient } from "@/lib/supabase/client"
+
+
+interface UserProfile {
+    id: string
+    name: string
+    email: string
+    phone: string
+    avatar: string
+    role: "tenant" | "owner" | "agency" | null
+    siret?: string
+    address?: string
+}
+
+
 
 interface UserContextType {
-    user: {
-        name: string
-        email: string
-        avatar: string
-    }
-    updateAvatar: (url: string) => void
-    updateName: (name: string) => void
+    user: UserProfile | null
+    loading: boolean
+    refreshUser: () => Promise<void>
+    updateProfile: (updates: Partial<UserProfile>) => Promise<void>
+    updateAvatar: (url: string) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState({
-        name: "David Martin",
-        email: "David.martin@imovia.com",
-        avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=2574&auto=format&fit=crop"
-    })
+    const [user, setUser] = useState<UserProfile | null>(null)
+    const [loading, setLoading] = useState(true)
+    const supabase = createClient()
 
-    const updateAvatar = (url: string) => {
-        setUser(prev => ({ ...prev, avatar: url }))
+    const fetchUser = useCallback(async () => {
+        try {
+            setLoading(true)
+            const { data: { user: authUser } } = await supabase.auth.getUser()
+
+            if (authUser) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .single()
+
+                setUser({
+                    id: authUser.id,
+                    name: profile?.full_name || authUser.user_metadata?.full_name || "Utilisateur",
+                    email: authUser.email || "",
+                    phone: profile?.phone || authUser.user_metadata?.phone || "",
+                    avatar: profile?.avatar_url || authUser.user_metadata?.avatar_url || "",
+                    role: profile?.role || authUser.user_metadata?.role || ((profile?.full_name || authUser.user_metadata?.full_name || "").includes("Agence") ? "agency" : "tenant"),
+                    siret: profile?.siret || authUser.user_metadata?.siret || "",
+                    address: profile?.address || authUser.user_metadata?.address || ""
+                })
+            } else {
+                setUser(null)
+            }
+        } catch (error) {
+            console.error("Error fetching user:", error)
+            setUser(null)
+        } finally {
+            setLoading(false)
+        }
+    }, [supabase])
+
+    useEffect(() => {
+        fetchUser()
+    }, [fetchUser])
+
+    const updateProfile = async (updates: Partial<UserProfile>) => {
+        if (!user) return
+
+        try {
+            // Map our internal 'name' to Supabase 'full_name'
+            const dbUpdates: Record<string, string | null | undefined> = {}
+
+            if (updates.name) {
+                dbUpdates.full_name = updates.name
+            }
+            if (updates.phone !== undefined) {
+                dbUpdates.phone = updates.phone
+            }
+
+            if (updates.avatar) {
+                dbUpdates.avatar_url = updates.avatar
+            }
+
+            const { error } = await supabase
+                .from('profiles')
+                .update(dbUpdates)
+                .eq('id', user.id)
+
+            if (error) throw error
+
+
+            const localUpdates = { ...updates }
+
+            setUser(prev => {
+                if (!prev) return null
+                return { ...prev, ...localUpdates }
+            })
+        } catch (error) {
+            console.error("Error updating profile:", error)
+            throw error
+        }
     }
 
-    const updateName = (name: string) => {
-        setUser(prev => ({ ...prev, name }))
+    const updateAvatar = async (url: string) => {
+        await updateProfile({ avatar: url })
     }
 
     return (
-        <UserContext.Provider value={{ user, updateAvatar, updateName }}>
+        <UserContext.Provider value={{ user, loading, refreshUser: fetchUser, updateProfile, updateAvatar }}>
             {children}
         </UserContext.Provider>
     )
@@ -43,3 +125,4 @@ export function useUser() {
     }
     return context
 }
+

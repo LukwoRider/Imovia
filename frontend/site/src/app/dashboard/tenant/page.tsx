@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader, LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function TenantDashboard() {
     return (
@@ -99,8 +100,8 @@ export default function TenantDashboard() {
                             </div>
                         </div>
 
-                        <Button className="w-full mt-auto bg-[#3153A1] hover:bg-[#25468d] text-white">
-                            Voir les détails
+                        <Button asChild className="w-full mt-auto bg-[#3153A1] hover:bg-[#25468d] text-white">
+                            <Link href="/dashboard/tenant/property">Voir les détails</Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -182,8 +183,8 @@ export default function TenantDashboard() {
                                 <p className="text-sm text-slate-500">Suivi de vos déclarations</p>
                             </div>
                         </div>
-                        <Button variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
-                            Voir tout
+                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                            <Link href="/dashboard/tenant/incidents">Voir tout</Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-4">
@@ -219,8 +220,10 @@ export default function TenantDashboard() {
                             <p className="text-sm text-slate-500 pl-[42px]">Problème de fusible qui sautait à répétition...</p>
                         </div>
 
-                        <Button className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white mt-2">
-                            <FireExtinguisher className="mr-2 h-4 w-4" /> Déclarer un incident
+                        <Button asChild className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white mt-2">
+                            <Link href="/dashboard/tenant/incidents">
+                                <FireExtinguisher className="mr-2 h-4 w-4" /> Voir les incidents
+                            </Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -237,8 +240,8 @@ export default function TenantDashboard() {
                                 <p className="text-sm text-slate-500">Accès rapide à vos documents</p>
                             </div>
                         </div>
-                        <Button variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
-                            Voir tout
+                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                            <Link href="/dashboard/tenant/documents">Voir tout</Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-3">

@@ -2,18 +2,20 @@
 "use client"
 
 import { useState } from "react"
-import { DocumentFilters } from "@/components/dashboard/documents/document-filters"
-import { DocumentList } from "@/components/dashboard/documents/document-list"
-import { QuickActions } from "@/components/dashboard/documents/quick-actions"
+import { DocumentFilters } from "@/components/dashboard/tenant/documents/document-filters"
+import { DocumentList } from "@/components/dashboard/tenant/documents/document-list"
+import { QuickActions } from "@/components/dashboard/shared/quick-actions"
 import { HelpCenter } from "@/components/dashboard/shared/help-center"
 import { mockDocuments, DocumentType } from "@/lib/data/mock-documents"
 
 export default function DocumentsPage() {
     const [filter, setFilter] = useState<DocumentType | "ALL">("ALL")
+    const [searchQuery, setSearchQuery] = useState("")
 
     const filteredDocuments = mockDocuments.filter((doc) => {
-        if (filter === "ALL") return true
-        return doc.type === filter
+        const matchesFilter = filter === "ALL" || doc.type === filter
+        const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase())
+        return matchesFilter && matchesSearch
     })
 
     return (
@@ -27,7 +29,11 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Main Content (List) */}
                 <div className="lg:col-span-3 space-y-6">
-                    <DocumentFilters currentFilter={filter} onFilterChange={setFilter} />
+                    <DocumentFilters
+                        currentFilter={filter}
+                        onFilterChange={setFilter}
+                        onSearchChange={setSearchQuery}
+                    />
                     <DocumentList documents={filteredDocuments} />
                 </div>
 

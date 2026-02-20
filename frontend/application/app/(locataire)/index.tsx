@@ -1,9 +1,13 @@
 import { Button } from "@/components/ui/button";
+import NotificationBellButton from "@/components/ui/notification-bell-button";
+import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 // --- Mock Data ---
@@ -140,12 +144,14 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
 
 export default function DashboardLocataire() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
     const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
     const totalPaiements = PAIEMENTS.length;
+    useScrollToTopOnFocus(scrollViewRef);
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: 32 }}>
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
@@ -158,31 +164,23 @@ export default function DashboardLocataire() {
                         borderBottomRightRadius: 24,
                     }}
                 >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <View style={{ flex: 1, marginRight: 12 }}>
                             <Image
                                 source={require("@/assets/images/logo-white.svg")}
                                 style={{ width: 90, height: 24, marginBottom: 2 }}
                                 contentFit="contain"
                             />
-                            <Text style={{ color: "#fff", fontSize: 24, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
+                            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginTop: 4, fontFamily: "Montserrat_700Bold" }}>
                                 Bonjour, David !
                             </Text>
-                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 4, fontFamily: "Montserrat_400Regular" }}>
+                            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
                                 Bienvenue sur votre espace locataire imovia
                             </Text>
                         </View>
-                        <View
-                            style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 22,
-                                backgroundColor: "rgba(255,255,255,0.2)",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Ionicons name="person" size={22} color="#fff" />
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            <NotificationBellButton />
+                            <ProfileHeaderButton />
                         </View>
                     </View>
                 </LinearGradient>

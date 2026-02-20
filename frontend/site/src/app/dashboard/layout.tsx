@@ -1,44 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Logo } from "@/components/ui/logo"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-    LayoutDashboard,
-    Search,
-    Home,
-    FileText,
-    FireExtinguisher,
-    User,
-    LogOut,
-    Bell,
-    Menu,
-    Wallet,
-    Building2,
-    Users
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { LogOut } from "lucide-react"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { UserProvider, useUser } from "@/contexts/user-context"
-
-const tenantItems = [
-    { icon: LayoutDashboard, label: "Accueil", href: "/dashboard/tenant" },
-    { icon: Search, label: "Recherche de biens", href: "/dashboard/tenant/search" },
-    { icon: Home, label: "Mon Logement", href: "/dashboard/tenant/property" },
-    { icon: FileText, label: "Mes Documents", href: "/dashboard/tenant/documents" },
-    { icon: FireExtinguisher, label: "Incidents", href: "/dashboard/tenant/incidents" },
-]
-
-const ownerItems = [
-    { icon: LayoutDashboard, label: "Tableau de bord", href: "/dashboard/owner" },
-    { icon: Building2, label: "Mes Biens", href: "/dashboard/owner/properties" },
-    { icon: Users, label: "Locataires", href: "/dashboard/owner/tenants" },
-    { icon: Wallet, label: "Finances", href: "/dashboard/owner/finances" },
-    { icon: FileText, label: "Documents", href: "/dashboard/owner/documents" },
-]
+import { logout } from "@/app/auth/actions"
+import { DashboardHeader } from "@/components/dashboard/shared/dashboard-header"
+import { SidebarNav, ProfileLink } from "@/components/dashboard/shared/sidebar-nav"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -61,6 +31,23 @@ function DashboardContent({
     isMobileMenuOpen: boolean
     setIsMobileMenuOpen: (open: boolean) => void
 }) {
+    const { user, loading } = useUser()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push("/auth/login")
+        }
+    }, [user, loading, router])
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+    }
+
+    if (!user) return null
+
     return (
         <div className="min-h-screen bg-slate-50 flex">
             {/* Desktop Sidebar */}
@@ -76,10 +63,12 @@ function DashboardContent({
 
                     <div className="space-y-1">
                         <ProfileLink />
-                        <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 transition-all rounded-xl w-full">
-                            <LogOut className="h-5 w-5" />
-                            <span className="font-medium text-sm">Deconnexion</span>
-                        </button>
+                        <form action={logout}>
+                            <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 transition-all rounded-xl w-full cursor-pointer">
+                                <LogOut className="h-5 w-5" />
+                                <span className="font-medium text-sm">Deconnexion</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </aside>
@@ -87,20 +76,23 @@ function DashboardContent({
             {/* Mobile Sidebar (Sheet) */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetContent side="left" className="p-0 bg-[#12182C] text-white w-64 border-r-0">
+                    <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
                     <div className="p-6 flex items-center gap-2">
                         <Logo className="h-8 w-auto" variant="white" />
                     </div>
                     <div className="flex-1 flex flex-col px-4 py-6 overflow-y-auto">
-                        <SidebarNav />
+                        <SidebarNav onItemClick={() => setIsMobileMenuOpen(false)} />
 
                         <div className="my-4 h-px bg-white/10 mx-2" />
 
                         <div className="space-y-1">
-                            <ProfileLink />
-                            <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 transition-all rounded-xl w-full">
-                                <LogOut className="h-5 w-5" />
-                                <span className="font-medium text-sm">Deconnexion</span>
-                            </button>
+                            <ProfileLink onItemClick={() => setIsMobileMenuOpen(false)} />
+                            <form action={logout}>
+                                <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 transition-all rounded-xl w-full cursor-pointer">
+                                    <LogOut className="h-5 w-5" />
+                                    <span className="font-medium text-sm">Deconnexion</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </SheetContent>
@@ -119,93 +111,3 @@ function DashboardContent({
     )
 }
 
-function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: (open: boolean) => void }) {
-    const { user } = useUser()
-    const pathname = usePathname()
-
-    return (
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden"
-                    onClick={() => setIsMobileMenuOpen(true)}
-                >
-                    <Menu className="h-6 w-6 text-slate-700" />
-                </Button>
-                <div>
-                    <h1 className="text-xl font-bold text-[#12182C]">
-                        {pathname?.startsWith("/dashboard/owner") ? "Bonjour, Pierre !" : `Bonjour, ${user.name.split(' ')[0]} !`}
-                    </h1>
-                    <p className="text-sm text-slate-500 hidden sm:block">
-                        {pathname?.startsWith("/dashboard/owner") ? "Espace Propriétaire Imovia" : "Bienvenue sur votre espace locataire Imovia"}
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <button className="p-2 text-slate-400 hover:text-[#3153A1] transition-colors relative">
-                    <Bell className="h-6 w-6" />
-                    <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-                </button>
-                <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-                    <Avatar>
-                        <AvatarImage src={user.avatar} className="object-cover" />
-                        <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                </div>
-            </div>
-        </header>
-    )
-}
-
-function SidebarNav() {
-    const pathname = usePathname()
-    const isOwner = pathname?.startsWith("/dashboard/owner")
-    const items = isOwner ? ownerItems : tenantItems
-
-    return (
-        <nav className="space-y-1">
-            {items.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                            isActive
-                                ? "bg-[#3153A1] text-white shadow-lg shadow-blue-900/20"
-                                : "text-slate-400 hover:text-white hover:bg-white/5"
-                        )}
-                    >
-                        <item.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-400 group-hover:text-white")} />
-                        <span className="font-medium text-sm">{item.label}</span>
-                    </Link>
-                )
-            })}
-        </nav>
-    )
-}
-
-function ProfileLink() {
-    const pathname = usePathname()
-    const href = "/dashboard/profile"
-    const isActive = pathname === href
-
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                isActive
-                    ? "bg-[#3153A1] text-white shadow-lg shadow-blue-900/20"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-            )}
-        >
-            <User className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-400 group-hover:text-white")} />
-            <span className="font-medium text-sm">Profile</span>
-        </Link>
-    )
-}

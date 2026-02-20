@@ -3,13 +3,55 @@
 import { Search, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Slider } from "@/components/ui/slider"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 
 export function FilterBar() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
+
+    // Initialize state
+    const [query, setQuery] = useState("")
     const [surfaceRange, setSurfaceRange] = useState([0, 300])
     const [priceRange, setPriceRange] = useState([500, 5000])
+
+    // Sync from URL on mount/update
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setQuery(searchParams.get("q") || "")
+
+        const minSurface = searchParams.get("minSurface") ? Number(searchParams.get("minSurface")) : 0
+        const maxSurface = searchParams.get("maxSurface") ? Number(searchParams.get("maxSurface")) : 300
+        setSurfaceRange([minSurface, maxSurface])
+
+        const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 500
+        const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 5000
+        setPriceRange([minPrice, maxPrice])
+    }, [searchParams])
+
+    const applyFilters = () => {
+        const params = new URLSearchParams(searchParams)
+
+        if (query) params.set("q", query)
+        else params.delete("q")
+
+        params.set("minSurface", surfaceRange[0].toString())
+        params.set("maxSurface", surfaceRange[1].toString())
+
+        params.set("minPrice", priceRange[0].toString())
+        params.set("maxPrice", priceRange[1].toString())
+
+        router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            applyFilters()
+        }
+    }
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sticky top-24 z-10 mx-auto max-w-7xl w-full">
@@ -21,6 +63,9 @@ export function FilterBar() {
                     <Input
                         placeholder="Ville, code postal..."
                         className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all w-full"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
                     />
                 </div>
 
@@ -69,7 +114,10 @@ export function FilterBar() {
                 </div>
 
                 {/* Action Button */}
-                <Button className="w-full lg:w-auto h-11 px-8 bg-[#3153A1] hover:bg-[#25468d] text-white font-medium rounded-lg shadow-lg shadow-blue-900/20 shrink-0 transition-all active:scale-95">
+                <Button
+                    onClick={applyFilters}
+                    className="w-full lg:w-auto h-11 px-8 bg-[#3153A1] hover:bg-[#25468d] text-white font-medium rounded-lg shadow-lg shadow-blue-900/20 shrink-0 transition-all active:scale-95"
+                >
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                     Filtrer
                 </Button>

@@ -3,21 +3,23 @@
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, CheckCircle2, Clock, Hourglass } from "lucide-react"
+import { Search, FileText, ClipboardList, Briefcase, File } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { IncidentStatus } from "@/lib/data/mock-incidents"
+import { DocumentType } from "@/lib/data/mock-documents"
 
-interface IncidentFiltersProps {
-    currentFilter: IncidentStatus | "ALL"
-    onFilterChange: (filter: IncidentStatus | "ALL") => void
+interface DocumentFiltersProps {
+    currentFilter: DocumentType | "ALL"
+    onFilterChange: (filter: DocumentType | "ALL") => void
+    onSearchChange: (query: string) => void
 }
 
-export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFiltersProps) {
+export function DocumentFilters({ currentFilter, onFilterChange, onSearchChange }: DocumentFiltersProps) {
     const filters = [
-        { id: "ALL", label: "Tous", icon: null },
-        { id: "RESOLVED", label: "Résolus", icon: CheckCircle2 },
-        { id: "IN_PROGRESS", label: "En cours", icon: Clock },
-        { id: "PENDING", label: "En attente", icon: Hourglass },
+        { id: "ALL", label: "Tous", icon: FileText },
+        { id: "CONTRACT", label: "Contrats", icon: Briefcase },
+        { id: "INVENTORY", label: "Etat des lieux", icon: ClipboardList },
+        { id: "RECEIPT", label: "Quittances", icon: File }, // Added Receipt specific
+        { id: "OTHER", label: "Autres", icon: File },
     ]
 
     return (
@@ -27,6 +29,7 @@ export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFilte
                 <Input
                     placeholder="Rechercher..."
                     className="pl-10 bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-10"
+                    onChange={(e) => onSearchChange(e.target.value)}
                 />
             </div>
 
@@ -36,7 +39,7 @@ export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFilte
                         key={filter.id}
                         variant="ghost"
                         size="sm"
-                        onClick={() => onFilterChange(filter.id as IncidentStatus | "ALL")}
+                        onClick={() => onFilterChange(filter.id as DocumentType | "ALL")}
                         className={cn(
                             "flex items-center gap-1.5 rounded-lg text-sm font-medium transition-all px-3 h-9 whitespace-nowrap",
                             currentFilter === filter.id
@@ -44,8 +47,7 @@ export function IncidentFilters({ currentFilter, onFilterChange }: IncidentFilte
                                 : "text-slate-500 hover:text-[#12182C] hover:bg-slate-100"
                         )}
                     >
-                        {filter.icon && <filter.icon className="h-3.5 w-3.5" />}
-                        {filter.id === "ALL" && <span className="mr-1">||||</span>}
+                        <filter.icon className="h-3.5 w-3.5" />
                         {filter.label}
                     </Button>
                 ))}

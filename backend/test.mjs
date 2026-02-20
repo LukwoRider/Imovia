@@ -1,3 +1,18 @@
+/**
+ * End-to-End Test Script for Imovia Backend Integration
+ *
+ * This script validates the complete backend flow using Supabase:
+ * - User authentication (owner and tenant)
+ * - Property management
+ * - Rental applications and leases
+ * - Payment processing
+ * - Incident reporting and maintenance
+ * - Document storage
+ * - Dashboard data retrieval
+ *
+ * It ensures the database schema, RLS policies, RPC functions, and storage buckets work correctly.
+ */
+
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
 import path from "path";
@@ -80,10 +95,17 @@ console.log(
 
 const supabase = createClient(url, anon);
 
+/**
+ * Asserts a condition and throws an error if false.
+ * Used for validation in tests.
+ */
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/**
+ * Logs detailed error information for debugging.
+ */
 function dumpError(label, err) {
   console.log(`\n[ERROR] ${label}`);
   console.log("message:", err?.message);
@@ -94,12 +116,20 @@ function dumpError(label, err) {
   console.log("");
 }
 
+/**
+ * Logs in a user with email and password.
+ * Signs out any existing session first.
+ */
 async function login(email, password) {
   await supabase.auth.signOut();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 
+/**
+ * Retrieves the current authenticated user's ID.
+ * Throws an error if no user is authenticated.
+ */
 async function getCurrentUserId() {
   const {
     data: { user },
@@ -110,11 +140,17 @@ async function getCurrentUserId() {
   return user.id;
 }
 
+/**
+ * Generates an ISO date string (YYYY-MM-DD) with optional day offset.
+ */
 function isoDate(deltaDays = 0) {
   const date = new Date(Date.now() + deltaDays * 24 * 60 * 60 * 1000);
   return date.toISOString().slice(0, 10);
 }
 
+/**
+ * Ensures the sample.txt file exists for testing document uploads.
+ */
 function requireSampleFile() {
   const samplePath = path.join(__dirname, "sample.txt");
   if (!fs.existsSync(samplePath)) {
@@ -123,6 +159,9 @@ function requireSampleFile() {
   return samplePath;
 }
 
+/**
+ * Uploads text content to a Supabase storage bucket.
+ */
 async function uploadTextToBucket(bucket, storagePath, textContent) {
   const { error } = await supabase.storage.from(bucket).upload(
     storagePath,
@@ -135,6 +174,10 @@ async function uploadTextToBucket(bucket, storagePath, textContent) {
   if (error) throw error;
 }
 
+/**
+ * Main test function that runs the complete end-to-end backend integration test.
+ * Simulates the full user journey from property creation to dashboard access.
+ */
 async function run() {
   const runTag = crypto.randomUUID().slice(0, 8);
   const summary = { run_tag: runTag, tenant_email: tenantEmail };
@@ -291,6 +334,7 @@ async function run() {
   await supabase.auth.signOut();
 
   // 5) Tenant creates incidents (one will stay open/in_progress, one resolved later).
+  // This tests the incident reporting and maintenance workflow.
   console.log("[5/12] Tenant creates incidents");
   await login(tenantEmail, tenantPass);
 

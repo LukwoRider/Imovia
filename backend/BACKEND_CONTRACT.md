@@ -230,6 +230,7 @@ Important:
   - tenant members of the lease
   - uploader
 - Owner/tenant housing relationship is available through `public.get_owner_property_tenants`.
+- Property image path must match the target housing id (`properties/{propertyId}/...`), validated in DB trigger.
 
 ## Common Frontend Sequence
 

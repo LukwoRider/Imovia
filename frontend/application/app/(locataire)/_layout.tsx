@@ -89,6 +89,12 @@ export default function LocataireLayout() {
                     ),
                 }}
             />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    href: null,
+                }}
+            />
         </Tabs>
     );
 }

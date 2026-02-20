@@ -5,6 +5,7 @@ import { DocumentsClient } from "@/components/dashboard/owner/documents/document
 import { DocumentsSidebar } from "@/components/dashboard/owner/documents/documents-sidebar"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import JSZip from "jszip"
 
 export default function OwnerDocumentsPage() {
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
@@ -33,9 +34,9 @@ export default function OwnerDocumentsPage() {
                 return
             }
 
-            toast.info(`Préparation du téléchargement de ${documents.length} document(s)...`)
+            toast.info(`Préparation de l'archive ZIP (${documents.length} document(s))...`)
 
-            // 2. Sequential download
+            const zip = new JSZip()
             const usedNames = new Map<string, number>();
 
             for (const doc of documents) {
@@ -51,14 +52,9 @@ export default function OwnerDocumentsPage() {
                         continue
                     }
 
-                    // Determine the extension from the storage path
                     const pathParts = doc.storage_path.split('.');
                     const ext = pathParts.length > 1 ? pathParts.pop() : 'file';
 
-                    // Priority for name: 
-                    // 1. Database title (if not generic/empty)
-                    // 2. Filename from storage path
-                    // 3. Fallback to "document"
                     let baseNameValue = doc.title;
                     if (!baseNameValue || baseNameValue === "Document sans titre" || baseNameValue.trim() === "") {
                         const pathSegments = doc.storage_path.split('/');
@@ -67,8 +63,6 @@ export default function OwnerDocumentsPage() {
                     }
 
                     const baseName = baseNameValue;
-
-                    // Track usage of this name in current batch for uniqueness
                     const count = usedNames.get(baseName) || 0;
                     usedNames.set(baseName, count + 1);
 
@@ -77,35 +71,34 @@ export default function OwnerDocumentsPage() {
                         displayName = `${baseName} (${count})`;
                     }
 
-                    // Add extension and sanitize
                     let finalFileName = `${displayName}.${ext}`;
                     finalFileName = finalFileName.replace(/[/\\?%*:|"<>]/g, '-');
 
-                    // Trigger browser download
-                    const url = window.URL.createObjectURL(data)
-                    const link = document.createElement("a")
-                    link.href = url
-                    link.setAttribute("download", finalFileName)
-                    document.body.appendChild(link)
-                    link.click()
-
-                    // Cleanup after a delay
-                    setTimeout(() => {
-                        link.remove()
-                        window.URL.revokeObjectURL(url)
-                    }, 2000)
-
-                    // Wait a bit between each to avoid browser blocking
-                    await new Promise(resolve => setTimeout(resolve, 800))
+                    // Add to ZIP instead of triggering immediate download
+                    zip.file(finalFileName, data)
                 } catch (err) {
                     console.error(`Download loop error for ${doc.title}:`, err)
                 }
             }
 
-            toast.success("Téléchargement de tous les documents terminé")
-        } catch (error: any) {
+            // Generate ZIP and trigger single download
+            const blob = await zip.generateAsync({ type: "blob" })
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.setAttribute("download", "Imovia_Documents_Proprio.zip")
+            document.body.appendChild(link)
+            link.click()
+
+            setTimeout(() => {
+                link.remove()
+                window.URL.revokeObjectURL(url)
+            }, 2000)
+
+            toast.success("Archive ZIP créée et téléchargée avec succès")
+        } catch (error: unknown) {
             console.error("Download all error:", error)
-            toast.error("Erreur lors du téléchargement groupé : " + error.message)
+            toast.error("Erreur lors du téléchargement groupé : " + (error instanceof Error ? error.message : "Erreur inconnue"))
         } finally {
             setIsDownloadingAll(false)
         }

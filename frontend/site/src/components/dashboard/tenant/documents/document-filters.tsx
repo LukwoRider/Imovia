@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, FileText, ClipboardList, Briefcase, File } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { DocumentType } from "@/lib/data/mock-documents"
+import { DocumentType } from "@/lib/types/document"
 
 interface DocumentFiltersProps {
     currentFilter: DocumentType | "ALL"
@@ -16,10 +16,10 @@ interface DocumentFiltersProps {
 export function DocumentFilters({ currentFilter, onFilterChange, onSearchChange }: DocumentFiltersProps) {
     const filters = [
         { id: "ALL", label: "Tous", icon: FileText },
-        { id: "CONTRACT", label: "Contrats", icon: Briefcase },
-        { id: "INVENTORY", label: "Etat des lieux", icon: ClipboardList },
-        { id: "RECEIPT", label: "Quittances", icon: File }, // Added Receipt specific
-        { id: "OTHER", label: "Autres", icon: File },
+        { id: "Contrats", label: "Contrats", icon: Briefcase },
+        { id: "Etat des lieux", label: "Etat des lieux", icon: ClipboardList },
+        { id: "Quittances", label: "Quittances", icon: File },
+        { id: "Autres", label: "Autres", icon: File },
     ]
 
     return (

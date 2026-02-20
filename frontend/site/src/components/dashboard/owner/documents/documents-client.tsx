@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react"
 import { Search, FileText, Briefcase, FileSearch, MoreHorizontal, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { DocumentType, DocumentMock } from "@/lib/data/mock-documents"
+import { DocumentType, Document as DocumentMock } from "@/lib/types/document"
 import { DocumentList } from "./document-list"
 import { AddDocumentDialog } from "./add-document-dialog"
 import { createClient } from "@/lib/supabase/client"
@@ -13,6 +13,7 @@ const categories = [
     { label: "Tous", value: "all", icon: MoreHorizontal },
     { label: "Contrats", value: "Contrats", icon: Briefcase },
     { label: "Etat des lieux", value: "Etat des lieux", icon: FileSearch },
+    { label: "Quittances", value: "Quittances", icon: FileText },
     { label: "Autres", value: "Autres", icon: FileText },
 ] as const
 
@@ -51,14 +52,14 @@ export function DocumentsClient() {
 
             setDocuments(formattedDocs)
         } catch (error: unknown) {
-            const err = error as any
+            const err = error instanceof Error ? error : new Error(String(error))
             console.error("Error fetching documents (Raw):", err)
-            console.error("Error fetching documents (Message):", err?.message || "No message")
+            console.error("Error fetching documents (Message):", err.message)
             console.error("Error fetching documents (Full):", JSON.stringify(err, null, 2))
         } finally {
             setIsLoading(false)
         }
-    }, [supabase])
+    }, [])
 
     useEffect(() => {
         fetchDocuments()

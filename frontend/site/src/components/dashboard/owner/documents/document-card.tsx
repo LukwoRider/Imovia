@@ -1,6 +1,6 @@
 "use client"
 
-import { DocumentMock } from "@/lib/data/mock-documents"
+import { Document as DocumentMock } from "@/lib/types/document"
 import { FileText, Download, Eye, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
@@ -35,9 +35,9 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
             if (data?.signedUrl) {
                 window.open(data.signedUrl, '_blank')
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("View error:", error)
-            toast.error("Impossible d'ouvrir le document: " + (error.message || "Erreur inconnue"))
+            toast.error("Impossible d'ouvrir le document: " + (error instanceof Error ? error.message : "Erreur inconnue"))
         }
     }
 
@@ -63,9 +63,9 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
             link.click()
             link.remove()
             window.URL.revokeObjectURL(url)
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Download error:", error)
-            toast.error(error.message || "Erreur lors du téléchargement")
+            toast.error(error instanceof Error ? error.message : "Erreur lors du téléchargement")
         } finally {
             setIsDownloading(false)
         }
@@ -107,9 +107,9 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
             }
 
             onRefresh?.()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Delete error:", error)
-            toast.error(error.message || "Erreur lors de la suppression")
+            toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression")
         } finally {
             setIsDeleting(false)
         }

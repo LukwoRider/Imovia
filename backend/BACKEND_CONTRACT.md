@@ -196,7 +196,7 @@ Schema additions used by the flows:
 - `incidents.incident_type`, `incidents.priority`, `incidents.location_details`, `incidents.contact_phone`, `incidents.preferred_visit_date`, `incidents.allow_access_without_presence`, `incidents.resolution_notes`, `incidents.resolved_at`, `incidents.resolved_by`
 - `maintenance_requests.incident_id`
 - `property_tenant_contacts.first_name`, `property_tenant_contacts.last_name`, `property_tenant_contacts.phone`, `property_tenant_contacts.email`, `property_tenant_contacts.tenant_profile_id`
-- `documents.title`, `documents.document_type`
+- `documents.title`, `documents.document_type`, `documents.document_date`, `documents.target_tenant_id`
 
 ## Storage Contract
 
@@ -261,6 +261,7 @@ Never expose:
 
 - This contract assumes migrations in `supabase/migrations/` are applied.
 - Use the same project ref/environment as the branch target for QA.
+- Business rule: a tenant can be affiliated with only one `active` lease/property at a time.
 
 ## Versioning Policy
 

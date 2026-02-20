@@ -159,7 +159,7 @@ Frontend guidance:
 - prefer RPCs for business transitions (status changes, lease creation, payment marking)
 
 Contract source of truth:
-- `backend/BACKEND_CONTRACT.md` (current: `v1.0.0`)
+- `backend/BACKEND_CONTRACT.md` (current: `v1.1.0`)
 
 ## Storage Contract
 

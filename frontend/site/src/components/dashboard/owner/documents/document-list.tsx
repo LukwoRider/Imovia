@@ -5,9 +5,11 @@ import { DocumentCard } from "./document-card"
 
 interface DocumentListProps {
     documents: DocumentMock[]
+    onRefresh?: () => void
+    onDeleteOptimistic?: (id: string) => void
 }
 
-export function DocumentList({ documents }: DocumentListProps) {
+export function DocumentList({ documents, onRefresh, onDeleteOptimistic }: DocumentListProps) {
     if (documents.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
@@ -19,7 +21,12 @@ export function DocumentList({ documents }: DocumentListProps) {
     return (
         <div className="flex flex-col gap-3">
             {documents.map((doc) => (
-                <DocumentCard key={doc.id} doc={doc} />
+                <DocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    onRefresh={onRefresh}
+                    onDeleteOptimistic={onDeleteOptimistic}
+                />
             ))}
         </div>
     )

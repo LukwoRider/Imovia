@@ -8,6 +8,7 @@ export interface DocumentMock {
     type: DocumentType // For backward compatibility
     propertyName?: string
     tenantName?: string
+    storagePath?: string
 }
 
 export type Document = DocumentMock // Alias for backward compatibility

@@ -8,35 +8,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
-// --- Mock Data ---
-const STATS = [
-    { label: "Mon Logement", value: "1750", trend: "+8.56%", up: true, icon: "home" as const },
-    { label: "Prochain loyer", value: "1020€", trend: "-8.56%", up: false, icon: "cash" as const },
-    { label: "Documents", value: "23", trend: "+8.56%", up: true, icon: "document-text" as const },
-    { label: "Incidents", value: "1750", trend: "-8.56%", up: false, icon: "alert-circle" as const },
-];
+// --- Types ---
+type StatItem = {
+    label: string;
+    value: string;
+    trend: string;
+    up: boolean;
+    icon: any;
+};
 
-const PAIEMENTS = [
-    { mois: "Janvier 2024", date: "Payé le 05/01/2024", montant: "1950 €", paid: true },
-    { mois: "Janvier 2024", date: "Payé le 05/01/2024", montant: "1950 €", paid: true },
-    { mois: "Mars 2024", date: "En attente", montant: "1950 €", paid: false },
-];
+type PaymentItem = {
+    mois: string;
+    date: string;
+    montant: string;
+    paid: boolean;
+};
 
-const INCIDENTS = [
-    { titre: "Fuite d'eau sous l'évier", desc: "Une fuite d'eau a été constatée sous l'évier.", statut: "En cours", color: "#E17100" },
-    { titre: "Problème électrique", desc: "Problème de fusible", statut: "Résolu", color: "#08CB56" },
-];
-
-const DOCUMENTS = [
-    { titre: "Contrat de location - Marais", date: "07/04/2025", type: "contrat" },
-    { titre: "État des lieux d'entrée", date: "01/01/2024", type: "etat_des_lieux" },
-    { titre: "Quittance Janvier 2024", date: "10/01/2024", type: "quittance" },
-];
-
-function StatCard({ label, value, trend, up, icon }: typeof STATS[0]) {
+function StatCard({ label, value, trend, up, icon }: StatItem) {
     return (
         <View
             style={{
@@ -95,7 +86,7 @@ function SectionHeader({ icon, title, subtitle }: { icon: string; title: string;
     );
 }
 
-function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
+function PaiementRow({ item }: { item: PaymentItem }) {
     return (
         <View
             style={{
@@ -146,25 +137,140 @@ function PaiementRow({ item }: { item: typeof PAIEMENTS[0] }) {
 export default function DashboardLocataire() {
     const router = useRouter();
     const scrollViewRef = useRef<ScrollView>(null);
-    const paiementsAJour = PAIEMENTS.filter((p) => p.paid).length;
-    const totalPaiements = PAIEMENTS.length;
+    const [loading, setLoading] = useState(true);
+    const [userName, setUserName] = useState("");
+    const [activeLease, setActiveLease] = useState<any>(null);
+    const [stats, setStats] = useState<any[]>([]);
+    const [payments, setPayments] = useState<any[]>([]);
+    const [incidents, setIncidents] = useState<any[]>([]);
+    const [documents, setDocuments] = useState<any[]>([]);
+
     useScrollToTopOnFocus(scrollViewRef);
 
     useEffect(() => {
-        const checkConnection = async () => {
-            try {
-                const { data, error } = await supabase.from("profiles").select("id").limit(1);
-                if (error) {
-                    console.log("Supabase connection error (expected if not logged in):", error.message);
-                } else {
-                    console.log("Supabase connection successful!");
-                }
-            } catch (err) {
-                console.log("Supabase check failed:", err);
-            }
-        };
-        checkConnection();
+        fetchDashboardData();
     }, []);
+
+    async function fetchDashboardData() {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // 1. Fetch Profile for Name
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", user.id)
+                .single();
+            if (profile) setUserName(profile.full_name.split(" ")[0]);
+
+            // 2. Fetch Active Lease & Property
+            const { data: leaseTenant } = await supabase
+                .from("lease_tenants")
+                .select(`
+                    lease_id,
+                    leases (
+                        *,
+                        properties (*)
+                    )
+                `)
+                .eq("tenant_id", user.id)
+                .limit(1)
+                .single();
+
+            if (leaseTenant?.leases) {
+                const lease = leaseTenant.leases as any;
+                setActiveLease(lease);
+
+                const leaseId = lease.id;
+
+                // 3. Fetch Stats
+                // - Next payment
+                const { data: nextPayment } = await supabase
+                    .from("rent_payments")
+                    .select("amount_due, due_date")
+                    .eq("lease_id", leaseId)
+                    .in("status", ["due", "late"])
+                    .order("due_date", { ascending: true })
+                    .limit(1)
+                    .single();
+
+                // - Documents count
+                const { count: docCount } = await supabase
+                    .from("documents")
+                    .select("*", { count: "exact", head: true })
+                    .eq("lease_id", leaseId);
+
+                // - Incidents count
+                const { count: incCount } = await supabase
+                    .from("incidents")
+                    .select("*", { count: "exact", head: true })
+                    .eq("lease_id", leaseId);
+
+                setStats([
+                    { label: "Loyer mensuel", value: `${lease.rent_amount}€`, trend: "Total", up: true, icon: "home" },
+                    { label: "Prochain loyer", value: nextPayment ? `${nextPayment.amount_due}€` : "A jour", trend: nextPayment ? `Dû le ${new Date(nextPayment.due_date).toLocaleDateString('fr-FR')}` : "Aucun", up: !nextPayment, icon: "cash" },
+                    { label: "Documents", value: `${docCount || 0}`, trend: "Total", up: true, icon: "document-text" },
+                    { label: "Incidents", value: `${incCount || 0}`, trend: "Total", up: false, icon: "alert-circle" },
+                ]);
+
+                // 4. Fetch Recent Payments
+                const { data: paymentsData } = await supabase
+                    .from("rent_payments")
+                    .select("*")
+                    .eq("lease_id", leaseId)
+                    .order("due_date", { ascending: false })
+                    .limit(3);
+
+                if (paymentsData) {
+                    setPayments(paymentsData.map(p => ({
+                        mois: new Date(p.due_date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+                        date: p.paid_at ? `Payé le ${new Date(p.paid_at).toLocaleDateString('fr-FR')}` : "En attente",
+                        montant: `${p.amount_due} €`,
+                        paid: p.status === 'paid'
+                    })));
+                }
+
+                // 5. Fetch Recent Incidents
+                const { data: incidentsData } = await supabase
+                    .from("incidents")
+                    .select("*")
+                    .eq("lease_id", leaseId)
+                    .order("created_at", { ascending: false })
+                    .limit(2);
+
+                if (incidentsData) {
+                    setIncidents(incidentsData.map(inc => ({
+                        titre: inc.title || "Incident",
+                        desc: inc.description,
+                        statut: inc.status === 'open' ? 'En cours' : inc.status === 'in_progress' ? 'Traité' : 'Résolu',
+                        color: inc.status === 'open' ? "#E17100" : inc.status === 'in_progress' ? "#3153A1" : "#08CB56"
+                    })));
+                }
+
+                // 6. Fetch Recent Documents
+                const { data: docsData } = await supabase
+                    .from("documents")
+                    .select("*")
+                    .eq("lease_id", leaseId)
+                    .order("created_at", { ascending: false })
+                    .limit(3);
+
+                if (docsData) {
+                    setDocuments(docsData.map(doc => ({
+                        titre: doc.title,
+                        date: new Date(doc.created_at).toLocaleDateString('fr-FR'),
+                        type: doc.document_type
+                    })));
+                }
+            }
+        } catch (error) {
+            console.error("[Dashboard] Fetch error:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -189,7 +295,7 @@ export default function DashboardLocataire() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginTop: 4, fontFamily: "Montserrat_700Bold" }}>
-                                Bonjour, David !
+                                Bonjour, {userName || "David"} !
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
                                 Bienvenue sur votre espace locataire imovia
@@ -202,227 +308,263 @@ export default function DashboardLocataire() {
                     </View>
                 </LinearGradient>
 
-                <View style={{ paddingHorizontal: 16, marginTop: -12 }}>
-                    <View style={{ flexDirection: "row", gap: 10 }}>
-                        <StatCard {...STATS[0]} />
-                        <StatCard {...STATS[1]} />
+                {loading ? (
+                    <View style={{ padding: 40, alignItems: "center" }}>
+                        <ActivityIndicator size="large" color="#3153A1" />
                     </View>
-                    <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-                        <StatCard {...STATS[2]} />
-                        <StatCard {...STATS[3]} />
-                    </View>
-                </View>
-
-                <View
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 20,
-                        backgroundColor: "#fff",
-                        borderRadius: 16,
-                        padding: 16,
-                        borderWidth: 1,
-                        borderColor: "#e5e7eb",
-                    }}
-                >
-                    <SectionHeader icon="home-outline" title="Mon logement" subtitle="Informations sur votre location actuelle" />
-
-                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#1e293b", marginBottom: 4 }}>
-                        Appartement lumineux - Marais
-                    </Text>
-                    <Text style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>
-                        25 Rue des Francs-Bourgeois, 75004 Paris
-                    </Text>
-
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-                        {[
-                            { icon: "resize-outline", label: "200 m²" },
-                            { icon: "grid-outline", label: "4 Pièces" },
-                            { icon: "bed-outline", label: "Meublé" },
-                            { icon: "cash-outline", label: "1950 €" },
-                        ].map((badge) => (
-                            <View
-                                key={badge.label}
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    backgroundColor: "#f9fafb",
-                                    borderRadius: 8,
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 6,
-                                    borderWidth: 1,
-                                    borderColor: "#e5e7eb",
-                                }}
-                            >
-                                <Ionicons name={badge.icon as any} size={14} color="#6b7280" />
-                                <Text style={{ fontSize: 12, color: "#374151", marginLeft: 4 }}>{badge.label}</Text>
+                ) : (
+                    <>
+                        <View style={{ paddingHorizontal: 16, marginTop: -12 }}>
+                            <View style={{ flexDirection: "row", gap: 10 }}>
+                                {stats.length > 0 && (
+                                    <>
+                                        <StatCard {...stats[0]} />
+                                        <StatCard {...stats[1]} />
+                                    </>
+                                )}
                             </View>
-                        ))}
-                    </View>
-
-                    <Button onPress={() => router.push("/(locataire)/logement")}>
-                        <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                        <Text>Voir les détails</Text>
-                    </Button>
-                </View>
-
-                <View
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 20,
-                        backgroundColor: "#fff",
-                        borderRadius: 16,
-                        padding: 16,
-                        borderWidth: 1,
-                        borderColor: "#e5e7eb",
-                    }}
-                >
-                    <SectionHeader icon="card-outline" title="Etat des paiements" subtitle="Suivi de vos paiements de loyer" />
-
-                    {PAIEMENTS.map((p, i) => (
-                        <PaiementRow key={i} item={p} />
-                    ))}
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
-                        <Text style={{ fontSize: 12, color: "#6b7280" }}>Paiements à jour</Text>
-                        <Text style={{ fontSize: 12, fontWeight: "600", color: "#1e293b" }}>
-                            {paiementsAJour}/{totalPaiements}
-                        </Text>
-                    </View>
-                    <View style={{ height: 6, backgroundColor: "#e5e7eb", borderRadius: 3, marginTop: 6 }}>
-                        <View
-                            style={{
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: "#3153A1",
-                                width: `${(paiementsAJour / totalPaiements) * 100}%`,
-                            }}
-                        />
-                    </View>
-                </View>
-
-                <View
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 20,
-                        backgroundColor: "#fff",
-                        borderRadius: 16,
-                        padding: 16,
-                        borderWidth: 1,
-                        borderColor: "#e5e7eb",
-                    }}
-                >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                        <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
-                        <Pressable
-                            onPress={() => router.push("/(locataire)/incidents")}
-                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
-                        >
-                            <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </Pressable>
-                    </View>
-
-                    {INCIDENTS.map((inc, i) => (
-                        <View
-                            key={i}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "flex-start",
-                                paddingVertical: 10,
-                                borderBottomWidth: i < INCIDENTS.length - 1 ? 1 : 0,
-                                borderBottomColor: "#f3f4f6",
-                            }}
-                        >
-                            <Ionicons name="ellipse" size={8} color={inc.color} style={{ marginTop: 5, marginRight: 10 }} />
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 14, fontWeight: "600", color: "#1e293b" }}>{inc.titre}</Text>
-                                <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{inc.desc}</Text>
-                            </View>
-                            <View
-                                style={{
-                                    borderRadius: 12,
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 3,
-                                    backgroundColor: "#FDF8F2",
-                                    borderWidth: 1,
-                                    borderColor: inc.color,
-                                }}
-                            >
-                                <Text style={{ fontSize: 11, fontWeight: "600", color: inc.color }}>{inc.statut}</Text>
+                            <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+                                {stats.length > 2 && (
+                                    <>
+                                        <StatCard {...stats[2]} />
+                                        <StatCard {...stats[3]} />
+                                    </>
+                                )}
                             </View>
                         </View>
-                    ))}
 
-                    <Button
-                        onPress={() => router.push("/(locataire)/incidents")}
-                        style={{ marginTop: 14 }}
-                    >
-                        <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                        <Text>Déclarer un incident</Text>
-                    </Button>
-                </View>
-
-                <View
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 20,
-                        backgroundColor: "#fff",
-                        borderRadius: 16,
-                        padding: 16,
-                        borderWidth: 1,
-                        borderColor: "#e5e7eb",
-                    }}
-                >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                        <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
-                        <Pressable
-                            onPress={() => router.push("/(locataire)/documents")}
-                            style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
-                        >
-                            <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
-                        </Pressable>
-                    </View>
-
-                    {DOCUMENTS.map((doc, i) => (
                         <View
-                            key={i}
                             style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                paddingVertical: 10,
-                                borderBottomWidth: i < DOCUMENTS.length - 1 ? 1 : 0,
-                                borderBottomColor: "#f3f4f6",
+                                marginHorizontal: 16,
+                                marginTop: 20,
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
                             }}
                         >
-                            <View
-                                style={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: 4,
-                                    backgroundColor: "#3153A1",
-                                    marginRight: 10,
-                                }}
-                            />
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 14, fontWeight: "600", color: "#1e293b" }}>{doc.titre}</Text>
-                                <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{doc.date}</Text>
-                            </View>
-                            <View
-                                style={{
-                                    borderRadius: 8,
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 4,
-                                    borderWidth: 1,
-                                    borderColor: "#e5e7eb",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Ionicons name="download-outline" size={12} color="#6b7280" style={{ marginRight: 4 }} />
-                                <Text style={{ fontSize: 11, color: "#6b7280" }}>{doc.type}</Text>
-                            </View>
+                            <SectionHeader icon="home-outline" title="Mon logement" subtitle="Informations sur votre location actuelle" />
+
+                            {activeLease ? (
+                                <>
+                                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#1e293b", marginBottom: 4 }}>
+                                        {activeLease.properties.title}
+                                    </Text>
+                                    <Text style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>
+                                        {activeLease.properties.address}, {activeLease.properties.city}
+                                    </Text>
+
+                                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                                        {[
+                                            { icon: "resize-outline", label: `${activeLease.properties.surface_m2} m²` },
+                                            { icon: "grid-outline", label: `${activeLease.properties.rooms} Pièces` },
+                                            { icon: "bed-outline", label: activeLease.properties.is_furnished ? "Meublé" : "Non meublé" },
+                                            { icon: "cash-outline", label: `${activeLease.rent_amount} €` },
+                                        ].map((badge) => (
+                                            <View
+                                                key={badge.label}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    backgroundColor: "#f9fafb",
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 10,
+                                                    paddingVertical: 6,
+                                                    borderWidth: 1,
+                                                    borderColor: "#e5e7eb",
+                                                }}
+                                            >
+                                                <Ionicons name={badge.icon as any} size={14} color="#6b7280" />
+                                                <Text style={{ fontSize: 12, color: "#374151", marginLeft: 4 }}>{badge.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </>
+                            ) : (
+                                <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>Aucun bail actif trouvé.</Text>
+                            )}
+
+                            <Button onPress={() => router.push("/(locataire)/logement")}>
+                                <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                                <Text>Voir les détails</Text>
+                            </Button>
                         </View>
-                    ))}
-                </View>
+
+                        <View
+                            style={{
+                                marginHorizontal: 16,
+                                marginTop: 20,
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                            }}
+                        >
+                            <SectionHeader icon="card-outline" title="Etat des paiements" subtitle="Suivi de vos paiements de loyer" />
+
+                            {payments.length > 0 ? (
+                                <>
+                                    {payments.map((p, i) => (
+                                        <PaiementRow key={i} item={p} />
+                                    ))}
+
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+                                        <Text style={{ fontSize: 12, color: "#6b7280" }}>Paiements récents</Text>
+                                        <Text style={{ fontSize: 12, fontWeight: "600", color: "#1e293b" }}>
+                                            {payments.filter(p => p.paid).length}/{payments.length}
+                                        </Text>
+                                    </View>
+                                    <View style={{ height: 6, backgroundColor: "#e5e7eb", borderRadius: 3, marginTop: 6 }}>
+                                        <View
+                                            style={{
+                                                height: 6,
+                                                borderRadius: 3,
+                                                backgroundColor: "#3153A1",
+                                                width: `${(payments.filter(p => p.paid).length / payments.length) * 100}%`,
+                                            }}
+                                        />
+                                    </View>
+                                </>
+                            ) : (
+                                <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>Aucun paiement trouvé.</Text>
+                            )}
+                        </View>
+
+                        <View
+                            style={{
+                                marginHorizontal: 16,
+                                marginTop: 20,
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                            }}
+                        >
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
+                                <Pressable
+                                    onPress={() => router.push("/(locataire)/incidents")}
+                                    style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                                >
+                                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
+                                </Pressable>
+                            </View>
+
+                            {incidents.length > 0 ? (
+                                incidents.map((inc, i) => (
+                                    <View
+                                        key={i}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-start",
+                                            paddingVertical: 10,
+                                            borderBottomWidth: i < incidents.length - 1 ? 1 : 0,
+                                            borderBottomColor: "#f3f4f6",
+                                        }}
+                                    >
+                                        <Ionicons name="ellipse" size={8} color={inc.color} style={{ marginTop: 5, marginRight: 10 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ fontSize: 14, fontWeight: "600", color: "#1e293b" }}>{inc.titre}</Text>
+                                            <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{inc.desc}</Text>
+                                        </View>
+                                        <View
+                                            style={{
+                                                borderRadius: 12,
+                                                paddingHorizontal: 10,
+                                                paddingVertical: 3,
+                                                backgroundColor: "#FDF8F2",
+                                                borderWidth: 1,
+                                                borderColor: inc.color,
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 11, fontWeight: "600", color: inc.color }}>{inc.statut}</Text>
+                                        </View>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic", marginBottom: 10 }}>Aucun incident signalé.</Text>
+                            )}
+
+                            <Button
+                                onPress={() => router.push("/(locataire)/incidents")}
+                                style={{ marginTop: 14 }}
+                            >
+                                <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                                <Text>Déclarer un incident</Text>
+                            </Button>
+                        </View>
+
+                        <View
+                            style={{
+                                marginHorizontal: 16,
+                                marginTop: 20,
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                            }}
+                        >
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
+                                <Pressable
+                                    onPress={() => router.push("/(locataire)/documents")}
+                                    style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
+                                >
+                                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
+                                </Pressable>
+                            </View>
+
+                            {documents.length > 0 ? (
+                                documents.map((doc, i) => (
+                                    <View
+                                        key={i}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingVertical: 10,
+                                            borderBottomWidth: i < documents.length - 1 ? 1 : 0,
+                                            borderBottomColor: "#f3f4f6",
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: 4,
+                                                backgroundColor: "#3153A1",
+                                                marginRight: 10,
+                                            }}
+                                        />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ fontSize: 14, fontWeight: "600", color: "#1e293b" }}>{doc.titre}</Text>
+                                            <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{doc.date}</Text>
+                                        </View>
+                                        <View
+                                            style={{
+                                                borderRadius: 8,
+                                                paddingHorizontal: 10,
+                                                paddingVertical: 4,
+                                                borderWidth: 1,
+                                                borderColor: "#e5e7eb",
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                            }}
+                                        >
+                                            <Ionicons name="download-outline" size={12} color="#6b7280" style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 11, color: "#6b7280" }}>{doc.type}</Text>
+                                        </View>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>Aucun document disponible.</Text>
+                            )}
+                        </View>
+                    </>
+                )}
             </ScrollView>
         </View>
     );

@@ -1,12 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+    Alert,
     Dimensions,
     GestureResponderEvent,
     LayoutChangeEvent,
@@ -15,20 +18,17 @@ import {
     TextInput,
     View,
 } from "react-native";
-import { Text } from "@/components/ui/text";
 
-const ALL_BIENS = [
-    { id: 1, adresse: "25 Rue des Francs-Bourgeois", ville: "Lille", prix: 289, surface: 45, type: "Appartement", favori: true, images: 4 },
-    { id: 2, adresse: "12 Avenue Foch", ville: "Lille", prix: 450, surface: 72, type: "Appartement", favori: false, images: 4 },
-    { id: 3, adresse: "8 Rue de la Monnaie", ville: "Lille", prix: 620, surface: 95, type: "Maison", favori: false, images: 4 },
-    { id: 4, adresse: "3 Boulevard Carnot", ville: "Paris", prix: 1200, surface: 120, type: "Appartement", favori: false, images: 4 },
-    { id: 5, adresse: "15 Rue Nationale", ville: "Lille", prix: 380, surface: 55, type: "Studio", favori: false, images: 4 },
-    { id: 6, adresse: "42 Rue Esquermoise", ville: "Lille", prix: 750, surface: 85, type: "Appartement", favori: true, images: 4 },
-    { id: 7, adresse: "7 Place du Général de Gaulle", ville: "Lille", prix: 520, surface: 60, type: "Appartement", favori: false, images: 4 },
-    { id: 8, adresse: "19 Rue Solférino", ville: "Lille", prix: 340, surface: 38, type: "Studio", favori: false, images: 4 },
-    { id: 9, adresse: "28 Rue des Arts", ville: "Lyon", prix: 890, surface: 110, type: "Maison", favori: false, images: 4 },
-    { id: 10, adresse: "5 Rue de Béthune", ville: "Lille", prix: 410, surface: 50, type: "Appartement", favori: false, images: 4 },
-];
+type Property = {
+    id: string;
+    adresse: string;
+    ville: string;
+    prix: number;
+    surface: number;
+    type: string;
+    imagesCount: number;
+    thumbnail?: string;
+};
 
 const ITEMS_PER_PAGE = 4;
 const screenWidth = Dimensions.get("window").width;
@@ -125,11 +125,9 @@ function DraggableSlider({
 
 function PropertyCard({
     item,
-    onToggleFavori,
     onPress,
 }: {
-    item: typeof ALL_BIENS[0];
-    onToggleFavori: (id: number) => void;
+    item: Property;
     onPress: () => void;
 }) {
     return (
@@ -157,47 +155,36 @@ function PropertyCard({
                     justifyContent: "flex-end",
                 }}
             >
-                <Pressable
-                    onPress={() => onToggleFavori(item.id)}
-                    style={{
-                        position: "absolute",
-                        top: 12,
-                        right: 12,
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
-                        backgroundColor: item.favori ? "rgba(49,83,161,0.15)" : "rgba(255,255,255,0.3)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Ionicons
-                        name={item.favori ? "heart" : "heart-outline"}
-                        size={19}
-                        color={item.favori ? "#3153A1" : "#fff"}
+                {item.thumbnail && (
+                    <Image
+                        source={{ uri: item.thumbnail }}
+                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                        contentFit="cover"
                     />
-                </Pressable>
+                )}
 
-                <View
-                    style={{
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        paddingBottom: 10,
-                        gap: 5,
-                    }}
-                >
-                    {Array.from({ length: item.images }).map((_, i) => (
-                        <View
-                            key={i}
-                            style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
-                            }}
-                        />
-                    ))}
-                </View>
+                {item.imagesCount > 0 && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            paddingBottom: 10,
+                            gap: 5,
+                        }}
+                    >
+                        {Array.from({ length: Math.min(item.imagesCount, 5) }).map((_, i) => (
+                            <View
+                                key={i}
+                                style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
+                                }}
+                            />
+                        ))}
+                    </View>
+                )}
             </View>
 
             <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
@@ -321,28 +308,63 @@ function PaginationBar({
 export default function BiensPage() {
     const router = useRouter();
     const scrollViewRef = useRef<ScrollView>(null);
+    const [biens, setBiens] = useState<Property[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
-    const [favoris, setFavoris] = useState<Set<number>>(
-        new Set(ALL_BIENS.filter((b) => b.favori).map((b) => b.id))
-    );
-    useScrollToTopOnFocus(scrollViewRef);
 
-    const toggleFavori = (id: number) => {
-        setFavoris((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
+    useEffect(() => {
+        fetchBiens();
+    }, []);
+
+    async function fetchBiens() {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from("properties")
+                .select(`
+                    id,
+                    address,
+                    city,
+                    monthly_rent,
+                    surface_m2,
+                    property_type,
+                    property_images (
+                        count
+                    )
+                `)
+                .eq("status", "available")
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            const mapped: Property[] = (data || []).map(p => ({
+                id: p.id,
+                adresse: p.address || "Adresse non renseignée",
+                ville: p.city || "Ville non renseignée",
+                prix: Number(p.monthly_rent) || 0,
+                surface: Number(p.surface_m2) || 0,
+                type: p.property_type || "",
+                imagesCount: (p.property_images as any)?.[0]?.count || 0
+            }));
+
+            setBiens(mapped);
+        } catch (error: any) {
+            console.error("[Biens] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les biens.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useScrollToTopOnFocus(scrollViewRef);
 
     const filteredBiens = useMemo(() => {
         const searchLower = search.trim().toLowerCase();
-        return ALL_BIENS.filter((bien) => {
+        return biens.filter((bien) => {
             if (searchLower) {
                 const matchSearch =
                     bien.adresse.toLowerCase().includes(searchLower) ||
@@ -352,11 +374,8 @@ export default function BiensPage() {
             if (bien.surface > surfaceMax) return false;
             if (bien.prix > loyerMax) return false;
             return true;
-        }).map((bien) => ({
-            ...bien,
-            favori: favoris.has(bien.id),
-        }));
-    }, [search, surfaceMax, loyerMax, favoris]);
+        });
+    }, [search, surfaceMax, loyerMax, biens]);
 
     const totalPages = Math.max(1, Math.ceil(filteredBiens.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
@@ -517,12 +536,15 @@ export default function BiensPage() {
                         </Text>
                     </View>
 
-                    {pagedBiens.length > 0 ? (
+                    {loading ? (
+                        <View style={{ padding: 40, alignItems: "center" }}>
+                            <Text style={{ color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement des biens...</Text>
+                        </View>
+                    ) : pagedBiens.length > 0 ? (
                         pagedBiens.map((bien) => (
                             <PropertyCard
                                 key={bien.id}
                                 item={bien}
-                                onToggleFavori={toggleFavori}
                                 onPress={() => router.push(`/bien/${bien.id}` as any)}
                             />
                         ))

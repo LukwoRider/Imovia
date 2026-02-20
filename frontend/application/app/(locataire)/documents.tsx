@@ -1,32 +1,25 @@
-import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Linking, Pressable, ScrollView, TextInput, View } from "react-native";
 
 type DocCategory = "tous" | "contrats" | "etat" | "autres";
 
 type Document = {
-    id: number;
+    id: string;
     titre: string;
     date: string;
-    categorie: "contrats" | "etat" | "autres";
+    categorie: DocCategory;
+    storage_path: string;
+    lease_id: string;
 };
 
-const ALL_DOCUMENTS: Document[] = [
-    { id: 1, titre: "Contrat de location - Marais", date: "07/04/2025", categorie: "contrats" },
-    { id: 2, titre: "État des lieux d'entrée", date: "01/01/2024", categorie: "etat" },
-    { id: 3, titre: "Quittance Janvier 2024", date: "10/01/2024", categorie: "autres" },
-    { id: 4, titre: "Contrat de location - Marais", date: "07/04/2025", categorie: "contrats" },
-    { id: 5, titre: "Quittance Février 2024", date: "10/02/2024", categorie: "autres" },
-    { id: 6, titre: "État des lieux de sortie", date: "15/03/2025", categorie: "etat" },
-    { id: 7, titre: "Avenant au contrat", date: "01/06/2024", categorie: "contrats" },
-    { id: 8, titre: "Quittance Mars 2024", date: "10/03/2024", categorie: "autres" },
-];
 
 const ITEMS_PER_PAGE = 4;
 
@@ -38,6 +31,40 @@ const CATEGORIES: { key: DocCategory; label: string; icon: string }[] = [
 ];
 
 function DocumentRow({ doc }: { doc: Document }) {
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        try {
+            let fullPath = doc.storage_path;
+
+            // If the path doesn't start with 'leases/', we assume it needs to be reconstructed
+            // according to the policy: leases/<lease_id>/<filename>
+            if (!fullPath.startsWith("leases/")) {
+                // Remove any leading slash just in case
+                const cleanName = fullPath.replace(/^\//, "");
+                fullPath = `leases/${doc.lease_id}/${cleanName}`;
+            }
+
+            console.log("[Documents] Requesting signed URL for:", fullPath);
+
+            const { data, error } = await supabase.storage
+                .from("documents")
+                .createSignedUrl(fullPath, 60);
+
+            if (error) throw error;
+            if (data?.signedUrl) {
+                await Linking.openURL(data.signedUrl);
+            }
+        } catch (error: any) {
+            console.error("[Documents] Download error:", error);
+            Alert.alert("Erreur", "Impossible de récupérer le fichier : " + (error.message || "Fichier non trouvé"));
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     return (
         <View
             style={{
@@ -90,10 +117,12 @@ function DocumentRow({ doc }: { doc: Document }) {
             </View>
 
             <Pressable
+                onPress={handleDownload}
+                disabled={isDownloading}
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: "#3153A1",
+                    backgroundColor: isDownloading ? "#9ca3af" : "#3153A1",
                     borderRadius: 10,
                     paddingHorizontal: 12,
                     paddingVertical: 8,
@@ -108,7 +137,7 @@ function DocumentRow({ doc }: { doc: Document }) {
                         fontFamily: "Montserrat_600SemiBold",
                     }}
                 >
-                    Telecharger
+                    {isDownloading ? "..." : "Telecharger"}
                 </Text>
                 <Ionicons name="download-outline" size={14} color="#fff" />
             </Pressable>
@@ -244,14 +273,18 @@ function QuickAction({
     icon,
     title,
     subtitle,
+    onPress,
 }: {
     icon: string;
     title: string;
     subtitle: string;
+    onPress?: () => void;
 }) {
     return (
         <Pressable
-            style={{
+            onPress={onPress}
+            style={({ pressed }) => ({
+                opacity: pressed ? 0.7 : 1,
                 flex: 1,
                 backgroundColor: "#f9fafb",
                 borderRadius: 14,
@@ -259,7 +292,7 @@ function QuickAction({
                 borderWidth: 1,
                 borderColor: "#e5e7eb",
                 alignItems: "center",
-            }}
+            })}
         >
             <View
                 style={{
@@ -304,14 +337,79 @@ function QuickAction({
 
 export default function DocumentsPage() {
     const scrollViewRef = useRef<ScrollView>(null);
+    const [documents, setDocuments] = useState<Document[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState<DocCategory>("tous");
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
+
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
+
+    async function fetchDocuments() {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Fetch leases for this tenant
+            const { data: leases, error: leaseError } = await supabase
+                .from("lease_tenants")
+                .select("lease_id")
+                .eq("tenant_id", user.id);
+
+            if (leaseError) throw leaseError;
+
+            const leaseIds = leases?.map(l => l.lease_id) || [];
+
+            if (leaseIds.length === 0) {
+                setDocuments([]);
+                return;
+            }
+
+            // Fetch documents for these leases
+            const { data: dbDocs, error: docError } = await supabase
+                .from("documents")
+                .select("*")
+                .in("lease_id", leaseIds)
+                .order("created_at", { ascending: false });
+
+            if (docError) throw docError;
+
+            const mappedDocs: Document[] = (dbDocs || []).map(d => ({
+                id: d.id,
+                titre: d.title || "Sans titre",
+                date: new Date(d.created_at).toLocaleDateString("fr-FR"),
+                categorie: mapDocType(d.document_type),
+                storage_path: d.storage_path,
+                lease_id: d.lease_id,
+            }));
+
+            setDocuments(mappedDocs);
+        } catch (error: any) {
+            console.error("[Documents] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les documents.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function mapDocType(type: string): DocCategory {
+        switch (type) {
+            case "contract": return "contrats";
+            case "inventory": return "etat";
+            case "receipt":
+            case "other":
+            default: return "autres";
+        }
+    }
+
     useScrollToTopOnFocus(scrollViewRef);
 
     const filteredDocs = useMemo(() => {
-        let docs = ALL_DOCUMENTS;
+        let docs = documents;
 
         if (activeCategory !== "tous") {
             docs = docs.filter((d) => d.categorie === activeCategory);
@@ -326,7 +424,7 @@ export default function DocumentsPage() {
         }
 
         return docs;
-    }, [search, activeCategory]);
+    }, [search, activeCategory, documents]);
 
     const totalPages = Math.max(1, Math.ceil(filteredDocs.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
@@ -509,7 +607,11 @@ export default function DocumentsPage() {
                         })}
                     </ScrollView>
 
-                    {pagedDocs.length > 0 ? (
+                    {loading ? (
+                        <View style={{ padding: 40, alignItems: "center" }}>
+                            <Text style={{ color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement des documents...</Text>
+                        </View>
+                    ) : pagedDocs.length > 0 ? (
                         pagedDocs.map((doc) => (
                             <DocumentRow key={doc.id} doc={doc} />
                         ))
@@ -600,12 +702,14 @@ export default function DocumentsPage() {
                             <QuickAction
                                 icon="download-outline"
                                 title="Telecharger tous Mes Documents"
-                                subtitle="Telecharger tous vos documents sans réflechir"
+                                subtitle="Telecharger tous vos documents"
+                                onPress={() => Alert.alert("Information", "Le téléchargement groupé sera disponible prochainement.")}
                             />
                             <QuickAction
                                 icon="mail-outline"
                                 title="Envoyer par e-mail"
-                                subtitle="Envoyer vos documents sur votre mail"
+                                subtitle="Envoyer vos documents par mail"
+                                onPress={() => Linking.openURL("mailto:?subject=Mes Documents Imovia")}
                             />
                         </View>
                     </View>

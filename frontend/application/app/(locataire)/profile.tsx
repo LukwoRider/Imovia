@@ -52,13 +52,14 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -109,6 +110,62 @@ export default function ProfilePage() {
       Alert.alert("Erreur", "Impossible de se déconnecter : " + error.message);
     } finally {
       setIsSigningOut(false);
+    }
+  }
+
+  async function handleUpdatePassword() {
+    if (!newPassword || !confirmPassword) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      Alert.alert("Succès", "Votre mot de passe a été mis à jour.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("[Profile] Update password error:", error);
+      Alert.alert("Erreur", "Impossible de mettre à jour le mot de passe : " + error.message);
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
+  async function handleUpdateProfile() {
+    setIsUpdatingProfile(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utilisateur non trouvé");
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: `${firstName} ${lastName}`.trim(),
+          phone: phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      Alert.alert("Succès", "Votre profil a été mis à jour.");
+    } catch (error: any) {
+      console.error("[Profile] Update profile error:", error);
+      Alert.alert("Erreur", "Impossible de mettre à jour le profil : " + error.message);
+    } finally {
+      setIsUpdatingProfile(false);
     }
   }
 
@@ -243,18 +300,16 @@ export default function ProfilePage() {
                 onChangeText={setPhone}
                 placeholder="Telephone"
               />
-              <InfoField
-                icon="map-pin"
-                value={address}
-                onChangeText={setAddress}
-                placeholder="Adresse"
-              />
 
-              <Button className="h-12 mt-2 rounded-xl">
+              <Button
+                className="h-12 mt-2 rounded-xl"
+                onPress={handleUpdateProfile}
+                disabled={isUpdatingProfile}
+              >
                 <View className="flex-row items-center gap-2">
                   <Feather name="save" size={16} color="#FFFFFF" />
                   <Text className="text-white text-[14px] font-semibold">
-                    Enregistrer
+                    {isUpdatingProfile ? "Enregistrement..." : "Enregistrer"}
                   </Text>
                 </View>
               </Button>
@@ -303,11 +358,15 @@ export default function ProfilePage() {
                 className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
               />
 
-              <Button className="h-12 mt-2 rounded-xl">
+              <Button
+                className="h-12 mt-2 rounded-xl"
+                onPress={handleUpdatePassword}
+                disabled={isUpdatingPassword}
+              >
                 <View className="flex-row items-center gap-2">
                   <Feather name="save" size={16} color="#FFFFFF" />
                   <Text className="text-white text-[14px] font-semibold">
-                    Enregistrer
+                    {isUpdatingPassword ? "Mise à jour..." : "Enregistrer"}
                   </Text>
                 </View>
               </Button>

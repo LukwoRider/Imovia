@@ -1,138 +1,36 @@
+import NotificationBellButton from "@/components/ui/notification-bell-button";
+import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     Dimensions,
     Pressable,
     ScrollView,
     View,
 } from "react-native";
-import { Text } from "@/components/ui/text";
-
-// --- Mock data (sera remplacé par un appel API) ---
-const BIENS_DB: Record<string, BienDetail> = {
-    "1": {
-        id: 1,
-        adresse: "25 Rue des Francs-Bourgeois",
-        ville: "Lille",
-        prix: 289,
-        surface: 45,
-        type: "Appartement",
-        chambres: 2,
-        cuisines: 1,
-        toilettes: 1,
-        classeEnergie: "A",
-        visite: "Visite possible les week-ends de 10h à 18h",
-        disponibilite: "Disponible à partir du 27/07/2026",
-        meuble: true,
-        description:
-            "Bel appartement lumineux situé dans le quartier des Francs-Bourgeois à Lille. Proche de toutes les commodités, transports en commun et commerces. L'appartement dispose d'un séjour spacieux, d'une cuisine équipée, de deux chambres confortables et d'une salle de bain moderne. Idéal pour un couple ou une colocation.",
-    },
-    "2": {
-        id: 2,
-        adresse: "12 Avenue Foch",
-        ville: "Lille",
-        prix: 450,
-        surface: 72,
-        type: "Appartement",
-        chambres: 3,
-        cuisines: 1,
-        toilettes: 2,
-        classeEnergie: "B",
-        visite: "Visite possible en semaine de 14h à 18h",
-        disponibilite: "Disponible à partir du 01/09/2026",
-        meuble: false,
-        description:
-            "Grand appartement de 72m² avec vue sur l'avenue Foch. Trois chambres spacieuses, deux salles de bain, une cuisine séparée et un grand salon lumineux. Parking souterrain inclus. Proche du métro et des écoles.",
-    },
-    "3": {
-        id: 3,
-        adresse: "8 Rue de la Monnaie",
-        ville: "Lille",
-        prix: 620,
-        surface: 95,
-        type: "Maison",
-        chambres: 4,
-        cuisines: 1,
-        toilettes: 2,
-        classeEnergie: "C",
-        visite: "Visite sur rendez-vous",
-        disponibilite: "Disponible immédiatement",
-        meuble: true,
-        description:
-            "Charmante maison de ville avec jardin, située dans le vieux Lille. Quatre chambres, salon double, cuisine aménagée et équipée, deux salles d'eau. Terrasse et petit jardin à l'arrière. Quartier calme et résidentiel.",
-    },
-    "4": {
-        id: 4,
-        adresse: "3 Boulevard Carnot",
-        ville: "Paris",
-        prix: 1200,
-        surface: 120,
-        type: "Appartement",
-        chambres: 4,
-        cuisines: 1,
-        toilettes: 2,
-        classeEnergie: "B",
-        visite: "Visite possible les week-ends de 10h à 18h",
-        disponibilite: "Disponible à partir du 15/08/2026",
-        meuble: false,
-        description:
-            "Superbe appartement haussmannien de 120m² avec parquet, moulures et cheminées d'époque. Quatre chambres, deux salles de bain, grande cuisine et double séjour. Situé sur le boulevard Carnot, à proximité des transports.",
-    },
-    "5": {
-        id: 5,
-        adresse: "15 Rue Nationale",
-        ville: "Lille",
-        prix: 380,
-        surface: 55,
-        type: "Studio",
-        chambres: 1,
-        cuisines: 1,
-        toilettes: 1,
-        classeEnergie: "A",
-        visite: "Visite possible tous les jours de 9h à 19h",
-        disponibilite: "Disponible à partir du 01/06/2026",
-        meuble: true,
-        description:
-            "Studio moderne entièrement rénové, idéalement situé sur la rue Nationale. Kitchenette équipée, salle de douche, coin nuit séparé par une verrière. Parfait pour un étudiant ou un jeune actif.",
-    },
-};
-
-// Fallback for unknown IDs
-const DEFAULT_BIEN: BienDetail = {
-    id: 0,
-    adresse: "Bien non trouvé",
-    ville: "",
-    prix: 0,
-    surface: 0,
-    type: "",
-    chambres: 0,
-    cuisines: 0,
-    toilettes: 0,
-    classeEnergie: "",
-    visite: "",
-    disponibilite: "",
-    meuble: false,
-    description: "",
-};
 
 type BienDetail = {
-    id: number;
+    id: string;
     adresse: string;
     ville: string;
     prix: number;
     surface: number;
     type: string;
     chambres: number;
-    cuisines: number;
+    cuisines?: number;
     toilettes: number;
     classeEnergie: string;
-    visite: string;
-    disponibilite: string;
+    visite?: string;
     meuble: boolean;
     description: string;
+    images: string[];
 };
 
 const screenWidth = Dimensions.get("window").width;
@@ -164,9 +62,71 @@ export default function BienDetailPage() {
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
     const [activeImage, setActiveImage] = useState(0);
+    const [bien, setBien] = useState<BienDetail | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const bien = BIENS_DB[id ?? ""] ?? DEFAULT_BIEN;
-    const imageCount = 4; // Mock: 4 images placeholder
+    useEffect(() => {
+        if (id) fetchBienDetail();
+    }, [id]);
+
+    async function fetchBienDetail() {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from("properties")
+                .select(`
+                    *,
+                    property_images (
+                        storage_path
+                    )
+                `)
+                .eq("id", id)
+                .single();
+
+            if (error) throw error;
+
+            const mapped: BienDetail = {
+                id: data.id,
+                adresse: data.address || "Adresse non renseignée",
+                ville: data.city || "Ville non renseignée",
+                prix: Number(data.monthly_rent) || 0,
+                surface: Number(data.surface_m2) || 0,
+                type: data.property_type || "Bien",
+                chambres: data.rooms || 0,
+                cuisines: undefined, // Donnée non présente dans la table properties
+                toilettes: data.bathrooms || 0,
+                classeEnergie: data.energy_class || "",
+                visite: undefined, // Donnée non présente dans la table properties
+                meuble: data.is_furnished || false,
+                description: data.description || "Aucune description fournie.",
+                images: (data.property_images || []).map((img: any) => {
+                    const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(img.storage_path);
+                    return publicUrl;
+                })
+            };
+
+            setBien(mapped);
+        } catch (error: any) {
+            console.error("[BienDetail] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les détails du bien.");
+            router.back();
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f9fafb" }}>
+                <ActivityIndicator size="large" color="#3153A1" />
+                <Text style={{ marginTop: 12, color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement du bien...</Text>
+            </View>
+        );
+    }
+
+    if (!bien) return null;
+
+    const images = bien.images.length > 0 ? bien.images : [null]; // Fallback if no images
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -202,30 +162,8 @@ export default function BienDetailPage() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={17} color="#fff" />
-                            </View>
-                            <View
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: "rgba(255,255,255,0.2)",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Ionicons name="person" size={17} color="#fff" />
-                            </View>
+                            <NotificationBellButton />
+                            <ProfileHeaderButton />
                         </View>
                     </View>
                 </LinearGradient>
@@ -275,31 +213,47 @@ export default function BienDetailPage() {
                                 justifyContent: "center",
                             }}
                         >
-                            <Ionicons name="image-outline" size={48} color="#9ca3af" />
-                            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 8, fontFamily: "Montserrat_400Regular" }}>Photo principale</Text>
+                            {images[activeImage] ? (
+                                <Image
+                                    source={{ uri: images[activeImage] }}
+                                    style={{ width: "100%", height: "100%" }}
+                                    contentFit="cover"
+                                />
+                            ) : (
+                                <>
+                                    <Ionicons name="image-outline" size={48} color="#9ca3af" />
+                                    <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 8, fontFamily: "Montserrat_400Regular" }}>Aucune photo disponible</Text>
+                                </>
+                            )}
                         </View>
 
                         {/* Thumbnail row */}
-                        <View style={{ flexDirection: "row", gap: 2, padding: 2 }}>
-                            {Array.from({ length: 3 }).map((_, i) => (
-                                <Pressable
-                                    key={i}
-                                    onPress={() => setActiveImage(i + 1)}
-                                    style={{
-                                        flex: 1,
-                                        height: 80,
-                                        backgroundColor: activeImage === i + 1 ? "#a8b5c9" : "#d1d8e0",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        borderWidth: activeImage === i + 1 ? 2 : 0,
-                                        borderColor: "#3153A1",
-                                        borderRadius: 4,
-                                    }}
-                                >
-                                    <Ionicons name="image-outline" size={20} color="#9ca3af" />
-                                </Pressable>
-                            ))}
-                        </View>
+                        {images.length > 1 && (
+                            <View style={{ flexDirection: "row", gap: 2, padding: 2 }}>
+                                {images.map((img, i) => (
+                                    <Pressable
+                                        key={i}
+                                        onPress={() => setActiveImage(i)}
+                                        style={{
+                                            flex: 1,
+                                            height: 80,
+                                            backgroundColor: activeImage === i ? "#a8b5c9" : "#d1d8e0",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            borderWidth: activeImage === i ? 2 : 0,
+                                            borderColor: "#3153A1",
+                                            borderRadius: 4,
+                                        }}
+                                    >
+                                        {img ? (
+                                            <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} />
+                                        ) : (
+                                            <Ionicons name="image-outline" size={20} color="#9ca3af" />
+                                        )}
+                                    </Pressable>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* === PROPERTY INFO === */}
@@ -324,11 +278,11 @@ export default function BienDetailPage() {
                         {/* Badges: chambres, cuisine, surface, toilettes */}
                         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                             {[
-                                { icon: "bed-outline", label: `${bien.chambres} Chambre${bien.chambres > 1 ? "s" : ""}` },
-                                { icon: "restaurant-outline", label: `${bien.cuisines} Cuisine` },
-                                { icon: "resize-outline", label: `${bien.surface} m²` },
-                                { icon: "water-outline", label: `${bien.toilettes} Toilette${bien.toilettes > 1 ? "s" : ""}` },
-                            ].map((badge) => (
+                                { icon: "bed-outline", label: `${bien.chambres} Chambre${bien.chambres > 1 ? "s" : ""}`, show: true },
+                                { icon: "restaurant-outline", label: `${bien.cuisines} Cuisine`, show: bien.cuisines !== undefined },
+                                { icon: "resize-outline", label: `${bien.surface} m²`, show: true },
+                                { icon: "water-outline", label: `${bien.toilettes} Toilette${bien.toilettes > 1 ? "s" : ""}`, show: true },
+                            ].filter(b => b.show).map((badge) => (
                                 <View
                                     key={badge.label}
                                     style={{
@@ -356,9 +310,6 @@ export default function BienDetailPage() {
                         ) : null}
                         {bien.visite ? (
                             <InfoRow icon="calendar-outline" text={bien.visite} />
-                        ) : null}
-                        {bien.disponibilite ? (
-                            <InfoRow icon="time-outline" text={bien.disponibilite} />
                         ) : null}
                         <InfoRow
                             icon="home-outline"

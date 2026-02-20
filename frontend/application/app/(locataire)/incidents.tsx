@@ -1,41 +1,150 @@
-import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
+import DeclarerIncidentView from "@/components/incidents/DeclarerIncidentModal";
 import IncidentCard from "@/components/incidents/IncidentCard";
 import PaginationBar from "@/components/incidents/PaginationBar";
-import DeclarerIncidentView from "@/components/incidents/DeclarerIncidentModal";
 import {
-    ALL_INCIDENTS,
     ITEMS_PER_PAGE,
     STATUS_FILTERS,
+    type Incident,
     type IncidentStatus,
 } from "@/components/incidents/types";
 
 export default function IncidentsPage() {
     const scrollViewRef = useRef<ScrollView>(null);
+    const [incidents, setIncidents] = useState<Incident[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [activeFilter, setActiveFilter] = useState<IncidentStatus>("tous");
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
     const [showDeclarer, setShowDeclarer] = useState(false);
+
+    useEffect(() => {
+        fetchIncidents();
+    }, []);
+
+    async function fetchIncidents() {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Fetch leases for this tenant
+            const { data: leases, error: leaseError } = await supabase
+                .from("lease_tenants")
+                .select("lease_id")
+                .eq("tenant_id", user.id);
+
+            if (leaseError) throw leaseError;
+
+            const leaseIds = leases?.map(l => l.lease_id) || [];
+            if (leaseIds.length === 0) {
+                setIncidents([]);
+                return;
+            }
+
+            // Fetch incidents for these leases
+            const { data: dbIncidents, error: incError } = await supabase
+                .from("incidents")
+                .select(`
+                    id,
+                    title,
+                    description,
+                    created_at,
+                    updated_at,
+                    status,
+                    location_details,
+                    properties (
+                        owner_id,
+                        profiles:owner_id (
+                            full_name,
+                            phone
+                        )
+                    )
+                `)
+                .in("lease_id", leaseIds)
+                .order("created_at", { ascending: false });
+
+            if (incError) throw incError;
+
+            const mapped: Incident[] = (dbIncidents || []).map(inc => {
+                const owner = (inc.properties as any)?.profiles;
+                return {
+                    id: inc.id,
+                    titre: inc.title || "Sans titre",
+                    dateDeclaration: new Date(inc.created_at).toLocaleDateString("fr-FR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }).replace(",", " à"),
+                    description: inc.description || "",
+                    localisation: inc.location_details || "Non précisé",
+                    statut: mapBackendStatus(inc.status),
+                    dureeLabel: calculateDurationLabel(inc.status, inc.created_at, inc.updated_at),
+                    gestionnaireNom: owner?.full_name || "Imovia",
+                    gestionnaireTel: owner?.phone || "Non renseigné",
+                };
+            });
+
+            setIncidents(mapped);
+        } catch (error: any) {
+            console.error("[Incidents] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les incidents.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function mapBackendStatus(status: string): Incident["statut"] {
+        switch (status) {
+            case "resolved": return "resolus";
+            case "in_progress": return "en_cours";
+            case "open":
+            default: return "attente";
+        }
+    }
+
+    function calculateDurationLabel(status: string, createdAt: string, updatedAt?: string): string {
+        const start = new Date(createdAt);
+        const now = new Date();
+        const diffMs = now.getTime() - start.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (status === "resolved") {
+            const end = updatedAt ? new Date(updatedAt) : now;
+            return `Résolu le ${end.toLocaleDateString("fr-FR")}`;
+        }
+
+        if (status === "in_progress") {
+            return `En cours depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+        }
+
+        return `En attente depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+    }
+
     useScrollToTopOnFocus(scrollViewRef);
 
     const filteredIncidents = useMemo(() => {
-        let incidents = ALL_INCIDENTS;
+        let list = incidents;
 
         if (activeFilter !== "tous") {
-            incidents = incidents.filter((inc) => inc.statut === activeFilter);
+            list = list.filter((inc) => inc.statut === activeFilter);
         }
         if (search.trim()) {
             const q = search.toLowerCase();
-            incidents = incidents.filter(
+            list = list.filter(
                 (inc) =>
                     inc.titre.toLowerCase().includes(q) ||
                     inc.description.toLowerCase().includes(q) ||
@@ -43,8 +152,8 @@ export default function IncidentsPage() {
             );
         }
 
-        return incidents;
-    }, [search, activeFilter]);
+        return list;
+    }, [search, activeFilter, incidents]);
 
     const totalPages = Math.max(
         1,
@@ -336,7 +445,11 @@ export default function IncidentsPage() {
                                 })}
                             </ScrollView>
 
-                            {pagedIncidents.length > 0 ? (
+                            {loading ? (
+                                <View style={{ padding: 40, alignItems: "center" }}>
+                                    <Text style={{ color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement des incidents...</Text>
+                                </View>
+                            ) : pagedIncidents.length > 0 ? (
                                 pagedIncidents.map((inc) => (
                                     <IncidentCard key={inc.id} incident={inc} />
                                 ))

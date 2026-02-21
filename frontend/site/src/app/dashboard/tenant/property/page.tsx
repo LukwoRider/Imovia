@@ -1,13 +1,80 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Home, Calendar, Phone, Mail, User, FileText, Box, Sofa, DollarSign } from "lucide-react"
+import { Home, Calendar, Phone, Mail, User, FileText, Box, Sofa, DollarSign, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { createClient } from "@/lib/supabase/client"
+import { Lease } from "@/lib/types/lease"
+import { format } from "date-fns"
 
 export default function TenantPropertyPage() {
+    const [lease, setLease] = useState<Lease | null>(null)
+    const [loading, setLoading] = useState(true)
+    const supabase = createClient()
+
+    useEffect(() => {
+        const fetchLease = async () => {
+            try {
+                setLoading(true)
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) return
+
+                // Fetch active lease for this tenant
+                const { data, error } = await supabase
+                    .from('lease_tenants')
+                    .select(`
+                        lease:leases (
+                            *,
+                            property:properties (*),
+                            owner:profiles!leases_owner_id_fkey (*)
+                        )
+                    `)
+                    .eq('tenant_id', user.id)
+                    .single()
+
+                if (error) {
+                    console.warn("No active lease found for tenant:", error.message)
+                    return
+                }
+
+                if (data?.lease) {
+                    setLease(data.lease as unknown as Lease)
+                }
+            } catch (error) {
+                console.error("Error fetching property details:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchLease()
+    }, [supabase])
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-[#3153A1] mb-4" />
+                <p className="text-slate-500 font-medium">Récupération des informations de votre logement...</p>
+            </div>
+        )
+    }
+
+    if (!lease) {
+        return (
+            <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200 mx-auto max-w-2xl">
+                <Home className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-[#12182C] mb-2">Aucun logement trouvé</h3>
+                <p className="text-slate-500">Nous n&apos;avons pas pu trouver de bail actif associé à votre compte.</p>
+            </div>
+        )
+    }
+
+    const { property } = lease
+    const owner = (lease as unknown as { owner: { full_name: string, email: string, phone: string | null } }).owner
+
     return (
         <div className="max-w-7xl mx-auto">
             <div className="mb-8">
@@ -25,8 +92,12 @@ export default function TenantPropertyPage() {
                                     <Home className="h-6 w-6 text-[#3153A1]" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xl font-bold text-[#12182C]">Appartement lumineux - Marais</CardTitle>
-                                    <p className="text-slate-500">25 Rue des Francs-Bourgeois, 75004 Paris</p>
+                                    <CardTitle className="text-xl font-bold text-[#12182C]">
+                                        {property?.property_type || "Appartement"} - {property?.city || "Ville inconnu"}
+                                    </CardTitle>
+                                    <p className="text-slate-500">
+                                        {property?.address}, {property?.postal_code || ""} {property?.city}
+                                    </p>
                                 </div>
                             </div>
                         </CardHeader>
@@ -44,19 +115,19 @@ export default function TenantPropertyPage() {
                             <div className="grid grid-cols-4 gap-4 mb-8">
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
                                     <Box className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">200 m²</span>
+                                    <span className="font-bold text-[#12182C]">{property?.surface_m2} m²</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
                                     <Home className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">4 Pièces</span>
+                                    <span className="font-bold text-[#12182C]">{property?.rooms || '-'} Pièces</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
                                     <Sofa className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">Meublé</span>
+                                    <span className="font-bold text-[#12182C]">{property?.is_furnished ? "Meublé" : "Non meublé"}</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
                                     <DollarSign className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">1950 €</span>
+                                    <span className="font-bold text-[#12182C]">{property?.monthly_rent ?? lease.rent_amount} €</span>
                                 </div>
                             </div>
 
@@ -64,10 +135,7 @@ export default function TenantPropertyPage() {
                                 <h3 className="text-lg font-bold text-[#12182C] mb-3">Description</h3>
                                 <div className="prose prose-slate max-w-none text-slate-500 text-sm leading-relaxed">
                                     <p className="mb-4">
-                                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                                    </p>
-                                    <p>
-                                        It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                        {property?.description || "Aucune description disponible pour ce bien."}
                                     </p>
                                 </div>
                             </div>
@@ -96,21 +164,29 @@ export default function TenantPropertyPage() {
                                     <Calendar className="h-4 w-4 text-slate-400" />
                                     <span className="text-sm font-medium text-[#12182C]">Début</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">01/01/2024</span>
+                                <span className="text-sm font-bold text-[#12182C]">{format(new Date(lease.start_date), "dd/MM/yyyy")}</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <Calendar className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-[#12182C]">Fin prévue</span>
+                                    <span className="text-sm font-medium text-[#12182C]">Échéance</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">Indéterminée</span>
+                                <span className="text-sm font-bold text-[#12182C]">Le {lease.payment_day} du mois</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <Home className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-[#12182C]">Dépôt de garantie</span>
+                                    <span className="text-sm font-medium text-[#12182C]">Charges</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">1950€</span>
+                                <span className="text-sm font-bold text-[#12182C]">{lease.charges_amount}€</span>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <DollarSign className="h-4 w-4 text-[#3153A1]" />
+                                    <span className="text-sm font-bold text-[#12182C]">Loyer de base</span>
+                                </div>
+                                <span className="text-sm font-bold text-[#12182C]">{property?.monthly_rent ?? lease.rent_amount}€</span>
                             </div>
 
                             <Separator className="my-2" />
@@ -120,7 +196,7 @@ export default function TenantPropertyPage() {
                                     <DollarSign className="h-4 w-4 text-[#3153A1]" />
                                     <span className="text-sm font-bold text-[#12182C]">Total mensuel</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">1950€</span>
+                                <span className="text-sm font-bold text-[#12182C]">{(property?.monthly_rent ?? lease.rent_amount) + lease.charges_amount}€</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -141,15 +217,24 @@ export default function TenantPropertyPage() {
                         <CardContent className="space-y-4">
                             <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
                                 <User className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm font-semibold text-[#12182C]">Jean Martin</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nom & Prénom</span>
+                                    <span className="text-sm font-semibold text-[#12182C]">{owner?.full_name || "Propriétaire"}</span>
+                                </div>
                             </div>
                             <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
                                 <Phone className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm font-medium text-[#12182C]">06 12 34 56 78</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Téléphone</span>
+                                    <span className="text-sm font-medium text-[#12182C]">{owner?.phone || "Indisponible"}</span>
+                                </div>
                             </div>
                             <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
                                 <Mail className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm font-medium text-[#12182C]">jean.martin@email.com</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</span>
+                                    <span className="text-sm font-medium text-[#12182C]">{owner?.email || "Indisponible"}</span>
+                                </div>
                             </div>
 
                             <Button className="w-full mt-2 bg-[#3153A1] hover:bg-[#25468d] text-white gap-2">

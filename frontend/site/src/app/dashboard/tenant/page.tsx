@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import { Document } from "@/lib/types/document"
 import { getPublicUrl } from "@/lib/supabase/storage-utils"
 import { format, addMonths, setDate } from "date-fns"
 import { fr } from "date-fns/locale"
+import { toast } from "sonner"
 
 export default function TenantDashboard() {
     const [lease, setLease] = useState<Lease | null>(null)
@@ -25,6 +26,34 @@ export default function TenantDashboard() {
     const [documents, setDocuments] = useState<Document[]>([])
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
+
+    const handleDownload = useCallback(async (doc: Document) => {
+        if (!doc.storagePath) {
+            toast.error("Fichier introuvable")
+            return
+        }
+
+        try {
+            const { data, error } = await supabase.storage
+                .from('documents')
+                .download(doc.storagePath)
+
+            if (error) throw error
+
+            const url = window.URL.createObjectURL(data)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = doc.title || 'document'
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+            toast.success("Téléchargement réussi")
+        } catch (error: unknown) {
+            console.error("Download error:", error)
+            toast.error("Erreur lors du téléchargement")
+        }
+    }, [])
 
     useEffect(() => {
         async function loadData() {
@@ -345,7 +374,13 @@ export default function TenantDashboard() {
                             </div>
                         ) : (
                             documents.map((doc) => (
-                                <DocumentRow key={doc.id} title={doc.title} date={doc.date} type={doc.type} />
+                                <DocumentRow
+                                    key={doc.id}
+                                    title={doc.title}
+                                    date={doc.date}
+                                    type={doc.type}
+                                    onDownload={() => handleDownload(doc)}
+                                />
                             ))
                         )}
                     </CardContent>
@@ -394,9 +429,10 @@ interface DocumentRowProps {
     title: string
     date: string
     type: string
+    onDownload: () => void
 }
 
-function DocumentRow({ title, date, type }: DocumentRowProps) {
+function DocumentRow({ title, date, type, onDownload }: DocumentRowProps) {
     const isOther = type.toLowerCase() === 'other' || type.toLowerCase() === 'autres'
     const displayType = isOther ? title : type
 
@@ -411,7 +447,15 @@ function DocumentRow({ title, date, type }: DocumentRowProps) {
                     <p className="text-xs text-slate-500">{date}</p>
                 </div>
             </div>
-            <Button variant="outline" size="sm" className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[150px]">
+            <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[150px]"
+                onClick={(e) => {
+                    e.preventDefault();
+                    onDownload();
+                }}
+            >
                 <Download className="h-3 w-3 shrink-0" />
                 <span className="sr-only sm:not-sr-only sm:inline-block text-xs truncate">{displayType}</span>
             </Button>

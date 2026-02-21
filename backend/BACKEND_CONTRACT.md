@@ -1,8 +1,8 @@
 # Backend Contract (Frontend Integration)
 
-Contract version: `v1.1.0`  
+Contract version: `v1.2.0`  
 Status: `stable`  
-Last updated: `2026-02-20`
+Last updated: `2026-02-21`
 This document is the practical contract for frontend developers using Supabase directly.
 
 ## Scope
@@ -170,6 +170,10 @@ await supabase.rpc("owner_update_incident_status", {
 });
 ```
 
+Important:
+- Always send `p_resolution_notes` explicitly (`string` or `null`) in frontend RPC payloads.
+- Reason: the DB exposes a 2-arg and a 3-arg overload for backward compatibility.
+
 ## Read Contract (RLS Protected)
 
 Use normal `select` on:
@@ -197,6 +201,10 @@ Schema additions used by the flows:
 - `maintenance_requests.incident_id`
 - `property_tenant_contacts.first_name`, `property_tenant_contacts.last_name`, `property_tenant_contacts.phone`, `property_tenant_contacts.email`, `property_tenant_contacts.tenant_profile_id`
 - `documents.title`, `documents.document_type`, `documents.document_date`, `documents.target_tenant_id`
+
+Legacy compatibility still present:
+- `documents.doc_type` is kept for backward compatibility.
+- New frontend code should use `documents.document_type` as source of truth.
 
 ## Storage Contract
 
@@ -226,9 +234,10 @@ await supabase.storage.from("documents").createSignedUrl(storagePath, 60);
 Important:
 - DB row in `public.documents` must stay consistent with `lease_id` and `property_id`.
 - `public.document_users` is auto-maintained to link each document to the concerned users:
-  - owner of the lease/property
-  - tenant members of the lease
-  - uploader
+- owner of the lease/property
+- tenant members of the lease
+- uploader
+- if `target_tenant_id` is set, only the targeted tenant is linked on tenant side
 - Owner/tenant housing relationship is available through `public.get_owner_property_tenants`.
 - Property image path must match the target housing id (`properties/{propertyId}/...`), validated in DB trigger.
 

@@ -20,23 +20,27 @@ It does not provide:
 
 The integration flow in `backend/test.mjs` validates:
 
-1. Owner login
-2. Property creation
-3. Tenant rental application
-4. Owner acceptance (`accept_application`)
-5. Rent schedule generation (`generate_rent_payments`)
-6. First payment mark-as-paid (`mark_payment_paid`)
-7. Incident flow
-8. Maintenance flow
-9. Document upload + DB row + signed URL
-10. Owner dashboard (`get_owner_dashboard`)
+1. Owner login + property creation + tenant contact (`property_tenant_contacts`)
+2. Tenant reads available property + creates rental application
+3. Owner accepts application (`accept_application`) + generates schedule (`generate_rent_payments`)
+4. Owner creates payment status variety (`paid`, `partial`, `due/overdue`)
+5. Tenant creates incidents (`create_incident`)
+6. Tenant creates maintenance requests linked to incidents
+7. Tenant uploads document + DB row
+8. Owner uploads targeted tenant document + property image
+9. Owner updates incident/maintenance states and reads owner modules (dashboard, KPIs, mappings)
+10. Tenant reads all affiliated modules (property, lease, payments, incidents, maintenance, documents)
+11. Signed URL checks for tenant and owner
+12. Final summary payload for frontend QA
 
 ## Prerequisites
 
 - Node.js 18+
 - Supabase project linked in repo root (`supabase/`)
 - Supabase schema/migrations synced
-- Two test users in Auth (`owner`, `tenant`)
+- Two test users in Auth:
+- `owner@imovia.test`
+- `tenant@imovia.test`
 
 ## Install
 
@@ -69,6 +73,11 @@ Then fill each file values:
 - `backend/.env.local` -> local Supabase (`127.0.0.1`)
 - `backend/.env.staging` -> staging Supabase project
 - `backend/.env.prod` -> production Supabase project
+
+Important behavior in `backend/test.mjs`:
+- login emails are fixed to `owner@imovia.test` and `tenant@imovia.test`
+- `OWNER_EMAIL` / `TENANT_EMAIL` env values are currently ignored by the script
+- optional: `PROPERTY_IMAGE_SOURCE_URL` overrides the default demo image URL used for `property-images`
 
 Reference templates:
 - `backend/.env.example` (base required keys)
@@ -125,11 +134,11 @@ Notes:
 - script refuses remote writes unless `ALLOW_REMOTE_TESTS=true`
 - production mode also requires `ALLOW_PROD_TESTS=true` and `CONFIRM_PROD_HOST`
 - `TEST_TARGET`, `TEST_ENV_FILE`, `ALLOW_REMOTE_TESTS`, `ALLOW_PROD_TESTS`, and `CONFIRM_PROD_HOST` are terminal environment variables (not values hardcoded in the script)
-- `backend/.env` is legacy and not used by `backend/test.mjs`
+- `backend/.env` can still be used only if you explicitly set `TEST_ENV_FILE=.env`
 
 Expected success marker:
 
-`TEST COMPLET REUSSI (documents inclus)`
+`Seed and integration checks passed.`
 
 ## Frontend Contract (Use This First)
 
@@ -159,7 +168,7 @@ Frontend guidance:
 - prefer RPCs for business transitions (status changes, lease creation, payment marking)
 
 Contract source of truth:
-- `backend/BACKEND_CONTRACT.md` (current: `v1.1.0`)
+- `backend/BACKEND_CONTRACT.md` (current: `v1.2.0`)
 
 ## Storage Contract
 

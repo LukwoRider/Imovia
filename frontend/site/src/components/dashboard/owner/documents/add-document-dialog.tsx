@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Plus, Upload, Check, FileIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -30,10 +30,43 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
     const [title, setTitle] = useState("")
     const [property, setProperty] = useState("")
     const [category, setCategory] = useState("")
-    const [tenant, setTenant] = useState("")
+    const [recipientId, setRecipientId] = useState("")
+    const [tenants, setTenants] = useState<{ id: string, display_name: string }[]>([])
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const supabase = createClient()
+
+    // Fetch tenants from Supabase
+    useEffect(() => {
+        const fetchTenants = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, full_name')
+                    .eq('role', 'tenant')
+                    .order('full_name')
+
+                if (error) {
+                    console.error("Erreur fetch locataires:", error)
+                    return
+                }
+
+                if (data) {
+                    // Map data to ensure we have a display name even if full_name is empty
+                    const formattedTenants = data.map(t => ({
+                        id: t.id,
+                        display_name: t.full_name || `Locataire (${t.id.slice(0, 5)})`
+                    }))
+                    setTenants(formattedTenants)
+                }
+            } catch (err) {
+                console.error("Fetch error:", err)
+            }
+        }
+        if (open) {
+            fetchTenants()
+        }
+    }, [open, supabase])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -78,7 +111,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                     doc_type: category,
                     storage_path: filePath,
                     property_name: property,
-                    tenant_name: tenant
+                    tenant_id: recipientId // Link to the actual tenant profile
                 })
 
             if (dbError) throw dbError
@@ -87,9 +120,9 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
             setOpen(false)
             resetForm()
             onSuccess?.()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Upload error:", error)
-            toast.error(error.message || "Erreur lors de l'ajout du document")
+            toast.error(error instanceof Error ? error.message : "Erreur lors de l'ajout du document")
         } finally {
             setIsLoading(false)
         }
@@ -100,7 +133,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
         setTitle("")
         setProperty("")
         setCategory("")
-        setTenant("")
+        setRecipientId("")
     }
 
     return (
@@ -179,16 +212,22 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                             </Select>
                         </div>
 
-                        {/* Tenant */}
+                        {/* Tenant Selection */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Locataire :</Label>
-                            <Select onValueChange={setTenant} value={tenant} required>
+                            <Label className="text-[15px] font-semibold text-[#12182C]">Locataire destinataire :</Label>
+                            <Select onValueChange={setRecipientId} value={recipientId} required>
                                 <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-[#3153A1]">
                                     <SelectValue placeholder="Choisir le locataire" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Alex">Alex</SelectItem>
-                                    <SelectItem value="William">William</SelectItem>
+                                    {tenants.map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>
+                                            {t.display_name}
+                                        </SelectItem>
+                                    ))}
+                                    {tenants.length === 0 && (
+                                        <div className="p-2 text-sm text-slate-500 text-center">Aucun locataire trouvé</div>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -203,6 +242,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                                 <SelectContent>
                                     <SelectItem value="Contrats">Contrats</SelectItem>
                                     <SelectItem value="Etat des lieux">Etat des lieux</SelectItem>
+                                    <SelectItem value="Quittances">Quittances</SelectItem>
                                     <SelectItem value="Autres">Autres</SelectItem>
                                 </SelectContent>
                             </Select>

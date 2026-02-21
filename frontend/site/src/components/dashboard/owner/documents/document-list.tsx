@@ -1,6 +1,6 @@
 "use client"
 
-import { DocumentMock } from "@/lib/data/mock-documents"
+import { Document as DocumentMock } from "@/lib/types/document"
 import { DocumentCard } from "./document-card"
 
 interface DocumentListProps {

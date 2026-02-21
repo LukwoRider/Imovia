@@ -38,14 +38,25 @@ dotenv.config({ path: envFile });
 
 const url = process.env.SUPABASE_URL;
 const anon = process.env.SUPABASE_ANON_KEY;
-const ownerEmail = process.env.OWNER_EMAIL;
+const ownerEmail = "owner@imovia.test";
 const ownerPass = process.env.OWNER_PASS;
 const tenantEmail = "tenant@imovia.test";
 const tenantPass = process.env.TENANT_PASS;
 
 if (!url || !anon) throw new Error(`Missing SUPABASE_URL or SUPABASE_ANON_KEY in ${envFile}`);
-if (!ownerEmail || !ownerPass) throw new Error(`Missing OWNER_EMAIL/OWNER_PASS in ${envFile}`);
+if (!ownerPass) throw new Error(`Missing OWNER_PASS in ${envFile}`);
 if (!tenantPass) throw new Error(`Missing TENANT_PASS in ${envFile}`);
+
+if (process.env.OWNER_EMAIL && process.env.OWNER_EMAIL.toLowerCase() !== ownerEmail) {
+  console.warn(
+    `Ignoring OWNER_EMAIL=${process.env.OWNER_EMAIL}; this script enforces ${ownerEmail}.`
+  );
+}
+if (process.env.TENANT_EMAIL && process.env.TENANT_EMAIL.toLowerCase() !== tenantEmail) {
+  console.warn(
+    `Ignoring TENANT_EMAIL=${process.env.TENANT_EMAIL}; this script enforces ${tenantEmail}.`
+  );
+}
 
 const testTarget = (process.env.TEST_TARGET || "local").toLowerCase();
 if (!["local", "staging", "prod"].includes(testTarget)) {
@@ -440,6 +451,8 @@ async function run() {
       uploader_id: ownerId,
       storage_path: ownerDocStorage,
       title: `Owner receipt ${runTag}`,
+      document_date: isoDate(0),
+      target_tenant_id: tenantId,
       document_type: "receipt",
       doc_type: "receipt",
     })
@@ -465,13 +478,14 @@ async function run() {
 
   await supabase.auth.signOut();
 
-  // 9) Owner updates incident/maintenance statuses and reads owner views/RPC.
-  console.log("[9/12] Owner updates statuses + reads owner analytics");
+  // 9) Owner updates incident/maintenance statuses and reads owner modules.
+  console.log("[9/12] Owner updates statuses + reads owner modules");
   await login(ownerEmail, ownerPass);
 
   const { error: incidentInProgressErr } = await supabase.rpc("owner_update_incident_status", {
     p_incident_id: incidentA,
     p_status: "in_progress",
+    p_resolution_notes: null,
   });
   if (incidentInProgressErr) throw incidentInProgressErr;
 
@@ -519,6 +533,101 @@ async function run() {
   if (ownerKpisErr) throw ownerKpisErr;
   summary.owner_kpis_count = ownerKpisRows?.length ?? 0;
 
+  const { data: ownerProperties, error: ownerPropertiesErr } = await supabase
+    .from("properties")
+    .select("id, status, address, postal_code, city, property_type, floor_number")
+    .eq("id", property.id);
+  if (ownerPropertiesErr) throw ownerPropertiesErr;
+  assert((ownerProperties || []).length >= 1, "Owner cannot read properties");
+
+  const { data: ownerLeases, error: ownerLeasesErr } = await supabase
+    .from("leases")
+    .select("id, property_id, owner_id, status, start_date, end_date")
+    .eq("id", leaseId);
+  if (ownerLeasesErr) throw ownerLeasesErr;
+  assert((ownerLeases || []).length === 1, "Owner cannot read lease");
+
+  const { data: ownerLeaseMembers, error: ownerLeaseMembersErr } = await supabase
+    .from("lease_tenants")
+    .select("lease_id, tenant_id, joined_at")
+    .eq("lease_id", leaseId);
+  if (ownerLeaseMembersErr) throw ownerLeaseMembersErr;
+  assert((ownerLeaseMembers || []).length >= 1, "Owner cannot read lease_tenants");
+
+  const { data: ownerApplications, error: ownerApplicationsErr } = await supabase
+    .from("rental_applications")
+    .select("id, property_id, tenant_id, owner_id, status")
+    .eq("id", application.id);
+  if (ownerApplicationsErr) throw ownerApplicationsErr;
+  assert((ownerApplications || []).length === 1, "Owner cannot read rental applications");
+
+  const { data: ownerPayments, error: ownerPaymentsErr } = await supabase
+    .from("rent_payments")
+    .select("id, lease_id, status, amount_due, amount_paid, due_date")
+    .eq("lease_id", leaseId);
+  if (ownerPaymentsErr) throw ownerPaymentsErr;
+  assert((ownerPayments || []).length >= 3, "Owner cannot read rent payments");
+
+  const { data: ownerIncidents, error: ownerIncidentsErr } = await supabase
+    .from("incidents")
+    .select("id, lease_id, status, incident_type, priority, description")
+    .in("id", [incidentA, incidentB]);
+  if (ownerIncidentsErr) throw ownerIncidentsErr;
+  assert((ownerIncidents || []).length === 2, "Owner cannot read incidents");
+
+  const { data: ownerMaintenance, error: ownerMaintenanceErr } = await supabase
+    .from("maintenance_requests")
+    .select("id, lease_id, status, title, incident_id, cost_estimated, cost_real")
+    .in("id", [maintenanceA.id, maintenanceB.id]);
+  if (ownerMaintenanceErr) throw ownerMaintenanceErr;
+  assert((ownerMaintenance || []).length === 2, "Owner cannot read maintenance requests");
+
+  const { data: ownerDocuments, error: ownerDocumentsErr } = await supabase
+    .from("documents")
+    .select("id, lease_id, property_id, uploader_id, title, document_type, document_date, target_tenant_id")
+    .in("id", [tenantDoc.id, ownerDoc.id]);
+  if (ownerDocumentsErr) throw ownerDocumentsErr;
+  assert((ownerDocuments || []).length === 2, "Owner cannot read documents");
+  assert(
+    (ownerDocuments || []).some((d) => d.id === ownerDoc.id && d.target_tenant_id === tenantId),
+    "Owner targeted document is missing target_tenant_id"
+  );
+
+  const { data: ownerDocLinks, error: ownerDocLinksErr } = await supabase
+    .from("document_users")
+    .select("document_id, user_id, link_role")
+    .in("document_id", [tenantDoc.id, ownerDoc.id]);
+  if (ownerDocLinksErr) throw ownerDocLinksErr;
+  assert((ownerDocLinks || []).length >= 2, "Owner cannot read document link rows");
+
+  const { data: ownerPropertyImages, error: ownerPropertyImagesErr } = await supabase
+    .from("property_images")
+    .select("id, property_id, storage_path, is_cover")
+    .eq("property_id", property.id);
+  if (ownerPropertyImagesErr) throw ownerPropertyImagesErr;
+  assert((ownerPropertyImages || []).length >= 1, "Owner cannot read property images");
+
+  const { data: ownerPropertyContacts, error: ownerPropertyContactsErr } = await supabase
+    .from("property_tenant_contacts")
+    .select("id, property_id, tenant_profile_id, first_name, last_name, email")
+    .eq("property_id", property.id);
+  if (ownerPropertyContactsErr) throw ownerPropertyContactsErr;
+  assert((ownerPropertyContacts || []).length >= 1, "Owner cannot read property tenant contacts");
+
+  summary.owner_visible_counts = {
+    properties: ownerProperties.length,
+    leases: ownerLeases.length,
+    lease_tenants: ownerLeaseMembers.length,
+    applications: ownerApplications.length,
+    payments: ownerPayments.length,
+    incidents: ownerIncidents.length,
+    maintenance_requests: ownerMaintenance.length,
+    documents: ownerDocuments.length,
+    document_users: ownerDocLinks.length,
+    property_images: ownerPropertyImages.length,
+    property_tenant_contacts: ownerPropertyContacts.length,
+  };
+
   await supabase.auth.signOut();
 
   // 10) Tenant reads all associated data modules.
@@ -531,6 +640,16 @@ async function run() {
     .eq("id", leaseId);
   if (tenantLeasesErr) throw tenantLeasesErr;
   assert((tenantLeases || []).length === 1, "Tenant cannot read own lease");
+
+  const { data: tenantActiveLeases, error: tenantActiveLeasesErr } = await supabase
+    .from("leases")
+    .select("id")
+    .eq("status", "active");
+  if (tenantActiveLeasesErr) throw tenantActiveLeasesErr;
+  assert(
+    (tenantActiveLeases || []).length <= 1,
+    "Rule violation: tenant is affiliated to more than one active housing"
+  );
 
   const { data: tenantLeaseMembership, error: tenantLeaseMembershipErr } = await supabase
     .from("lease_tenants")
@@ -575,7 +694,7 @@ async function run() {
 
   const { data: tenantDocuments, error: tenantDocumentsErr } = await supabase
     .from("documents")
-    .select("id, storage_path, title, document_type, lease_id, property_id")
+    .select("id, storage_path, title, document_type, lease_id, property_id, document_date, target_tenant_id")
     .in("id", [tenantDoc.id, ownerDoc.id]);
   if (tenantDocumentsErr) throw tenantDocumentsErr;
   assert((tenantDocuments || []).length === 2, "Tenant cannot read both linked documents");

@@ -270,33 +270,48 @@ export default function TenantDashboard() {
                                 <p className="text-sm italic">Aucun incident déclaré</p>
                             </div>
                         ) : (
-                            incidents.map((incident) => (
-                                <div key={incident.id} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-[#3153A1]/30 transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className={cn(
-                                                "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                                                incident.status === 'resolved' ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
+                            incidents.map((incident) => {
+                                const isResolved = incident.status === 'resolved' || incident.status === 'closed';
+                                const isInProgress = incident.status === 'in_progress';
+                                const isOpen = incident.status === 'open';
+
+                                return (
+                                    <div key={incident.id} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-[#3153A1]/30 transition-colors cursor-pointer group">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                                                    isResolved ? "bg-green-100 text-green-600" :
+                                                        isInProgress ? "bg-amber-100 text-amber-600" :
+                                                            "bg-slate-100 text-slate-500"
+                                                )}>
+                                                    {isResolved ? <CheckCircle2 className="h-4 w-4" /> :
+                                                        isInProgress ? <Loader className="h-4 w-4 animate-spin" /> :
+                                                            <Clock className="h-4 w-4" />}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-[#12182C] line-clamp-1">{incident.description}</h4>
+                                                    <p className="text-xs text-slate-400">Déclaré le {format(new Date(incident.created_at), "dd MMM")}</p>
+                                                </div>
+                                            </div>
+                                            <Badge variant="outline" className={cn(
+                                                "capitalize gap-1 px-2 py-0.5 h-auto font-medium",
+                                                isOpen ? "bg-slate-50 text-slate-500 border-slate-200" :
+                                                    isInProgress ? "bg-amber-50 text-amber-600 border-amber-200" :
+                                                        "bg-green-50 text-green-600 border-green-200"
                                             )}>
-                                                {incident.status === 'resolved' ? <CheckCircle2 className="h-4 w-4" /> : <Loader className={cn("h-4 w-4", incident.status === 'in_progress' && "animate-spin")} />}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-[#12182C] line-clamp-1">{incident.description}</h4>
-                                                <p className="text-xs text-slate-400">Déclaré le {format(new Date(incident.created_at), "dd MMM")}</p>
-                                            </div>
+                                                {isOpen ? <Clock className="h-3 w-3" /> :
+                                                    isInProgress ? <Loader className="h-3 w-3 animate-spin" /> :
+                                                        <CheckCircle2 className="h-3 w-3" />}
+                                                {isOpen ? "En attente" :
+                                                    isInProgress ? "En cours" :
+                                                        "Résolu"}
+                                            </Badge>
                                         </div>
-                                        <Badge variant="outline" className={cn(
-                                            "capitalize",
-                                            incident.status === 'open' ? "bg-blue-50 text-blue-600 border-blue-200" :
-                                                incident.status === 'in_progress' ? "bg-amber-50 text-amber-600 border-amber-200" :
-                                                    "bg-green-50 text-green-600 border-green-200"
-                                        )}>
-                                            {incident.status.replace('_', ' ')}
-                                        </Badge>
+                                        <p className="text-sm text-slate-500 pl-[42px] line-clamp-2">{incident.location_details || "Pas de détails de localisation précis."}</p>
                                     </div>
-                                    <p className="text-sm text-slate-500 pl-[42px] line-clamp-2">{incident.location_details || "Pas de détails de localisation précis."}</p>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
 
                         <Button asChild className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white mt-2">
@@ -382,6 +397,9 @@ interface DocumentRowProps {
 }
 
 function DocumentRow({ title, date, type }: DocumentRowProps) {
+    const isOther = type.toLowerCase() === 'other' || type.toLowerCase() === 'autres'
+    const displayType = isOther ? title : type
+
     return (
         <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors group">
             <div className="flex items-center gap-3">
@@ -393,9 +411,9 @@ function DocumentRow({ title, date, type }: DocumentRowProps) {
                     <p className="text-xs text-slate-500">{date}</p>
                 </div>
             </div>
-            <Button variant="outline" size="sm" className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1]">
-                <Download className="h-3 w-3" />
-                <span className="sr-only sm:not-sr-only sm:inline-block text-xs">{type}</span>
+            <Button variant="outline" size="sm" className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[150px]">
+                <Download className="h-3 w-3 shrink-0" />
+                <span className="sr-only sm:not-sr-only sm:inline-block text-xs truncate">{displayType}</span>
             </Button>
         </div>
     )

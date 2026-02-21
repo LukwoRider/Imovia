@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Incident, IncidentStatus } from "@/lib/types/incident"
-import { Phone, CheckCircle2, Clock, Hourglass, Wrench, Zap, AlertTriangle, HelpCircle, Loader2 } from "lucide-react"
+import { Phone, CheckCircle2, Clock, Wrench, Zap, AlertTriangle, HelpCircle, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -16,8 +16,8 @@ interface IncidentListProps {
 
 const statusConfig: Record<IncidentStatus, { label: string; icon: ElementType; color: string; hoverColor: string }> = {
     resolved: { label: "Résolu", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100", hoverColor: "hover:bg-emerald-100" },
-    in_progress: { label: "En cours", icon: Clock, color: "text-amber-600 bg-amber-50 border-amber-100", hoverColor: "hover:bg-amber-100" },
-    open: { label: "En attente", icon: Hourglass, color: "text-slate-600 bg-slate-50 border-slate-100", hoverColor: "hover:bg-slate-100" },
+    in_progress: { label: "En cours", icon: Loader2, color: "text-amber-600 bg-amber-50 border-amber-100", hoverColor: "hover:bg-amber-100" },
+    open: { label: "En attente", icon: Clock, color: "text-slate-600 bg-slate-50 border-slate-100", hoverColor: "hover:bg-slate-100" },
     closed: { label: "Fermé", icon: CheckCircle2, color: "text-slate-500 bg-slate-50 border-slate-100", hoverColor: "hover:bg-slate-100" },
 }
 

@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, CheckCircle2, Clock, Hourglass, LayoutGrid } from "lucide-react"
+import { Search, CheckCircle2, Clock, LayoutGrid } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { IncidentStatus } from "@/lib/types/incident"
 
@@ -17,7 +17,7 @@ export function IncidentFilters({ currentFilter, onFilterChange, onSearchChange 
         { id: "ALL", label: "Tous", icon: LayoutGrid },
         { id: "resolved", label: "Résolus", icon: CheckCircle2 },
         { id: "in_progress", label: "En cours", icon: Clock },
-        { id: "open", label: "En attente", icon: Hourglass },
+        { id: "open", label: "En attente", icon: Clock },
     ]
 
     return (

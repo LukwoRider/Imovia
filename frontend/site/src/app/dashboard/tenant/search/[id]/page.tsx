@@ -11,6 +11,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { createClient } from "@/lib/supabase/client"
 import { Property } from "@/lib/types/property"
 import { User } from "@supabase/supabase-js"
+import { getPublicUrl } from "@/lib/supabase/storage-utils"
 
 export default function PropertyDetailsPage() {
     const params = useParams()
@@ -65,7 +66,7 @@ export default function PropertyDetailsPage() {
     }
 
     const images = property.images && property.images.length > 0
-        ? property.images.map(img => img.storage_path)
+        ? property.images.map(img => getPublicUrl(img.storage_path))
         : ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop"]
 
     const openLightbox = (index: number) => {

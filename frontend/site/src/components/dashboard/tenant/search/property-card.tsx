@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { getPublicUrl } from "@/lib/supabase/storage-utils"
 
 export interface PropertyCardProps {
     property: {
@@ -37,6 +38,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
         setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length)
     }
 
+    const currentImageUrl = property.images.length > 0
+        ? getPublicUrl(property.images[currentImageIndex])
+        : "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop"
+
     return (
         <Link href={`/dashboard/tenant/search/${property.id}`} className="block group">
             <div
@@ -47,7 +52,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 {/* Image Carousel */}
                 <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                     <Image
-                        src={property.images[currentImageIndex] || "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop"}
+                        src={currentImageUrl}
                         alt={property.title || "Image du bien"}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"

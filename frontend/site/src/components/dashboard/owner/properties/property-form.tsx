@@ -18,6 +18,7 @@ import { toast } from "sonner"
 import { Property, EnergyClass, PropertyStatus } from "@/lib/types/property"
 import { Loader2, Camera, MapPin, Building, Ruler, Euro, Info, Plus, Trash2 } from "lucide-react"
 import Image from "next/image"
+import { getPublicUrl } from "@/lib/supabase/storage-utils"
 
 interface PropertyFormProps {
     initialData?: Property
@@ -41,7 +42,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
         if (initialData?.images) {
             const existingImages: ImageItem[] = initialData.images.map(img => ({
                 id: img.id,
-                url: img.storage_path,
+                url: getPublicUrl(img.storage_path),
                 isExisting: true
             }))
             setImages(existingImages)
@@ -139,32 +140,54 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
                     const filePath = `properties/${propertyId}/${fileName}`
 
+                    console.log(`[DEBUG] Image ${i + 1}: Starting upload...`, { filePath })
+
+                    // 1. Upload to Storage
                     const { error: uploadError } = await supabase.storage
                         .from('property-images')
                         .upload(filePath, file)
 
-                    if (uploadError) throw uploadError
+                    if (uploadError) {
+                        console.error(`[DEBUG] Image ${i + 1}: Upload failed:`, uploadError)
+                        throw new Error(`Erreur d'upload pour l'image ${i + 1}: ${uploadError.message}`)
+                    }
 
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('property-images')
-                        .getPublicUrl(filePath)
-
-                    await supabase.from('property_images').insert([{
+                    // 2. Get Public URL (This step is no longer needed for storage_path)
+                    // 3. Save link to DB using relative path
+                    const { error: dbError } = await supabase.from('property_images').insert([{
                         property_id: propertyId,
-                        storage_path: publicUrl,
+                        storage_path: filePath, // Use relative path as per backend contract
                         is_cover: i === 0 && !images.some(img => img.isExisting && img.id)
                     }])
+
+                    if (dbError) {
+                        console.error(`[DEBUG] Image ${i + 1}: Database insert failed:`, dbError)
+                        throw new Error(`Lien de l'image ${i + 1} non enregistré: ${dbError.message}`)
+                    }
+
+                    console.log(`[DEBUG] Image ${i + 1}: Saved successfully`)
                 }
             }
 
-            if (images.length === 0) {
-                await supabase.from('property_images').insert([{
+            // Only insert placeholder if THERE ARE NO IMAGES AT ALL after our attempts
+            const { data: finalImages, error: checkError } = await supabase
+                .from('property_images')
+                .select('id')
+                .eq('property_id', propertyId)
+
+            if (checkError) console.error("[DEBUG] Error checking final images:", checkError)
+
+            if (!finalImages || finalImages.length === 0) {
+                console.log("[DEBUG] No images found, inserting placeholder...")
+                const { error: placeholderError } = await supabase.from('property_images').insert([{
                     property_id: propertyId,
                     storage_path: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop",
                     is_cover: true
                 }])
+                if (placeholderError) console.error("[DEBUG] Placeholder error:", placeholderError)
             }
 
+            toast.success(mode === 'edit' ? "Bien mis à jour !" : "Bien publié avec succès !")
             window.location.href = "/dashboard/owner/properties"
         } catch (error) {
             const err = error as Error

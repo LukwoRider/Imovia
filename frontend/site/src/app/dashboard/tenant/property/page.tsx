@@ -8,6 +8,7 @@ import { Home, Calendar, Phone, Mail, User, FileText, Box, Sofa, DollarSign, Loa
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import { Lease } from "@/lib/types/lease"
+import { getPublicUrl } from "@/lib/supabase/storage-utils"
 import { format } from "date-fns"
 
 export default function TenantPropertyPage() {
@@ -28,7 +29,10 @@ export default function TenantPropertyPage() {
                     .select(`
                         lease:leases (
                             *,
-                            property:properties (*),
+                            property:properties (
+                                *,
+                                images:property_images(*)
+                            ),
                             owner:profiles!leases_owner_id_fkey (*)
                         )
                     `)
@@ -105,8 +109,10 @@ export default function TenantPropertyPage() {
                         <div className="px-6 pb-6">
                             <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-6">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80"
-                                    alt="Appartement"
+                                    src={property?.images?.find(img => img.is_cover)?.storage_path
+                                        ? getPublicUrl(property.images.find(img => img.is_cover)!.storage_path)
+                                        : "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80"}
+                                    alt={property?.address || "Logement"}
                                     fill
                                     className="object-cover"
                                 />

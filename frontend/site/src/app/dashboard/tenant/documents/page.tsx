@@ -30,7 +30,6 @@ export default function DocumentsPage() {
             const { data, error } = await supabase
                 .from('documents')
                 .select('*')
-                .eq('tenant_id', user.id)
                 .order('created_at', { ascending: false })
 
             if (error) throw error
@@ -39,8 +38,8 @@ export default function DocumentsPage() {
                 id: doc.id,
                 title: doc.title || "Document sans titre",
                 date: new Date(doc.created_at).toLocaleDateString(),
-                category: (doc.doc_type || "Autres") as DocumentType,
-                type: (doc.doc_type || "Autres") as DocumentType,
+                category: (doc.document_type || "Autres") as DocumentType,
+                type: (doc.document_type || "Autres") as DocumentType,
                 storagePath: doc.storage_path
             }))
 

@@ -42,6 +42,9 @@ const ownerEmail = "owner@imovia.test";
 const ownerPass = process.env.OWNER_PASS;
 const tenantEmail = "tenant@imovia.test";
 const tenantPass = process.env.TENANT_PASS;
+const propertyImageSourceUrl =
+  process.env.PROPERTY_IMAGE_SOURCE_URL ||
+  "https://honka.com/wp-json/image/resize?w=900&h=600&src=reference%2Fhouse-kapanen%2FKapanen-cover.jpg";
 
 if (!url || !anon) throw new Error(`Missing SUPABASE_URL or SUPABASE_ANON_KEY in ${envFile}`);
 if (!ownerPass) throw new Error(`Missing OWNER_PASS in ${envFile}`);
@@ -183,6 +186,37 @@ async function uploadTextToBucket(bucket, storagePath, textContent) {
     }
   );
   if (error) throw error;
+}
+
+let cachedPropertyImageAsset = null;
+
+function extensionFromContentType(contentType) {
+  if (contentType.includes("png")) return "png";
+  if (contentType.includes("webp")) return "webp";
+  return "jpg";
+}
+
+async function getPropertyImageAsset() {
+  if (cachedPropertyImageAsset) return cachedPropertyImageAsset;
+
+  const response = await fetch(propertyImageSourceUrl);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download property image source (${response.status} ${response.statusText})`
+    );
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+  const ext = extensionFromContentType(contentType);
+
+  cachedPropertyImageAsset = {
+    bytes: Buffer.from(arrayBuffer),
+    contentType,
+    ext,
+  };
+
+  return cachedPropertyImageAsset;
 }
 
 /**
@@ -461,8 +495,16 @@ async function run() {
   if (ownerDocErr) throw ownerDocErr;
   summary.owner_document_id = ownerDoc.id;
 
-  const propertyImageStorage = `properties/${property.id}/${crypto.randomUUID()}-${runTag}.txt`;
-  await uploadTextToBucket("property-images", propertyImageStorage, `Property image placeholder ${runTag}`);
+  const imageAsset = await getPropertyImageAsset();
+  const propertyImageStorage = `properties/${property.id}/${crypto.randomUUID()}-${runTag}-cover.${imageAsset.ext}`;
+  const { error: propertyImageUploadErr } = await supabase
+    .storage
+    .from("property-images")
+    .upload(propertyImageStorage, imageAsset.bytes, {
+      contentType: imageAsset.contentType,
+      upsert: false,
+    });
+  if (propertyImageUploadErr) throw propertyImageUploadErr;
 
   const { data: propertyImage, error: propertyImageErr } = await supabase
     .from("property_images")
@@ -735,6 +777,7 @@ async function run() {
   // 12) Final summary for frontend team.
   console.log("[12/12] Seed completed");
   summary.created_at = new Date().toISOString();
+  summary.property_image_source_url = propertyImageSourceUrl;
   summary.storage_paths = {
     tenant_doc: tenantDocStorage,
     owner_doc: ownerDocStorage,

@@ -87,7 +87,7 @@ export default function PropertyDetailsPage() {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link
-                    href="/dashboard/tenant/search"
+                    href={user?.id === property.owner_id ? "/dashboard/owner/properties" : "/dashboard/tenant/search"}
                     className="flex items-center gap-2 text-slate-500 hover:text-[#3153A1] transition-colors"
                 >
                     <div className="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">

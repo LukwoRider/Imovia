@@ -39,7 +39,18 @@ export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
     return (
         <nav className="space-y-1">
             {items.map((item) => {
-                const isActive = pathname === item.href
+                let isActive = pathname === item.href
+
+                // For routes other than the root dashboard, use startsWith for better sub-route highlighting
+                if (item.href !== "/dashboard/owner" && item.href !== "/dashboard/tenant") {
+                    isActive = pathname.startsWith(item.href)
+                }
+
+                // Special Case: Owner viewing a property detail (which is technically under tenant search path)
+                // should highlight "Liste des biens"
+                if (isOwner && item.href === "/dashboard/owner/properties" && pathname.startsWith("/dashboard/tenant/search/")) {
+                    isActive = true
+                }
                 return (
                     <Link
                         key={item.href}

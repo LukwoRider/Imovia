@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Home, Calendar, Phone, Mail, User, FileText, Box, Sofa, DollarSign, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
+import { getTenantActiveLease } from "@/lib/supabase/tenant-dashboard-utils"
 import { Lease } from "@/lib/types/lease"
 import { getPublicUrl } from "@/lib/supabase/storage-utils"
 import { format } from "date-fns"
@@ -23,37 +24,8 @@ export default function TenantPropertyPage() {
                 const { data: { user } } = await supabase.auth.getUser()
                 if (!user) return
 
-                // Fetch active lease for this tenant
-                const { data, error } = await supabase
-                    .from('lease_tenants')
-                    .select(`
-                        lease:leases (
-                            *,
-                            property:properties (
-                                *,
-                                images:property_images(*)
-                            ),
-                            owner:profiles!leases_owner_id_fkey (*)
-                        )
-                    `)
-                    .eq('tenant_id', user.id)
-                    .order('joined_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle()
-
-                if (error) {
-                    console.error("Error fetching lease assignment - Code:", error.code, "Message:", error.message)
-                    return
-                }
-
-                if (!data) {
-                    console.warn("No lease assignment found for tenant ID:", user.id)
-                    return
-                }
-
-                if (data?.lease) {
-                    setLease(data.lease as unknown as Lease)
-                }
+                const activeLease = await getTenantActiveLease(user.id)
+                setLease(activeLease)
             } catch (err) {
                 console.error("Error fetching property details:", err)
             } finally {

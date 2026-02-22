@@ -140,7 +140,6 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
                     const filePath = `properties/${propertyId}/${fileName}`
 
-                    console.log(`[DEBUG] Image ${i + 1}: Starting upload...`, { filePath })
 
                     // 1. Upload to Storage
                     const { error: uploadError } = await supabase.storage
@@ -148,7 +147,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                         .upload(filePath, file)
 
                     if (uploadError) {
-                        console.error(`[DEBUG] Image ${i + 1}: Upload failed:`, uploadError)
+                        console.error(`Erreur d'upload pour l'image ${i + 1}:`, uploadError)
                         throw new Error(`Erreur d'upload pour l'image ${i + 1}: ${uploadError.message}`)
                     }
 
@@ -161,11 +160,10 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     }])
 
                     if (dbError) {
-                        console.error(`[DEBUG] Image ${i + 1}: Database insert failed:`, dbError)
+                        console.error(`Lien de l'image ${i + 1} non enregistré:`, dbError)
                         throw new Error(`Lien de l'image ${i + 1} non enregistré: ${dbError.message}`)
                     }
 
-                    console.log(`[DEBUG] Image ${i + 1}: Saved successfully`)
                 }
             }
 
@@ -175,16 +173,15 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                 .select('id')
                 .eq('property_id', propertyId)
 
-            if (checkError) console.error("[DEBUG] Error checking final images:", checkError)
+            if (checkError) console.error("Error checking final images:", checkError)
 
             if (!finalImages || finalImages.length === 0) {
-                console.log("[DEBUG] No images found, inserting placeholder...")
                 const { error: placeholderError } = await supabase.from('property_images').insert([{
                     property_id: propertyId,
                     storage_path: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop",
                     is_cover: true
                 }])
-                if (placeholderError) console.error("[DEBUG] Placeholder error:", placeholderError)
+                if (placeholderError) console.error("Placeholder error:", placeholderError)
             }
 
             toast.success(mode === 'edit' ? "Bien mis à jour !" : "Bien publié avec succès !")

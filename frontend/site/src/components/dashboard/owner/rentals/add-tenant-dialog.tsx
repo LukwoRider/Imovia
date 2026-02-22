@@ -55,7 +55,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
             setFetchingProperties(true)
             const data = await getAvailableProperties()
             setProperties(data)
-        } catch (error) {
+        } catch (_error) {
             toast.error("Impossible de récupérer vos biens disponibles")
         } finally {
             setFetchingProperties(false)
@@ -67,7 +67,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
             setFetchingTenants(true)
             const data = await getAllTenants()
             setAllTenants(data)
-        } catch (error) {
+        } catch (_error) {
             toast.error("Impossible de récupérer la liste des locataires")
         } finally {
             setFetchingTenants(false)
@@ -106,8 +106,8 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
             toast.success("Location configurée avec succès !")
             onOpenChange(false)
             onSuccess?.()
-        } catch (error: any) {
-            toast.error(error.message || "Une erreur est survenue")
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Une erreur est survenue")
         } finally {
             setLoading(false)
         }
@@ -233,7 +233,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                         <div className="p-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100 text-center">
                                             <User className="h-12 w-12 text-slate-300 mx-auto mb-4" />
                                             <p className="text-slate-500 font-medium">Aucun locataire trouvé dans la base.</p>
-                                            <p className="text-xs text-slate-400 mt-1">Les locataires doivent avoir créé un compte avec le rôle \"locataire\".</p>
+                                            <p className="text-xs text-slate-400 mt-1">Les locataires doivent avoir cr&eacute;&eacute; un compte avec le r&ocirc;le &quot;locataire&quot;.</p>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 gap-2 max-h-[350px] overflow-y-auto pr-2 scrollbar-hide py-2">

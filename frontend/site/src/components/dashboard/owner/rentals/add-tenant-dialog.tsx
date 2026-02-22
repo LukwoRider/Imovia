@@ -55,7 +55,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
             setFetchingProperties(true)
             const data = await getAvailableProperties()
             setProperties(data)
-        } catch (_error) {
+        } catch {
             toast.error("Impossible de récupérer vos biens disponibles")
         } finally {
             setFetchingProperties(false)
@@ -67,7 +67,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
             setFetchingTenants(true)
             const data = await getAllTenants()
             setAllTenants(data)
-        } catch (_error) {
+        } catch {
             toast.error("Impossible de récupérer la liste des locataires")
         } finally {
             setFetchingTenants(false)

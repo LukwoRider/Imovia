@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react"
 export function PropertiesClient() {
     const [properties, setProperties] = useState<Property[]>([])
     const [loading, setLoading] = useState(true)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const supabase = createClient()
 
     const fetchProperties = useCallback(async () => {
@@ -45,6 +46,26 @@ export function PropertiesClient() {
         window.location.href = "/dashboard/owner/properties/add"
     }
 
+    const handleDeleteProperty = async (id: string) => {
+        try {
+            setDeletingId(id)
+            const { error } = await supabase
+                .from('properties')
+                .delete()
+                .eq('id', id)
+
+            if (error) throw error
+
+            setProperties(prev => prev.filter(p => p.id !== id))
+            toast.success("Bien supprimé avec succès")
+        } catch (error) {
+            console.error("Error deleting property:", error)
+            toast.error("Erreur lors de la suppression du bien")
+        } finally {
+            setDeletingId(null)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -57,5 +78,12 @@ export function PropertiesClient() {
         return <EmptyPropertiesState onAddProperty={handleAddProperty} />
     }
 
-    return <PropertiesList properties={properties} onAddProperty={handleAddProperty} />
+    return (
+        <PropertiesList
+            properties={properties}
+            onAddProperty={handleAddProperty}
+            onDeleteProperty={handleDeleteProperty}
+            isDeleting={deletingId !== null}
+        />
+    )
 }

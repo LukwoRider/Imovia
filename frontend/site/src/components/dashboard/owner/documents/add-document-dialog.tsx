@@ -10,6 +10,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -149,7 +150,9 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
                             <DialogTitle className="text-2xl font-bold text-[#12182C]">Ajouter un document</DialogTitle>
-                            <p className="text-slate-500 text-sm">Partager un document<br />Pensez &agrave; remplir toutes les informations n&eacute;cessaires</p>
+                            <DialogDescription className="text-slate-500 text-sm">
+                                Partager un document<br />Pensez &agrave; remplir toutes les informations n&eacute;cessaires
+                            </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>

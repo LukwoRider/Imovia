@@ -20,6 +20,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogClose,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -222,6 +223,9 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                 <DialogContent className="sm:max-w-[400px] rounded-3xl">
                     <DialogHeader>
                         <DialogTitle>Fiche Locataire</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Informations de contact et profil du locataire.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-4 py-6">
                         <Avatar className="h-24 w-24 border-4 border-slate-50 shadow-sm">
@@ -259,7 +263,10 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                                 <Badge className="bg-[#3153A1] text-white border-none mb-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                     Détails du Contrat
                                 </Badge>
-                                <h2 className="text-2xl font-black tracking-tight leading-none uppercase">Gérer le bail</h2>
+                                <DialogTitle className="text-2xl font-black tracking-tight leading-none uppercase">Gérer le bail</DialogTitle>
+                                <DialogDescription className="sr-only">
+                                    Détails et gestion du contrat de bail pour ce logement.
+                                </DialogDescription>
                             </div>
                             <DialogClose asChild>
                                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all">

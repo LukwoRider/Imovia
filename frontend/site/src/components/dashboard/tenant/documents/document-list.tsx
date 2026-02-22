@@ -126,9 +126,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                                     ) : (
                                         <Download className="h-4 w-4" />
                                     )}
-                                    <span className="truncate max-w-[120px]">
-                                        {isDownloading ? "En cours..." : (doc.type?.toLowerCase() === 'other' || doc.type?.toLowerCase() === 'autres' || !doc.type ? doc.title : doc.type)}
-                                    </span>
+                                    {isDownloading ? "En cours..." : "Telecharger"}
                                 </Button>
                             </div>
                         </div>

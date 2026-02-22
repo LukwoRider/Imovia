@@ -3,14 +3,32 @@
 import { Property } from "@/lib/types/property"
 import { PropertyCard } from "@/components/dashboard/tenant/search/property-card"
 import { Button } from "@/components/ui/button"
-import { Plus, Pencil } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface PropertiesListProps {
     properties: Property[]
     onAddProperty: () => void
+    onDeleteProperty: (id: string) => Promise<void>
+    isDeleting: boolean
 }
 
-export function PropertiesList({ properties, onAddProperty }: PropertiesListProps) {
+export function PropertiesList({
+    properties,
+    onAddProperty,
+    onDeleteProperty,
+    isDeleting
+}: PropertiesListProps) {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -57,7 +75,7 @@ export function PropertiesList({ properties, onAddProperty }: PropertiesListProp
                                 </span>
                             </div>
 
-                            <div className="absolute top-4 right-4 z-10 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
+                            <div className="absolute top-4 right-4 z-10 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 flex items-center gap-2">
                                 <Button
                                     onClick={(e) => {
                                         e.preventDefault()
@@ -69,6 +87,38 @@ export function PropertiesList({ properties, onAddProperty }: PropertiesListProp
                                     <Pencil className="h-4 w-4" />
                                     Modifier
                                 </Button>
+
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            disabled={isDeleting}
+                                            variant="destructive"
+                                            className="h-10 w-10 p-0 rounded-xl shadow-xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center bg-red-500 hover:bg-red-600 border-none"
+                                        >
+                                            <Trash2 className="h-4 w-4 text-white" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-xl font-bold text-[#12182C]">Supprimer ce bien ?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-slate-500">
+                                                Cette action est irréversible. Toutes les données associées (baux, documents, images) seront définitivement supprimées de nos serveurs.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter className="gap-2">
+                                            <AlertDialogCancel className="rounded-xl border-slate-200 font-semibold h-11 px-6">Annuler</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => onDeleteProperty(property.id)}
+                                                className="bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold h-11 px-8 shadow-lg shadow-red-900/20"
+                                            >
+                                                {isDeleting ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                ) : null}
+                                                Supprimer
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
 
                             <PropertyCard property={cardProperty} />

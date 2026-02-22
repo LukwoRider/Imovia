@@ -245,3 +245,29 @@ export async function getAvailableProperties() {
 
     return filteredProperties
 }
+
+/**
+ * Updates an existing lease with new details.
+ */
+export async function updateLease(leaseId: string, updates: {
+    rent_amount?: number
+    charges_amount?: number
+    deposit_amount?: number
+    start_date?: string
+    payment_day?: number
+}) {
+    const supabase = createClient()
+    const { data, error } = await supabase
+        .from('leases')
+        .update(updates)
+        .eq('id', leaseId)
+        .select()
+        .maybeSingle()
+
+    if (error) {
+        console.error("Error updating lease:", error)
+        throw new Error(`Erreur lors de la mise à jour du bail: ${error.message}`)
+    }
+
+    return data
+}

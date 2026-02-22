@@ -37,18 +37,25 @@ export default function TenantPropertyPage() {
                         )
                     `)
                     .eq('tenant_id', user.id)
-                    .single()
+                    .order('joined_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle()
 
                 if (error) {
-                    console.warn("No active lease found for tenant:", error.message)
+                    console.error("Error fetching lease assignment - Code:", error.code, "Message:", error.message)
+                    return
+                }
+
+                if (!data) {
+                    console.warn("No lease assignment found for tenant ID:", user.id)
                     return
                 }
 
                 if (data?.lease) {
                     setLease(data.lease as unknown as Lease)
                 }
-            } catch (error) {
-                console.error("Error fetching property details:", error)
+            } catch (err) {
+                console.error("Error fetching property details:", err)
             } finally {
                 setLoading(false)
             }
@@ -76,8 +83,7 @@ export default function TenantPropertyPage() {
         )
     }
 
-    const { property } = lease
-    const owner = (lease as unknown as { owner: { full_name: string, email: string, phone: string | null } }).owner
+    const { property, owner } = lease
 
     return (
         <div className="max-w-7xl mx-auto">

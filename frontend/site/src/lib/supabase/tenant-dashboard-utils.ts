@@ -11,7 +11,15 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
         .select('lease_id')
         .eq('tenant_id', tileId)
 
-    if (ltError || !leaseTenants || leaseTenants.length === 0) return null
+    if (ltError) {
+        console.error("Error fetching lease_tenants:", ltError.code, ltError.message)
+        return null
+    }
+
+    if (!leaseTenants || leaseTenants.length === 0) {
+        console.warn("No lease_tenants found for user:", tileId)
+        return null
+    }
 
     const leaseIds = leaseTenants.map(lt => lt.lease_id)
 
@@ -20,9 +28,19 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
         .select('*, property:properties(*, images:property_images(*))')
         .in('id', leaseIds)
         .eq('status', 'active')
-        .single()
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-    if (lError || !lease) return null
+    if (lError) {
+        console.error("Error fetching leases - Code:", lError.code, "Message:", lError.message)
+        return null
+    }
+
+    if (!lease) {
+        console.warn("No active lease found in 'leases' table for IDs:", leaseIds)
+        return null
+    }
 
     return lease as unknown as Lease
 }
@@ -59,7 +77,7 @@ export async function getTenantIncidents(userId: string): Promise<Incident[]> {
     return data as unknown as Incident[]
 }
 
-export async function getTenantDocuments(_userId: string): Promise<Document[]> {
+export async function getTenantDocuments(): Promise<Document[]> {
     const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -71,12 +89,12 @@ export async function getTenantDocuments(_userId: string): Promise<Document[]> {
         return []
     }
 
-    return data.map(doc => ({
+    return (data || []).map(doc => ({
         id: doc.id,
         title: doc.title || 'Document sans titre',
         date: new Date(doc.created_at).toLocaleDateString('fr-FR'),
-        category: (doc.document_type || 'Autres') as any,
-        type: (doc.document_type || 'Autres') as any,
+        category: doc.document_type || 'Autres',
+        type: doc.document_type || 'Autres',
         storagePath: doc.storage_path
-    }))
+    })) as Document[]
 }

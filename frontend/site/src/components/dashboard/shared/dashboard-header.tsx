@@ -3,7 +3,8 @@
 import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, Bell } from "lucide-react"
+import { Menu } from "lucide-react"
+import { NotificationCenter } from "./notification-center"
 
 export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: (open: boolean) => void }) {
     const { user } = useUser()
@@ -36,14 +37,11 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="p-2 text-slate-400 hover:text-[#3153A1] transition-colors relative">
-                    <Bell className="h-6 w-6" />
-                    <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-                </button>
+                <NotificationCenter userId={user.id} />
                 <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                     <Avatar>
                         <AvatarImage src={user.avatar} className="object-cover" />
-                        <AvatarFallback>{user.name?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
+                        <AvatarFallback>{user.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
                     </Avatar>
                 </div>
             </div>

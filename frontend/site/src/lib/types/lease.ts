@@ -24,7 +24,13 @@ export interface Lease {
         full_name: string
         phone: string
         email: string
+        avatar_url?: string
     }[]
+    owner?: {
+        full_name: string
+        email: string
+        phone: string | null
+    }
 }
 
 export interface RentPayment {

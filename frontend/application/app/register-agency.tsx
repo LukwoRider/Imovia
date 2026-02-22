@@ -91,7 +91,7 @@ export default function RegisterAgencyPage() {
                 Alert.alert(
                     "Compte créé",
                     "Votre compte agence a été créé avec succès. Veuillez vérifier vos emails.",
-                    [{ text: "OK", onPress: () => router.replace("/login") }]
+                    [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
                 );
             }
         }

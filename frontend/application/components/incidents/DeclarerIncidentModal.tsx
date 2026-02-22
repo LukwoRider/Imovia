@@ -262,50 +262,39 @@ export default function DeclarerIncidentView({
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Utilisateur non connecté");
 
-            // Fetch the first active lease for this tenant to know the property
             const { data: leaseData, error: leaseError } = await supabase
                 .from("lease_tenants")
-                .select(`
-                    lease_id,
-                    leases (
-                        property_id
-                    )
-                `)
+                .select("lease_id")
                 .eq("tenant_id", user.id)
-                .limit(1)
-                .single();
+                .maybeSingle();
 
-            if (leaseError || !leaseData) {
+            if (leaseError) {
                 console.error("[Incident] Lease fetch error:", leaseError);
-                throw new Error("Impossible de trouver votre bail actif.");
+                throw new Error("Erreur lors de la vérification de votre bail.");
+            }
+
+            if (!leaseData) {
+                Alert.alert(
+                    "Action impossible",
+                    "Vous n'avez pas de bail actif associé à votre compte. Seuls les locataires ayant un bail en cours peuvent déclarer des incidents."
+                );
+                return;
             }
 
             const leaseId = leaseData.lease_id;
-            const propertyId = (leaseData.leases as any)?.property_id;
 
-            if (!propertyId) {
-                throw new Error("Information sur le logement manquante.");
-            }
-
-            // Map UI type to backend enum
             const backendType = mapToBackendType(selectedType);
 
-            const { error: insertError } = await supabase
-                .from("incidents")
-                .insert({
-                    property_id: propertyId,
-                    lease_id: leaseId,
-                    reporter_id: user.id,
-                    description: description.trim(),
-                    incident_type: backendType,
-                    contact_phone: telephone.replace(/\s/g, ""),
-                    allow_access_without_presence: autoriseAcces,
-                    preferred_visit_date: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
-                    location_details: "Etage 1", // Optionnel, ou ajouter un champ
-                    status: "open"
-                });
+            const { data: incidentId, error: rpcError } = await supabase.rpc("create_incident", {
+                p_lease_id: leaseId,
+                p_description: description.trim(),
+                p_incident_type: backendType,
+                p_contact_phone: telephone.replace(/\s/g, ""),
+                p_preferred_visit_date: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
+                p_allow_access_without_presence: autoriseAcces
+            });
 
-            if (insertError) throw insertError;
+            if (rpcError) throw rpcError;
 
             Alert.alert("Succès", "Votre incident a été déclaré avec succès.");
             onBack();

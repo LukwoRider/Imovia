@@ -1,13 +1,18 @@
+import AjouterDocumentModal from "@/components/documents/AjouterDocumentModal";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
+import { cacheDirectory, EncodingType, writeAsStringAsync } from "expo-file-system/legacy";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import * as MailComposer from "expo-mail-composer";
+import * as Sharing from "expo-sharing";
+import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
 type DocCategory = "tous" | "contrats" | "etat" | "autres";
 
@@ -30,7 +35,15 @@ const CATEGORIES: { key: DocCategory; label: string; icon: string }[] = [
     { key: "autres", label: "Autres", icon: "albums-outline" },
 ];
 
-function DocumentRow({ doc }: { doc: Document }) {
+function DocumentRow({
+    doc,
+    isManagement,
+    onDelete
+}: {
+    doc: Document;
+    isManagement: boolean;
+    onDelete: () => void;
+}) {
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleDownload = async () => {
@@ -39,15 +52,11 @@ function DocumentRow({ doc }: { doc: Document }) {
         try {
             let fullPath = doc.storage_path;
 
-            // If the path doesn't start with 'leases/', we assume it needs to be reconstructed
-            // according to the policy: leases/<lease_id>/<filename>
             if (!fullPath.startsWith("leases/")) {
-                // Remove any leading slash just in case
                 const cleanName = fullPath.replace(/^\//, "");
                 fullPath = `leases/${doc.lease_id}/${cleanName}`;
             }
 
-            console.log("[Documents] Requesting signed URL for:", fullPath);
 
             const { data, error } = await supabase.storage
                 .from("documents")
@@ -62,6 +71,54 @@ function DocumentRow({ doc }: { doc: Document }) {
             Alert.alert("Erreur", "Impossible de récupérer le fichier : " + (error.message || "Fichier non trouvé"));
         } finally {
             setIsDownloading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+
+        const executeDelete = async () => {
+            try {
+                if (doc.storage_path) {
+                    const { error: storageError } = await supabase.storage
+                        .from("documents")
+                        .remove([doc.storage_path]);
+
+                    if (storageError) {
+                        console.error("[Documents] Storage delete error:", storageError);
+                    }
+                }
+
+                const { error: dbError } = await supabase
+                    .from("documents")
+                    .delete()
+                    .eq("id", doc.id);
+
+                if (dbError) {
+                    console.error("[Documents] Database delete error:", dbError);
+                    throw dbError;
+                }
+
+                Alert.alert("Succès", "Document supprimé.");
+                onDelete();
+            } catch (e: any) {
+                console.error("[Documents] Full delete crash:", e);
+                Alert.alert("Erreur", "Impossible de supprimer le document : " + (e.message || "Erreur inconnue"));
+            }
+        };
+
+        if (Platform.OS === "web") {
+            if (window.confirm("Voulez-vous vraiment supprimer ce document ?")) {
+                await executeDelete();
+            }
+        } else {
+            Alert.alert("Supprimer", "Voulez-vous vraiment supprimer ce document ?", [
+                { text: "Annuler", style: "cancel", onPress: () => console.log("[Documents] Delete cancelled") },
+                {
+                    text: "Supprimer",
+                    style: "destructive",
+                    onPress: executeDelete
+                }
+            ]);
         }
     };
 
@@ -116,31 +173,52 @@ function DocumentRow({ doc }: { doc: Document }) {
                 </Text>
             </View>
 
-            <Pressable
-                onPress={handleDownload}
-                disabled={isDownloading}
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: isDownloading ? "#9ca3af" : "#3153A1",
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                }}
-            >
-                <Text
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+                {isManagement && (
+                    <Pressable
+                        onPress={() => {
+                            handleDelete();
+                        }}
+                        hitSlop={15}
+                        style={({ pressed }) => ({
+                            flexDirection: "row",
+                            alignItems: "center",
+                            backgroundColor: pressed ? "#fca5a5" : "#fee2e2",
+                            borderRadius: 10,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            opacity: pressed ? 0.7 : 1,
+                        })}
+                    >
+                        <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                    </Pressable>
+                )}
+                <Pressable
+                    onPress={handleDownload}
+                    disabled={isDownloading}
                     style={{
-                        color: "#fff",
-                        fontSize: 11,
-                        fontWeight: "600",
-                        marginRight: 6,
-                        fontFamily: "Montserrat_600SemiBold",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: isDownloading ? "#9ca3af" : "#3153A1",
+                        borderRadius: 10,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
                     }}
                 >
-                    {isDownloading ? "..." : "Telecharger"}
-                </Text>
-                <Ionicons name="download-outline" size={14} color="#fff" />
-            </Pressable>
+                    <Text
+                        style={{
+                            color: "#fff",
+                            fontSize: 11,
+                            fontWeight: "600",
+                            marginRight: 6,
+                            fontFamily: "Montserrat_600SemiBold",
+                        }}
+                    >
+                        {isDownloading ? "..." : "Télécharger"}
+                    </Text>
+                    <Ionicons name="download-outline" size={14} color="#fff" />
+                </Pressable>
+            </View>
         </View>
     );
 }
@@ -343,6 +421,115 @@ export default function DocumentsPage() {
     const [activeCategory, setActiveCategory] = useState<DocCategory>("tous");
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
+
+    const isOwnerOrAgency = useMemo(() => {
+        if (!userRole) return false;
+        const role = userRole.toLowerCase();
+        return role === 'owner' || role === 'agency' || role === 'propriétaire';
+    }, [userRole]);
+
+    const [isZipping, setIsZipping] = useState(false);
+
+    const generateZip = async () => {
+        if (documents.length === 0) {
+            Alert.alert("Information", "Aucun document à compresser.");
+            return null;
+        }
+
+        setIsZipping(true);
+        const zip = new JSZip();
+
+        try {
+            for (const doc of documents) {
+                if (!doc.storage_path) continue;
+
+                const { data, error } = await supabase.storage
+                    .from("documents")
+                    .download(doc.storage_path);
+
+                if (error) {
+                    console.error(`Error downloading ${doc.titre}:`, error);
+                    continue;
+                }
+
+                const arrayBuffer = await data.arrayBuffer();
+
+                const ext = doc.storage_path.split('.').pop() || 'pdf';
+                const filename = `${doc.titre}.${ext}`.replace(/[<>:"/\\|?*]/g, '_');
+                zip.file(filename, arrayBuffer);
+            }
+
+            if (Platform.OS === 'web') {
+                return await zip.generateAsync({ type: "blob" });
+            } else {
+                const base64 = await zip.generateAsync({ type: "base64" });
+                const zipUri = cacheDirectory + "MesDocuments_Imovia.zip";
+                await writeAsStringAsync(zipUri, base64, {
+                    encoding: EncodingType.Base64,
+                });
+                return zipUri;
+            }
+        } catch (error) {
+            console.error("ZIP Generation error:", error);
+            Alert.alert("Erreur", "Impossible de générer le fichier ZIP.");
+            return null;
+        } finally {
+            setIsZipping(false);
+        }
+    };
+
+    const handleDownloadAll = async () => {
+        const result = await generateZip();
+        if (!result) return;
+
+        if (Platform.OS === "web") {
+            const blob = result as Blob;
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'MesDocuments_Imovia.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } else {
+            const uri = result as string;
+            await Sharing.shareAsync(uri, {
+                mimeType: "application/zip",
+                dialogTitle: "Télécharger mes documents",
+                UTI: "com.pkware.zip-archive",
+            });
+        }
+    };
+
+    const handleEmailAll = async () => {
+        const result = await generateZip();
+        if (!result) return;
+
+        if (Platform.OS === 'web') {
+            const confirmEmail = window.confirm("Sur navigateur, vous devez télécharger le fichier ZIP puis l'attacher manuellement. Voulez-vous télécharger le ZIP et ouvrir votre messagerie ?");
+            if (confirmEmail) {
+                handleDownloadAll();
+                Linking.openURL("mailto:?subject=Mes Documents Imovia&body=Veuillez trouver ci-joint mes documents Imovia.");
+            }
+        } else {
+            const uri = result as string;
+            const isAvailable = await MailComposer.isAvailableAsync();
+            if (isAvailable) {
+                await MailComposer.composeAsync({
+                    subject: "Mes Documents Imovia",
+                    body: "Veuillez trouver ci-joint mes documents Imovia.",
+                    attachments: [uri],
+                });
+            } else {
+                Alert.alert("Erreur", "L'envoi d'e-mail n'est pas disponible sur cet appareil.");
+                await Sharing.shareAsync(uri);
+            }
+        }
+    };
 
     useEffect(() => {
         fetchDocuments();
@@ -352,36 +539,63 @@ export default function DocumentsPage() {
         setLoading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Fetch leases for this tenant
-            const { data: leases, error: leaseError } = await supabase
-                .from("lease_tenants")
-                .select("lease_id")
-                .eq("tenant_id", user.id);
-
-            if (leaseError) throw leaseError;
-
-            const leaseIds = leases?.map(l => l.lease_id) || [];
-
-            if (leaseIds.length === 0) {
-                setDocuments([]);
+            if (!user) {
+                setLoading(false);
                 return;
             }
+            setUserId(user.id);
 
-            // Fetch documents for these leases
-            const { data: dbDocs, error: docError } = await supabase
-                .from("documents")
-                .select("*")
-                .in("lease_id", leaseIds)
-                .order("created_at", { ascending: false });
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            const profileRole = profile?.role || user.user_metadata?.role || "tenant";
+            setUserRole(profileRole);
+
+            const checkRole = profileRole.toLowerCase();
+            const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+
+            let dbDocs: any[] = [];
+            let docError: any = null;
+
+            if (isManagement) {
+                const { data, error } = await supabase
+                    .from("documents")
+                    .select("*")
+                    .eq("uploader_id", user.id)
+                    .order("created_at", { ascending: false });
+                dbDocs = data || [];
+                docError = error;
+            } else {
+                // Fetch leases for this tenant
+                const { data: leases, error: leaseError } = await supabase
+                    .from("lease_tenants")
+                    .select("lease_id")
+                    .eq("tenant_id", user.id);
+
+                if (leaseError) throw leaseError;
+
+                const leaseIds = leases?.map(l => l.lease_id) || [];
+
+                if (leaseIds.length > 0) {
+                    const { data, error } = await supabase
+                        .from("documents")
+                        .select("*")
+                        .in("lease_id", leaseIds)
+                        .order("created_at", { ascending: false });
+                    dbDocs = data || [];
+                    docError = error;
+                }
+            }
 
             if (docError) throw docError;
 
             const mappedDocs: Document[] = (dbDocs || []).map(d => ({
                 id: d.id,
                 titre: d.title || "Sans titre",
-                date: new Date(d.created_at).toLocaleDateString("fr-FR"),
+                date: d.document_date ? new Date(d.document_date).toLocaleDateString("fr-FR") : new Date(d.created_at).toLocaleDateString("fr-FR"),
                 categorie: mapDocType(d.document_type),
                 storage_path: d.storage_path,
                 lease_id: d.lease_id,
@@ -505,6 +719,33 @@ export default function DocumentsPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+                    {isOwnerOrAgency && (
+                        <Pressable
+                            onPress={() => setShowAddModal(true)}
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                backgroundColor: "#3153A1",
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                alignSelf: "flex-start",
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons name="add-circle-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                            <Text
+                                style={{
+                                    color: "#fff",
+                                    fontSize: 11,
+                                    fontWeight: "600",
+                                    fontFamily: "Montserrat_600SemiBold",
+                                }}
+                            >
+                                Ajouter
+                            </Text>
+                        </Pressable>
+                    )}
                     <View
                         style={{
                             flexDirection: "row",
@@ -613,7 +854,12 @@ export default function DocumentsPage() {
                         </View>
                     ) : pagedDocs.length > 0 ? (
                         pagedDocs.map((doc) => (
-                            <DocumentRow key={doc.id} doc={doc} />
+                            <DocumentRow
+                                key={doc.id}
+                                doc={doc}
+                                isManagement={isOwnerOrAgency}
+                                onDelete={fetchDocuments}
+                            />
                         ))
                     ) : (
                         <View
@@ -701,20 +947,32 @@ export default function DocumentsPage() {
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <QuickAction
                                 icon="download-outline"
-                                title="Telecharger tous Mes Documents"
+                                title={isZipping ? "Compression..." : "Telecharger tous Mes Documents"}
                                 subtitle="Telecharger tous vos documents"
-                                onPress={() => Alert.alert("Information", "Le téléchargement groupé sera disponible prochainement.")}
+                                onPress={handleDownloadAll}
                             />
                             <QuickAction
                                 icon="mail-outline"
-                                title="Envoyer par e-mail"
+                                title={isZipping ? "Compression..." : "Envoyer par e-mail"}
                                 subtitle="Envoyer vos documents par mail"
-                                onPress={() => Linking.openURL("mailto:?subject=Mes Documents Imovia")}
+                                onPress={handleEmailAll}
                             />
                         </View>
                     </View>
                 </View>
             </ScrollView>
+
+            {isOwnerOrAgency && userId && (
+                <AjouterDocumentModal
+                    visible={showAddModal}
+                    onClose={() => setShowAddModal(false)}
+                    onSuccess={() => {
+                        setShowAddModal(false);
+                        fetchDocuments();
+                    }}
+                    ownerId={userId}
+                />
+            )}
         </View>
     );
 }

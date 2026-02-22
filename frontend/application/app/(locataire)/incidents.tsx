@@ -28,83 +28,138 @@ export default function IncidentsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
     const [showDeclarer, setShowDeclarer] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isOwnerOrAgency, setIsOwnerOrAgency] = useState(false);
 
     useEffect(() => {
-        fetchIncidents();
+        const initialize = async () => {
+            setLoading(true);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) {
+                    setLoading(false);
+                    return;
+                }
+
+                const user = session.user;
+                let role = user.user_metadata?.role || "tenant";
+
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (profile?.role) {
+                    role = profile.role;
+                }
+
+                const checkRole = role.toLowerCase();
+                const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+
+                setUserRole(role);
+                setIsOwnerOrAgency(isManagement);
+                fetchIncidents(role, user.id, isManagement);
+            } catch (err) {
+                console.error("[Incidents] Init error:", err);
+                fetchIncidents("tenant");
+            }
+        };
+        initialize();
     }, []);
 
-    async function fetchIncidents() {
+    async function fetchIncidents(role: string = "tenant", userId?: string, isManagement: boolean = false) {
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
+
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Fetch leases for this tenant
-            const { data: leases, error: leaseError } = await supabase
-                .from("lease_tenants")
-                .select("lease_id")
-                .eq("tenant_id", user.id);
-
-            if (leaseError) throw leaseError;
-
-            const leaseIds = leases?.map(l => l.lease_id) || [];
-            if (leaseIds.length === 0) {
-                setIncidents([]);
-                return;
-            }
-
-            // Fetch incidents for these leases
-            const { data: dbIncidents, error: incError } = await supabase
+            let query = supabase
                 .from("incidents")
                 .select(`
                     id,
-                    title,
                     description,
                     created_at,
-                    updated_at,
                     status,
                     location_details,
-                    properties (
+                    properties!inner (
                         owner_id,
                         profiles:owner_id (
                             full_name,
                             phone
                         )
                     )
-                `)
-                .in("lease_id", leaseIds)
-                .order("created_at", { ascending: false });
+                `);
+
+            if (isManagement) {
+                query = query.eq("properties.owner_id", userId);
+            } else {
+                query = query.eq("reporter_id", userId);
+            }
+
+            const { data: dbIncidents, error: incError } = await query.order("created_at", { ascending: false });
 
             if (incError) throw incError;
-
-            const mapped: Incident[] = (dbIncidents || []).map(inc => {
-                const owner = (inc.properties as any)?.profiles;
-                return {
-                    id: inc.id,
-                    titre: inc.title || "Sans titre",
-                    dateDeclaration: new Date(inc.created_at).toLocaleDateString("fr-FR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    }).replace(",", " à"),
-                    description: inc.description || "",
-                    localisation: inc.location_details || "Non précisé",
-                    statut: mapBackendStatus(inc.status),
-                    dureeLabel: calculateDurationLabel(inc.status, inc.created_at, inc.updated_at),
-                    gestionnaireNom: owner?.full_name || "Imovia",
-                    gestionnaireTel: owner?.phone || "Non renseigné",
-                };
-            });
-
-            setIncidents(mapped);
+            processIncidents(dbIncidents);
         } catch (error: any) {
-            console.error("[Incidents] Fetch error:", error);
-            Alert.alert("Erreur", "Impossible de charger les incidents.");
+            console.error("[Incidents] Unified fetch error (likely no property link):", error);
+            try {
+                const { data: fallback, error: fallError } = await supabase
+                    .from("incidents")
+                    .select(`
+                        id,
+                        description,
+                        created_at,
+                        status,
+                        location_details,
+                        properties (
+                            owner_id,
+                            profiles:owner_id (
+                                full_name,
+                                phone
+                            )
+                        )
+                    `)
+                    .eq("reporter_id", userId)
+                    .order("created_at", { ascending: false });
+
+                if (!fallError) processIncidents(fallback);
+                else throw fallError;
+            } catch (fallbackErr) {
+                console.error("[Incidents] Fallback error:", fallbackErr);
+                Alert.alert("Erreur", "Impossible de charger les incidents.");
+            }
         } finally {
             setLoading(false);
         }
+    }
+
+    function processIncidents(dbIncidents: any[] | null) {
+
+        const mapped: Incident[] = (dbIncidents || []).map(inc => {
+            const owner = (inc.properties as any)?.profiles;
+            return {
+                id: inc.id,
+                titre: inc.description?.split('\n')[0] || "Incident signalé",
+                dateDeclaration: new Date(inc.created_at).toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }).replace(",", " à"),
+                description: inc.description || "",
+                localisation: inc.location_details || "Non précisé",
+                statut: mapBackendStatus(inc.status),
+                dureeLabel: calculateDurationLabel(inc.status, inc.created_at, inc.created_at),
+                gestionnaireNom: owner?.full_name || "Imovia",
+                gestionnaireTel: owner?.phone || "Non renseigné",
+            };
+        });
+
+        setIncidents(mapped);
     }
 
     function mapBackendStatus(status: string): Incident["statut"] {
@@ -131,7 +186,7 @@ export default function IncidentsPage() {
             return `En cours depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
         }
 
-        return `En attente depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+        return `En cours depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
     }
 
     useScrollToTopOnFocus(scrollViewRef);
@@ -219,8 +274,7 @@ export default function IncidentsPage() {
                                             fontFamily: "Montserrat_400Regular",
                                         }}
                                     >
-                                        Suivez et gérez tous les incidents signalés
-                                        {"\n"}dans votre logement
+                                        {isOwnerOrAgency ? "Suivez tous les incidents de vos logements" : "Suivez et gérez tous les incidents signalés dans votre logement"}
                                     </Text>
                                 </View>
                                 <View
@@ -283,8 +337,7 @@ export default function IncidentsPage() {
                                             fontFamily: "Montserrat_400Regular",
                                         }}
                                     >
-                                        Suivez et gérez tous les incidents signalés
-                                        {"\n"}dans votre logement
+                                        {isOwnerOrAgency ? "Suivez tous les incidents de vos logements" : "Suivez et gérez tous les incidents signalés dans votre logement"}
                                     </Text>
                                 </View>
                                 <View
@@ -306,26 +359,21 @@ export default function IncidentsPage() {
                                 style={{
                                     flexDirection: "row",
                                     alignItems: "center",
+                                    backgroundColor: "#3153A1",
+                                    borderRadius: 10,
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
                                     alignSelf: "flex-start",
-                                    backgroundColor: "#1e3a6d",
-                                    borderRadius: 12,
-                                    paddingVertical: 12,
-                                    paddingHorizontal: 20,
-                                    marginBottom: 14,
+                                    marginBottom: 12,
                                 }}
                             >
-                                <Ionicons
-                                    name="construct-outline"
-                                    size={16}
-                                    color="#fff"
-                                    style={{ marginRight: 10 }}
-                                />
+                                <Ionicons name="construct-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                                 <Text
                                     style={{
                                         color: "#fff",
-                                        fontSize: 13,
-                                        fontWeight: "700",
-                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 11,
+                                        fontWeight: "600",
+                                        fontFamily: "Montserrat_600SemiBold",
                                     }}
                                 >
                                     Déclarer un incident

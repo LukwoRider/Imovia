@@ -64,8 +64,17 @@ export default function BienDetailPage() {
     const [activeImage, setActiveImage] = useState(0);
     const [bien, setBien] = useState<BienDetail | null>(null);
     const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
+        const checkRole = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const role = session.user.user_metadata?.role || "tenant";
+                setUserRole(role);
+            }
+        };
+        checkRole();
         if (id) fetchBienDetail();
     }, [id]);
 
@@ -155,10 +164,10 @@ export default function BienDetailPage() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700", marginTop: 4, fontFamily: "Montserrat_700Bold" }}>
-                                Recherche de biens
+                                {userRole === 'owner' || userRole === 'agency' ? "Mes Biens" : "Recherche de biens"}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, marginTop: 2, fontFamily: "Montserrat_400Regular" }}>
-                                Recherchez votre futur chez vous
+                                {userRole === 'owner' || userRole === 'agency' ? "Gérez vos logements et baux" : "Recherchez votre futur chez vous"}
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -171,7 +180,7 @@ export default function BienDetailPage() {
                 <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
                     {/* === BACK + ADDRESS === */}
                     <Pressable
-                        onPress={() => router.back()}
+                        onPress={() => router.push("/(locataire)/biens")}
                         style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
                     >
                         <View

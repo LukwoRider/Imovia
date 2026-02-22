@@ -1,3 +1,4 @@
+import AjouterBienModal from "@/components/biens/AjouterBienModal";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
@@ -358,14 +359,52 @@ export default function BiensPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
 
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
     useEffect(() => {
-        fetchBiens();
+        const initialize = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const user = session?.user;
+
+                if (user) {
+                    setUserId(user.id);
+
+                    let role = user.user_metadata?.role || "tenant";
+                    console.log("[Biens] Initial role from metadata:", role);
+
+                    const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("role")
+                        .eq("id", user.id)
+                        .maybeSingle();
+
+                    if (profile?.role) {
+                        role = profile.role;
+                        console.log("[Biens] Role confirmed from profile:", role);
+                    }
+
+                    setUserRole(role);
+                    fetchBiens(role, user.id);
+                } else {
+                    setUserRole("tenant");
+                    fetchBiens("tenant");
+                }
+            } catch (err) {
+                console.error("[Biens] Initialization error:", err);
+                setUserRole("tenant");
+                fetchBiens("tenant");
+            }
+        };
+        initialize();
     }, []);
 
-    async function fetchBiens() {
+    async function fetchBiens(role: string, uid?: string) {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("properties")
                 .select(`
                     id,
@@ -377,9 +416,24 @@ export default function BiensPage() {
                     property_images (
                         count
                     )
-                `)
-                .eq("status", "available")
-                .order("created_at", { ascending: false });
+                `);
+
+            const isOwner = role.toLowerCase() === "owner" || role.toLowerCase() === "agency" || role.toLowerCase() === "propriétaire";
+
+            if (isOwner) {
+                if (uid) {
+                    console.log("[Biens] Fetching for owner/agency:", uid);
+                    query = query.eq("owner_id", uid);
+                } else {
+                    console.warn("[Biens] User matches owner role but no UID provided, falling back to all available");
+                    query = query.eq("status", "available");
+                }
+            } else {
+                console.log("[Biens] Fetching for tenant (available properties)");
+                query = query.eq("status", "available");
+            }
+
+            const { data, error } = await query.order("created_at", { ascending: false });
 
             if (error) throw error;
 
@@ -462,13 +516,30 @@ export default function BiensPage() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
-                                Recherche de biens
+                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Mes Biens" : "Recherche de biens"}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
-                                Recherchez votre futur chez vous
+                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Gérez vos logements et locataires" : "Recherchez votre futur chez vous"}
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') && (
+                                <Pressable
+                                    onPress={() => setIsAddModalVisible(true)}
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 8,
+                                        marginRight: 4
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                        <Ionicons name="add-circle" size={18} color="#3153A1" />
+                                        <Text style={{ color: '#3153A1', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
+                                    </View>
+                                </Pressable>
+                            )}
                             <NotificationBellButton />
                             <ProfileHeaderButton />
                         </View>
@@ -476,9 +547,11 @@ export default function BiensPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
-                        Trouver un appartement à Lille ?
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
+                            {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Vos biens immobiliers" : "Trouver un appartement à Lille ?"}
+                        </Text>
+                    </View>
 
                     <View
                         style={{
@@ -626,6 +699,13 @@ export default function BiensPage() {
                     />
                 </View>
             </ScrollView>
+
+            <AjouterBienModal
+                visible={isAddModalVisible}
+                onClose={() => setIsAddModalVisible(false)}
+                onSuccess={() => fetchBiens(userRole || "tenant", userId || undefined)}
+                ownerId={userId || ""}
+            />
         </View>
     );
 }

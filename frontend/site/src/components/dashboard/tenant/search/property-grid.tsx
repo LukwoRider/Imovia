@@ -32,7 +32,8 @@ export function PropertyGrid() {
 
             if (error) throw error
             setProperties(data || [])
-        } catch (error) {
+        } catch (err) {
+            console.error("Fetch properties error:", err)
             toast.error("Erreur lors de la récupération des biens")
         } finally {
             setLoading(false)

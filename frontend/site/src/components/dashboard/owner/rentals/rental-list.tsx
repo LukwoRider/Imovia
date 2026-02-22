@@ -6,9 +6,10 @@ import { useMemo } from "react"
 
 interface RentalListProps {
     leases: Lease[]
+    onRefresh?: () => void
 }
 
-export function RentalList({ leases }: RentalListProps) {
+export function RentalList({ leases, onRefresh }: RentalListProps) {
     // Group leases by status or property if needed, but for now let's just show them all
     // Sorted by start date (already done in parent but safe here too)
     const sortedLeases = useMemo(() => {
@@ -30,7 +31,7 @@ export function RentalList({ leases }: RentalListProps) {
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4">
                 {sortedLeases.map((lease) => (
-                    <RentalCard key={lease.id} lease={lease} />
+                    <RentalCard key={lease.id} lease={lease} onRefresh={onRefresh} />
                 ))}
             </div>
         </div>

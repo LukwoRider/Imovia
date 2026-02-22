@@ -53,7 +53,7 @@ export default function TenantDashboard() {
             console.error("Download error:", error)
             toast.error("Erreur lors du téléchargement")
         }
-    }, [])
+    }, [supabase])
 
     useEffect(() => {
         async function loadData() {
@@ -68,7 +68,7 @@ export default function TenantDashboard() {
                     const [pts, incs, docs] = await Promise.all([
                         getTenantPayments(activeLease.id),
                         getTenantIncidents(currentUser.id),
-                        getTenantDocuments(currentUser.id)
+                        getTenantDocuments()
                     ])
                     setPayments(pts)
                     setIncidents(incs)

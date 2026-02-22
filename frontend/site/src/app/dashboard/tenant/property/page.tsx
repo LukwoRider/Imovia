@@ -199,31 +199,42 @@ export default function TenantPropertyPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
+                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3 transition-all hover:bg-slate-50">
                                 <User className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nom & Prénom</span>
-                                    <span className="text-sm font-semibold text-[#12182C]">{owner?.full_name || "Propriétaire"}</span>
+                                    <span className="text-sm font-semibold text-[#12182C]">
+                                        {owner?.agency_profiles?.agency_name || owner?.full_name || "Propriétaire"}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
+                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3 transition-all hover:bg-slate-50">
                                 <Phone className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Téléphone</span>
-                                    <span className="text-sm font-medium text-[#12182C]">{owner?.phone || "Indisponible"}</span>
+                                    <a href={`tel:${owner?.agency_profiles?.business_phone || owner?.phone || ""}`} className="text-sm font-medium text-[#12182C] hover:text-[#3153A1] transition-colors">
+                                        {owner?.agency_profiles?.business_phone || owner?.phone || "Indisponible"}
+                                    </a>
                                 </div>
                             </div>
-                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3">
+                            <div className="p-3 bg-white rounded-lg border border-slate-100 flex items-center gap-3 transition-all hover:bg-slate-50">
                                 <Mail className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</span>
-                                    <span className="text-sm font-medium text-[#12182C]">{owner?.email || "Indisponible"}</span>
+                                    <a href={`mailto:${owner?.agency_profiles?.business_email || owner?.email || ""}`} className="text-sm font-medium text-[#12182C] hover:text-[#3153A1] transition-colors">
+                                        {owner?.agency_profiles?.business_email || owner?.email || "Indisponible"}
+                                    </a>
                                 </div>
                             </div>
 
-                            <Button className="w-full mt-2 bg-[#3153A1] hover:bg-[#25468d] text-white gap-2">
-                                <Phone className="h-4 w-4" />
-                                Contacter
+                            <Button
+                                asChild
+                                className="w-full mt-2 bg-[#3153A1] hover:bg-[#25468d] text-white gap-2 shadow-lg shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                                <a href={`mailto:${owner?.agency_profiles?.business_email || owner?.email || ""}`}>
+                                    <Mail className="h-4 w-4" />
+                                    Contacter par email
+                                </a>
                             </Button>
                         </CardContent>
                     </Card>

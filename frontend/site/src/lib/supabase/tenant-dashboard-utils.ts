@@ -31,7 +31,10 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
                 *,
                 images:property_images(*)
             ),
-            owner:profiles!leases_owner_id_fkey (*)
+            owner:profiles!leases_owner_id_fkey (
+                *,
+                agency_profiles (*)
+            )
         `)
         .in('id', leaseIds)
         .eq('status', 'active')

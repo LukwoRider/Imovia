@@ -30,6 +30,11 @@ export interface Lease {
         full_name: string
         email: string
         phone: string | null
+        agency_profiles?: {
+            agency_name: string
+            business_email: string | null
+            business_phone: string | null
+        }
     }
 }
 

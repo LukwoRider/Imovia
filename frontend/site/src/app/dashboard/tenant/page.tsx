@@ -378,7 +378,6 @@ export default function TenantDashboard() {
                                     key={doc.id}
                                     title={doc.title}
                                     date={doc.date}
-                                    type={doc.type}
                                     onDownload={() => handleDownload(doc)}
                                 />
                             ))
@@ -428,14 +427,10 @@ function StatCard({ title, value, trend, trendUp, icon: Icon, color, trendLabel 
 interface DocumentRowProps {
     title: string
     date: string
-    type: string
     onDownload: () => void
 }
 
-function DocumentRow({ title, date, type, onDownload }: DocumentRowProps) {
-    const isOther = type.toLowerCase() === 'other' || type.toLowerCase() === 'autres'
-    const displayType = isOther ? title : type
-
+function DocumentRow({ title, date, onDownload }: DocumentRowProps) {
     return (
         <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors group">
             <div className="flex items-center gap-3">
@@ -450,14 +445,14 @@ function DocumentRow({ title, date, type, onDownload }: DocumentRowProps) {
             <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[150px]"
+                className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[100px]"
                 onClick={(e) => {
                     e.preventDefault();
                     onDownload();
                 }}
             >
                 <Download className="h-3 w-3 shrink-0" />
-                <span className="sr-only sm:not-sr-only sm:inline-block text-xs truncate">{displayType}</span>
+                <span className="sr-only sm:not-sr-only sm:inline-block text-[10px] font-bold truncate lowercase">{title}</span>
             </Button>
         </div>
     )

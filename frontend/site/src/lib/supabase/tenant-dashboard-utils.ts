@@ -87,11 +87,10 @@ export async function getTenantIncidents(userId: string): Promise<Incident[]> {
     return data as unknown as Incident[]
 }
 
-export async function getTenantDocuments(userId: string): Promise<Document[]> {
+export async function getTenantDocuments(_userId: string): Promise<Document[]> {
     const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('tenant_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 

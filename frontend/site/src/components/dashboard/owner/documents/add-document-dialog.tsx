@@ -32,42 +32,77 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
     const [property, setProperty] = useState("")
     const [category, setCategory] = useState("")
     const [recipientId, setRecipientId] = useState("")
-    const [tenants, setTenants] = useState<{ id: string, display_name: string }[]>([])
+    const [realProperties, setRealProperties] = useState<{ id: string, address: string, tenant: { id: string, full_name: string } | null }[]>([])
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const supabase = createClient()
 
-    // Fetch tenants from Supabase
+    // Fetch owner's rented properties from Supabase
     useEffect(() => {
-        const fetchTenants = async () => {
+        const fetchPropertiesAndTenants = async () => {
             try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) return
+
                 const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, full_name')
-                    .eq('role', 'tenant')
-                    .order('full_name')
+                    .from('properties')
+                    .select(`
+                        id,
+                        address,
+                        leases!inner (
+                            id,
+                            status,
+                            lease_tenants (
+                                tenant_id,
+                                profiles (
+                                    full_name
+                                )
+                            )
+                        )
+                    `)
+                    .eq('owner_id', user.id)
+                    .eq('leases.status', 'active')
 
                 if (error) {
-                    console.error("Erreur fetch locataires:", error)
+                    console.error("Erreur fetch données:", error)
                     return
                 }
 
                 if (data) {
-                    // Map data to ensure we have a display name even if full_name is empty
-                    const formattedTenants = data.map(t => ({
-                        id: t.id,
-                        display_name: t.full_name || `Locataire (${t.id.slice(0, 5)})`
-                    }))
-                    setTenants(formattedTenants)
+                    const formatted = data.map(p => {
+                        const activeLease = p.leases[0]
+                        const firstTenant = activeLease?.lease_tenants?.[0]
+                        return {
+                            id: p.id,
+                            address: p.address || "Adresse inconnue",
+                            tenant: firstTenant ? {
+                                id: firstTenant.tenant_id,
+                                full_name: (firstTenant.profiles as any)?.full_name || "Locataire sans nom"
+                            } : null
+                        }
+                    })
+                    setRealProperties(formatted)
                 }
             } catch (err) {
                 console.error("Fetch error:", err)
             }
         }
         if (open) {
-            fetchTenants()
+            fetchPropertiesAndTenants()
         }
     }, [open, supabase])
+
+    // Auto-select tenant when property changes
+    useEffect(() => {
+        if (property) {
+            const selected = realProperties.find(p => p.id === property)
+            if (selected?.tenant) {
+                setRecipientId(selected.tenant.id)
+            } else {
+                setRecipientId("")
+            }
+        }
+    }, [property, realProperties])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -104,15 +139,24 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
             if (uploadError) throw uploadError
 
             // 2. Insert metadata into Database
+            // Map category to enum document_type
+            const categoryMap: Record<string, string> = {
+                'Contrats': 'contract',
+                'Etat des lieux': 'inventory',
+                'Quittances': 'receipt',
+                'Autres': 'other'
+            }
+
             const { error: dbError } = await supabase
                 .from('documents')
                 .insert({
                     uploader_id: user.id,
                     title: title,
-                    doc_type: category,
+                    document_type: categoryMap[category] || 'other',
                     storage_path: filePath,
-                    property_name: property,
-                    tenant_id: recipientId // Link to the actual tenant profile
+                    property_id: property,
+                    target_tenant_id: recipientId || null,
+                    document_date: new Date().toISOString().split('T')[0]
                 })
 
             if (dbError) throw dbError
@@ -209,8 +253,14 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                                     <SelectValue placeholder="Choisir le logement" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Marais">Marais</SelectItem>
-                                    <SelectItem value="Les Caroubiers">Les Caroubiers</SelectItem>
+                                    {realProperties.map((p) => (
+                                        <SelectItem key={p.id} value={p.id}>
+                                            {p.address}
+                                        </SelectItem>
+                                    ))}
+                                    {realProperties.length === 0 && (
+                                        <div className="p-2 text-sm text-slate-500 text-center">Aucun logement loué trouvé</div>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -223,13 +273,14 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                                     <SelectValue placeholder="Choisir le locataire" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {tenants.map((t) => (
-                                        <SelectItem key={t.id} value={t.id}>
-                                            {t.display_name}
+                                    {realProperties.find(p => p.id === property)?.tenant ? (
+                                        <SelectItem value={realProperties.find(p => p.id === property)!.tenant!.id}>
+                                            {realProperties.find(p => p.id === property)!.tenant!.full_name}
                                         </SelectItem>
-                                    ))}
-                                    {tenants.length === 0 && (
-                                        <div className="p-2 text-sm text-slate-500 text-center">Aucun locataire trouvé</div>
+                                    ) : (
+                                        <div className="p-2 text-sm text-slate-500 text-center">
+                                            {property ? "Aucun locataire sur ce logement" : "Sélectionnez d'abord un logement"}
+                                        </div>
                                     )}
                                 </SelectContent>
                             </Select>

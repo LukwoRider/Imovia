@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { terminateLease } from "@/lib/supabase/tenant-onboarding-utils"
+import { terminateLease, updateLease } from "@/lib/supabase/tenant-onboarding-utils"
 import { sendNotification } from "@/lib/supabase/notification-utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,6 +33,9 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Edit2, Save, RotateCcw } from "lucide-react"
 
 interface RentalCardProps {
     lease: Lease
@@ -44,6 +47,44 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const [isLeaseOpen, setIsLeaseOpen] = useState(false)
     const [sending, setSending] = useState(false)
+    const [isEditingLease, setIsEditingLease] = useState(false)
+    const [isSavingLease, setIsSavingLease] = useState(false)
+
+    // Form states for lease editing
+    const [leaseForm, setLeaseForm] = useState({
+        rent_amount: lease.rent_amount,
+        charges_amount: lease.charges_amount,
+        deposit_amount: lease.deposit_amount || 0,
+        start_date: lease.start_date,
+        payment_day: lease.payment_day
+    })
+
+    useEffect(() => {
+        if (isLeaseOpen) {
+            setLeaseForm({
+                rent_amount: lease.rent_amount,
+                charges_amount: lease.charges_amount,
+                deposit_amount: lease.deposit_amount || 0,
+                start_date: lease.start_date,
+                payment_day: lease.payment_day
+            })
+            setIsEditingLease(false)
+        }
+    }, [isLeaseOpen, lease])
+
+    const handleSaveLease = async () => {
+        try {
+            setIsSavingLease(true)
+            await updateLease(lease.id, leaseForm)
+            toast.success("Bail mis à jour avec succès")
+            setIsEditingLease(false)
+            onRefresh?.()
+        } catch (error: any) {
+            toast.error(error.message || "Erreur lors de la mise à jour")
+        } finally {
+            setIsSavingLease(false)
+        }
+    }
     const getStatusConfig = (status: Lease["status"]) => {
         switch (status) {
             case "active":
@@ -268,11 +309,34 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                                     Détails et gestion du contrat de bail pour ce logement.
                                 </DialogDescription>
                             </div>
-                            <DialogClose asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all">
-                                    <X className="h-6 w-6" />
-                                </Button>
-                            </DialogClose>
+                            <div className="flex items-center gap-2">
+                                {!isEditingLease ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsEditingLease(true)}
+                                        className="h-9 px-4 text-white hover:bg-white/10 rounded-xl transition-all gap-2"
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wider">Modifier</span>
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsEditingLease(false)}
+                                        className="h-9 px-4 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all gap-2"
+                                    >
+                                        <RotateCcw className="h-4 w-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wider">Annuler</span>
+                                    </Button>
+                                )}
+                                <DialogClose asChild>
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                                        <X className="h-6 w-6" />
+                                    </Button>
+                                </DialogClose>
+                            </div>
                         </div>
                     </div>
 
@@ -281,20 +345,44 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                             <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100 group transition-all hover:bg-white hover:shadow-lg hover:border-[#3153A1]/10">
                                 <div className="flex items-center gap-2 text-slate-400 mb-2">
                                     <Banknote className="h-4 w-4 text-[#3153A1]/60" />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">Loyer Nu</span>
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider cursor-pointer">Loyer Nu</Label>
                                 </div>
-                                <div className="text-xl font-black text-[#12182C]">
-                                    {lease.rent_amount.toLocaleString()} <span className="text-sm font-bold text-[#3153A1]">€</span>
-                                </div>
+                                {isEditingLease ? (
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={leaseForm.rent_amount}
+                                            onChange={(e) => setLeaseForm({ ...leaseForm, rent_amount: parseInt(e.target.value) || 0 })}
+                                            className="h-9 bg-white border-slate-200 focus:border-[#3153A1] rounded-xl font-bold"
+                                        />
+                                        <span className="text-sm font-bold text-[#3153A1]">€</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-xl font-black text-[#12182C]">
+                                        {lease.rent_amount.toLocaleString()} <span className="text-sm font-bold text-[#3153A1]">€</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100 group transition-all hover:bg-white hover:shadow-lg hover:border-[#3153A1]/10">
                                 <div className="flex items-center gap-2 text-slate-400 mb-2">
                                     <Receipt className="h-4 w-4 text-[#3153A1]/60" />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">Charges</span>
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider cursor-pointer">Charges</Label>
                                 </div>
-                                <div className="text-xl font-black text-[#12182C]">
-                                    {lease.charges_amount.toLocaleString()} <span className="text-sm font-bold text-[#3153A1]">€</span>
-                                </div>
+                                {isEditingLease ? (
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={leaseForm.charges_amount}
+                                            onChange={(e) => setLeaseForm({ ...leaseForm, charges_amount: parseInt(e.target.value) || 0 })}
+                                            className="h-9 bg-white border-slate-200 focus:border-[#3153A1] rounded-xl font-bold"
+                                        />
+                                        <span className="text-sm font-bold text-[#3153A1]">€</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-xl font-black text-[#12182C]">
+                                        {lease.charges_amount.toLocaleString()} <span className="text-sm font-bold text-[#3153A1]">€</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -304,31 +392,84 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                                     <div className="h-8 w-8 rounded-xl bg-[#3153A1]/5 flex items-center justify-center">
                                         <Calendar className="h-4 w-4 text-[#3153A1]" />
                                     </div>
-                                    <span className="text-sm font-medium text-slate-500">Date de début</span>
+                                    <Label className="text-sm font-medium text-slate-500 cursor-pointer">Date de début</Label>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">{formattedStartDate}</span>
+                                {isEditingLease ? (
+                                    <Input
+                                        type="date"
+                                        value={leaseForm.start_date.split('T')[0]}
+                                        onChange={(e) => setLeaseForm({ ...leaseForm, start_date: e.target.value })}
+                                        className="h-9 w-40 bg-slate-50 border-slate-200 focus:border-[#3153A1] rounded-xl text-sm font-bold"
+                                    />
+                                ) : (
+                                    <span className="text-sm font-bold text-[#12182C]">{formattedStartDate}</span>
+                                )}
                             </div>
                             <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-xl bg-[#3153A1]/5 flex items-center justify-center">
                                         <CreditCard className="h-4 w-4 text-[#3153A1]" />
                                     </div>
-                                    <span className="text-sm font-medium text-slate-500">Jour de paiement</span>
+                                    <Label className="text-sm font-medium text-slate-500 cursor-pointer">Jour de paiement</Label>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">Le {lease.payment_day} du mois</span>
+                                {isEditingLease ? (
+                                    <select
+                                        value={leaseForm.payment_day}
+                                        onChange={(e) => setLeaseForm({ ...leaseForm, payment_day: parseInt(e.target.value) })}
+                                        className="h-9 w-40 bg-slate-50 border-slate-200 focus:border-[#3153A1] rounded-xl text-sm font-bold px-3 focus:outline-none"
+                                    >
+                                        {[...Array(31)].map((_, i) => (
+                                            <option key={i + 1} value={i + 1}>Le {i + 1} du mois</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <span className="text-sm font-bold text-[#12182C]">Le {lease.payment_day} du mois</span>
+                                )}
                             </div>
                             <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-xl bg-[#3153A1]/5 flex items-center justify-center">
                                         <ShieldCheck className="h-4 w-4 text-[#3153A1]" />
                                     </div>
-                                    <span className="text-sm font-medium text-slate-500">Dépôt de garantie</span>
+                                    <Label className="text-sm font-medium text-slate-500 cursor-pointer">Dépôt de garantie</Label>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">
-                                    {lease.deposit_amount ? `${lease.deposit_amount.toLocaleString()} €` : "Non spécifié"}
-                                </span>
+                                {isEditingLease ? (
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={leaseForm.deposit_amount}
+                                            onChange={(e) => setLeaseForm({ ...leaseForm, deposit_amount: parseInt(e.target.value) || 0 })}
+                                            className="h-9 w-32 bg-slate-50 border-slate-200 focus:border-[#3153A1] rounded-xl text-sm font-bold"
+                                        />
+                                        <span className="text-sm font-bold text-[#3153A1]">€</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-sm font-bold text-[#12182C]">
+                                        {lease.deposit_amount ? `${lease.deposit_amount.toLocaleString()} €` : "Non spécifié"}
+                                    </span>
+                                )}
                             </div>
                         </div>
+
+                        {isEditingLease && (
+                            <Button
+                                onClick={handleSaveLease}
+                                disabled={isSavingLease}
+                                className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white h-12 rounded-2xl text-base font-bold gap-2 transition-all shadow-lg hover:shadow-[#3153A1]/20 mt-4"
+                            >
+                                {isSavingLease ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        Mise à jour...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="h-5 w-5" />
+                                        Enregistrer les modifications
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
 
                     <div className="bg-slate-50/50 p-6 flex justify-center border-t border-slate-100">

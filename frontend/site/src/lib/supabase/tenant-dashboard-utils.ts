@@ -25,7 +25,14 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
 
     const { data: lease, error: lError } = await supabase
         .from('leases')
-        .select('*, property:properties(*, images:property_images(*))')
+        .select(`
+            *,
+            property:properties (
+                *,
+                images:property_images(*)
+            ),
+            owner:profiles!leases_owner_id_fkey (*)
+        `)
         .in('id', leaseIds)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -77,10 +84,11 @@ export async function getTenantIncidents(userId: string): Promise<Incident[]> {
     return data as unknown as Incident[]
 }
 
-export async function getTenantDocuments(): Promise<Document[]> {
+export async function getTenantDocuments(userId: string): Promise<Document[]> {
     const { data, error } = await supabase
         .from('documents')
         .select('*')
+        .eq('tenant_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 

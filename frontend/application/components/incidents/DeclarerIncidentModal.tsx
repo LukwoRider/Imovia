@@ -1,7 +1,8 @@
+import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 function formatPhone(raw: string): string {
     const digits = raw.replace(/\D/g, "");
@@ -249,14 +250,71 @@ export default function DeclarerIncidentView({
     const [autoriseAcces, setAutoriseAcces] = useState(true);
     const [descFocused, setDescFocused] = useState(false);
     const [phoneFocused, setPhoneFocused] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const canSubmit = selectedType.length > 0 && description.trim().length > 0;
 
-    const handleSubmit = () => {
-        if (!canSubmit) return;
-        // TODO: envoyer au backend
-        onBack();
+    const handleSubmit = async () => {
+        if (!canSubmit || isSubmitting) return;
+
+        setIsSubmitting(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Utilisateur non connecté");
+
+            const { data: leaseData, error: leaseError } = await supabase
+                .from("lease_tenants")
+                .select("lease_id")
+                .eq("tenant_id", user.id)
+                .maybeSingle();
+
+            if (leaseError) {
+                console.error("[Incident] Lease fetch error:", leaseError);
+                throw new Error("Erreur lors de la vérification de votre bail.");
+            }
+
+            if (!leaseData) {
+                Alert.alert(
+                    "Action impossible",
+                    "Vous n'avez pas de bail actif associé à votre compte. Seuls les locataires ayant un bail en cours peuvent déclarer des incidents."
+                );
+                return;
+            }
+
+            const leaseId = leaseData.lease_id;
+
+            const backendType = mapToBackendType(selectedType);
+
+            const { data: incidentId, error: rpcError } = await supabase.rpc("create_incident", {
+                p_lease_id: leaseId,
+                p_description: description.trim(),
+                p_incident_type: backendType,
+                p_contact_phone: telephone.replace(/\s/g, ""),
+                p_preferred_visit_date: selectedDate ? selectedDate.toISOString().split('T')[0] : null,
+                p_allow_access_without_presence: autoriseAcces
+            });
+
+            if (rpcError) throw rpcError;
+
+            Alert.alert("Succès", "Votre incident a été déclaré avec succès.");
+            onBack();
+        } catch (error: any) {
+            console.error("[Incident] Submission error:", error);
+            Alert.alert("Erreur", error.message || "Une erreur est survenue lors de l'envoi.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
+    function mapToBackendType(uiKey: string): string {
+        switch (uiKey) {
+            case "plomberie": return "plumbing";
+            case "electrique": return "electricity";
+            case "panne": return "appliance";
+            case "autre":
+            default: return "other";
+        }
+    }
 
     return (
         <ScrollView
@@ -302,6 +360,7 @@ export default function DeclarerIncidentView({
                         Déclarer un incident
                     </Text>
                 </View>
+
 
                 <Text
                     style={{
@@ -573,10 +632,11 @@ export default function DeclarerIncidentView({
 
                 <Pressable
                     onPress={handleSubmit}
+                    disabled={isSubmitting}
                     style={{
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: canSubmit ? "#3153A1" : "#93a4c8",
+                        backgroundColor: (canSubmit && !isSubmitting) ? "#3153A1" : "#93a4c8",
                         borderRadius: 14,
                         paddingVertical: 16,
                         marginBottom: 10,
@@ -590,7 +650,7 @@ export default function DeclarerIncidentView({
                             fontFamily: "Montserrat_700Bold",
                         }}
                     >
-                        Déclarer cet incident
+                        {isSubmitting ? "Envoi en cours..." : "Déclarer cet incident"}
                     </Text>
                 </Pressable>
 

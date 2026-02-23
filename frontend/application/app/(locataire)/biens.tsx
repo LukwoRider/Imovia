@@ -1,13 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
+import AjouterBienModal from "@/components/biens/AjouterBienModal";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
+import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Dimensions,
+    Alert,
     GestureResponderEvent,
     LayoutChangeEvent,
     Pressable,
@@ -15,60 +18,73 @@ import {
     TextInput,
     View,
 } from "react-native";
-import { Text } from "@/components/ui/text";
 
-const ALL_BIENS = [
-    { id: 1, adresse: "25 Rue des Francs-Bourgeois", ville: "Lille", prix: 289, surface: 45, type: "Appartement", favori: true, images: 4 },
-    { id: 2, adresse: "12 Avenue Foch", ville: "Lille", prix: 450, surface: 72, type: "Appartement", favori: false, images: 4 },
-    { id: 3, adresse: "8 Rue de la Monnaie", ville: "Lille", prix: 620, surface: 95, type: "Maison", favori: false, images: 4 },
-    { id: 4, adresse: "3 Boulevard Carnot", ville: "Paris", prix: 1200, surface: 120, type: "Appartement", favori: false, images: 4 },
-    { id: 5, adresse: "15 Rue Nationale", ville: "Lille", prix: 380, surface: 55, type: "Studio", favori: false, images: 4 },
-    { id: 6, adresse: "42 Rue Esquermoise", ville: "Lille", prix: 750, surface: 85, type: "Appartement", favori: true, images: 4 },
-    { id: 7, adresse: "7 Place du Général de Gaulle", ville: "Lille", prix: 520, surface: 60, type: "Appartement", favori: false, images: 4 },
-    { id: 8, adresse: "19 Rue Solférino", ville: "Lille", prix: 340, surface: 38, type: "Studio", favori: false, images: 4 },
-    { id: 9, adresse: "28 Rue des Arts", ville: "Lyon", prix: 890, surface: 110, type: "Maison", favori: false, images: 4 },
-    { id: 10, adresse: "5 Rue de Béthune", ville: "Lille", prix: 410, surface: 50, type: "Appartement", favori: false, images: 4 },
-];
+type Property = {
+    id: string;
+    adresse: string;
+    ville: string;
+    prix: number;
+    surface: number;
+    type: string;
+    imagesCount: number;
+    thumbnail?: string;
+};
 
 const ITEMS_PER_PAGE = 4;
-const screenWidth = Dimensions.get("window").width;
 
 const SURFACE_MIN = 0;
 const SURFACE_MAX = 300;
 const LOYER_MIN = 0;
 const LOYER_MAX = 5000;
 
-function DraggableSlider({
+function RangeSlider({
     label,
     minValue,
     maxValue,
-    value,
-    onValueChange,
-    formatValue,
+    startValue,
+    endValue,
+    onRangeChange,
+    formatRange,
 }: {
     label: string;
     minValue: number;
     maxValue: number;
-    value: number;
-    onValueChange: (v: number) => void;
-    formatValue: (v: number) => string;
+    startValue: number;
+    endValue: number;
+    onRangeChange: (start: number, end: number) => void;
+    formatRange: (start: number, end: number) => string;
 }) {
     const trackWidth = useRef(0);
-    const trackX = useRef(0);
+    const activeThumb = useRef<"start" | "end" | null>(null);
 
-    const percent = ((value - minValue) / (maxValue - minValue)) * 100;
+    const getPercent = (v: number) => ((v - minValue) / (maxValue - minValue)) * 100;
+    const startPercent = getPercent(startValue);
+    const endPercent = getPercent(endValue);
 
     const handleTrackLayout = (e: LayoutChangeEvent) => {
         trackWidth.current = e.nativeEvent.layout.width;
-        trackX.current = e.nativeEvent.layout.x;
     };
 
-    const handleMove = (e: GestureResponderEvent) => {
+    const updateRangeFromTouch = (e: GestureResponderEvent) => {
         if (trackWidth.current === 0) return;
-        const touchX = e.nativeEvent.locationX;
+
+        const touchX = Math.max(0, Math.min(trackWidth.current, e.nativeEvent.locationX));
         const ratio = Math.max(0, Math.min(1, touchX / trackWidth.current));
-        const newValue = Math.round(minValue + ratio * (maxValue - minValue));
-        onValueChange(newValue);
+        const nextValue = Math.round(minValue + ratio * (maxValue - minValue));
+
+        if (!activeThumb.current) {
+            const startX = (startPercent / 100) * trackWidth.current;
+            const endX = (endPercent / 100) * trackWidth.current;
+            activeThumb.current =
+                Math.abs(touchX - startX) <= Math.abs(touchX - endX) ? "start" : "end";
+        }
+
+        if (activeThumb.current === "start") {
+            onRangeChange(Math.min(nextValue, endValue), endValue);
+            return;
+        }
+
+        onRangeChange(startValue, Math.max(nextValue, startValue));
     };
 
     return (
@@ -76,15 +92,20 @@ function DraggableSlider({
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>{label}</Text>
                 <View style={{ backgroundColor: "#f0f2f5", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>{formatValue(value)}</Text>
+                    <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>
+                        {formatRange(startValue, endValue)}
+                    </Text>
                 </View>
             </View>
             <View
                 onLayout={handleTrackLayout}
                 onStartShouldSetResponder={() => true}
                 onMoveShouldSetResponder={() => true}
-                onResponderGrant={handleMove}
-                onResponderMove={handleMove}
+                onResponderGrant={updateRangeFromTouch}
+                onResponderMove={updateRangeFromTouch}
+                onResponderRelease={() => {
+                    activeThumb.current = null;
+                }}
                 style={{
                     height: 32,
                     justifyContent: "center",
@@ -93,17 +114,37 @@ function DraggableSlider({
                 <View style={{ height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
                     <View
                         style={{
+                            position: "absolute",
                             height: 4,
                             backgroundColor: "#3153A1",
                             borderRadius: 2,
-                            width: `${percent}%`,
+                            left: `${startPercent}%`,
+                            width: `${Math.max(0, endPercent - startPercent)}%`,
                         }}
                     />
                 </View>
                 <View
                     style={{
                         position: "absolute",
-                        left: `${percent}%`,
+                        left: `${startPercent}%`,
+                        marginLeft: -10,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: "#fff",
+                        borderWidth: 3,
+                        borderColor: "#3153A1",
+                        shadowColor: "#000",
+                        shadowOpacity: 0.12,
+                        shadowRadius: 4,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: 3,
+                    }}
+                />
+                <View
+                    style={{
+                        position: "absolute",
+                        left: `${endPercent}%`,
                         marginLeft: -10,
                         width: 20,
                         height: 20,
@@ -125,11 +166,9 @@ function DraggableSlider({
 
 function PropertyCard({
     item,
-    onToggleFavori,
     onPress,
 }: {
-    item: typeof ALL_BIENS[0];
-    onToggleFavori: (id: number) => void;
+    item: Property;
     onPress: () => void;
 }) {
     return (
@@ -157,47 +196,36 @@ function PropertyCard({
                     justifyContent: "flex-end",
                 }}
             >
-                <Pressable
-                    onPress={() => onToggleFavori(item.id)}
-                    style={{
-                        position: "absolute",
-                        top: 12,
-                        right: 12,
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
-                        backgroundColor: item.favori ? "rgba(49,83,161,0.15)" : "rgba(255,255,255,0.3)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Ionicons
-                        name={item.favori ? "heart" : "heart-outline"}
-                        size={19}
-                        color={item.favori ? "#3153A1" : "#fff"}
+                {item.thumbnail && (
+                    <Image
+                        source={{ uri: item.thumbnail }}
+                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                        contentFit="cover"
                     />
-                </Pressable>
+                )}
 
-                <View
-                    style={{
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        paddingBottom: 10,
-                        gap: 5,
-                    }}
-                >
-                    {Array.from({ length: item.images }).map((_, i) => (
-                        <View
-                            key={i}
-                            style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
-                            }}
-                        />
-                    ))}
-                </View>
+                {item.imagesCount > 0 && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            paddingBottom: 10,
+                            gap: 5,
+                        }}
+                    >
+                        {Array.from({ length: Math.min(item.imagesCount, 5) }).map((_, i) => (
+                            <View
+                                key={i}
+                                style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
+                                }}
+                            />
+                        ))}
+                    </View>
+                )}
             </View>
 
             <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
@@ -321,42 +349,129 @@ function PaginationBar({
 export default function BiensPage() {
     const router = useRouter();
     const scrollViewRef = useRef<ScrollView>(null);
+    const [biens, setBiens] = useState<Property[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [surfaceMin, setSurfaceMin] = useState(SURFACE_MIN);
     const [surfaceMax, setSurfaceMax] = useState(SURFACE_MAX);
+    const [loyerMin, setLoyerMin] = useState(LOYER_MIN);
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
-    const [favoris, setFavoris] = useState<Set<number>>(
-        new Set(ALL_BIENS.filter((b) => b.favori).map((b) => b.id))
-    );
-    useScrollToTopOnFocus(scrollViewRef);
 
-    const toggleFavori = (id: number) => {
-        setFavoris((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+    useEffect(() => {
+        const initialize = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const user = session?.user;
+
+                if (user) {
+                    setUserId(user.id);
+
+                    let role = user.user_metadata?.role || "tenant";
+                    console.log("[Biens] Initial role from metadata:", role);
+
+                    const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("role")
+                        .eq("id", user.id)
+                        .maybeSingle();
+
+                    if (profile?.role) {
+                        role = profile.role;
+                        console.log("[Biens] Role confirmed from profile:", role);
+                    }
+
+                    setUserRole(role);
+                    fetchBiens(role, user.id);
+                } else {
+                    setUserRole("tenant");
+                    fetchBiens("tenant");
+                }
+            } catch (err) {
+                console.error("[Biens] Initialization error:", err);
+                setUserRole("tenant");
+                fetchBiens("tenant");
+            }
+        };
+        initialize();
+    }, []);
+
+    async function fetchBiens(role: string, uid?: string) {
+        setLoading(true);
+        try {
+            let query = supabase
+                .from("properties")
+                .select(`
+                    id,
+                    address,
+                    city,
+                    monthly_rent,
+                    surface_m2,
+                    property_type,
+                    property_images (
+                        count
+                    )
+                `);
+
+            const isOwner = role.toLowerCase() === "owner" || role.toLowerCase() === "agency" || role.toLowerCase() === "propriétaire";
+
+            if (isOwner) {
+                if (uid) {
+                    console.log("[Biens] Fetching for owner/agency:", uid);
+                    query = query.eq("owner_id", uid);
+                } else {
+                    console.warn("[Biens] User matches owner role but no UID provided, falling back to all available");
+                    query = query.eq("status", "available");
+                }
+            } else {
+                console.log("[Biens] Fetching for tenant (available properties)");
+                query = query.eq("status", "available");
+            }
+
+            const { data, error } = await query.order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            const mapped: Property[] = (data || []).map(p => ({
+                id: p.id,
+                adresse: p.address || "Adresse non renseignée",
+                ville: p.city || "Ville non renseignée",
+                prix: Number(p.monthly_rent) || 0,
+                surface: Number(p.surface_m2) || 0,
+                type: p.property_type || "",
+                imagesCount: (p.property_images as any)?.[0]?.count || 0
+            }));
+
+            setBiens(mapped);
+        } catch (error: any) {
+            console.error("[Biens] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les biens.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useScrollToTopOnFocus(scrollViewRef);
 
     const filteredBiens = useMemo(() => {
         const searchLower = search.trim().toLowerCase();
-        return ALL_BIENS.filter((bien) => {
+        return biens.filter((bien) => {
             if (searchLower) {
                 const matchSearch =
                     bien.adresse.toLowerCase().includes(searchLower) ||
                     bien.ville.toLowerCase().includes(searchLower);
                 if (!matchSearch) return false;
             }
-            if (bien.surface > surfaceMax) return false;
-            if (bien.prix > loyerMax) return false;
+            if (bien.surface < surfaceMin || bien.surface > surfaceMax) return false;
+            if (bien.prix < loyerMin || bien.prix > loyerMax) return false;
             return true;
-        }).map((bien) => ({
-            ...bien,
-            favori: favoris.has(bien.id),
-        }));
-    }, [search, surfaceMax, loyerMax, favoris]);
+        });
+    }, [search, surfaceMin, surfaceMax, loyerMin, loyerMax, biens]);
 
     const totalPages = Math.max(1, Math.ceil(filteredBiens.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
@@ -401,13 +516,30 @@ export default function BiensPage() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
-                                Recherche de biens
+                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Mes Biens" : "Recherche de biens"}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
-                                Recherchez votre futur chez vous
+                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Gérez vos logements et locataires" : "Recherchez votre futur chez vous"}
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') && (
+                                <Pressable
+                                    onPress={() => setIsAddModalVisible(true)}
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 8,
+                                        marginRight: 4
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                        <Ionicons name="add-circle" size={18} color="#3153A1" />
+                                        <Text style={{ color: '#3153A1', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
+                                    </View>
+                                </Pressable>
+                            )}
                             <NotificationBellButton />
                             <ProfileHeaderButton />
                         </View>
@@ -415,9 +547,11 @@ export default function BiensPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
-                        Trouver un appartement à Lille ?
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
+                            {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Vos biens immobiliers" : "Trouver un appartement à Lille ?"}
+                        </Text>
+                    </View>
 
                     <View
                         style={{
@@ -473,22 +607,30 @@ export default function BiensPage() {
                             )}
                         </View>
 
-                        <DraggableSlider
+                        <RangeSlider
                             label="Surface"
                             minValue={SURFACE_MIN}
                             maxValue={SURFACE_MAX}
-                            value={surfaceMax}
-                            onValueChange={setSurfaceMax}
-                            formatValue={(v) => `0 - ${v} m²${v >= SURFACE_MAX ? " et +" : ""}`}
+                            startValue={surfaceMin}
+                            endValue={surfaceMax}
+                            onRangeChange={(min, max) => {
+                                setSurfaceMin(min);
+                                setSurfaceMax(max);
+                            }}
+                            formatRange={(min, max) => `${min} - ${max} m²${max >= SURFACE_MAX ? " et +" : ""}`}
                         />
 
-                        <DraggableSlider
+                        <RangeSlider
                             label="Loyer"
                             minValue={LOYER_MIN}
                             maxValue={LOYER_MAX}
-                            value={loyerMax}
-                            onValueChange={setLoyerMax}
-                            formatValue={(v) => `0 - ${v}€${v >= LOYER_MAX ? " et +" : ""}`}
+                            startValue={loyerMin}
+                            endValue={loyerMax}
+                            onRangeChange={(min, max) => {
+                                setLoyerMin(min);
+                                setLoyerMax(max);
+                            }}
+                            formatRange={(min, max) => `${min}€ - ${max}€${max >= LOYER_MAX ? " et +" : ""}`}
                         />
 
                         <Pressable
@@ -517,13 +659,16 @@ export default function BiensPage() {
                         </Text>
                     </View>
 
-                    {pagedBiens.length > 0 ? (
+                    {loading ? (
+                        <View style={{ padding: 40, alignItems: "center" }}>
+                            <Text style={{ color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement des biens...</Text>
+                        </View>
+                    ) : pagedBiens.length > 0 ? (
                         pagedBiens.map((bien) => (
                             <PropertyCard
                                 key={bien.id}
                                 item={bien}
-                                onToggleFavori={toggleFavori}
-                                onPress={() => router.push(`/bien/${bien.id}` as any)}
+                                onPress={() => router.push(`/(locataire)/bien/${bien.id}` as any)}
                             />
                         ))
                     ) : (
@@ -554,6 +699,13 @@ export default function BiensPage() {
                     />
                 </View>
             </ScrollView>
+
+            <AjouterBienModal
+                visible={isAddModalVisible}
+                onClose={() => setIsAddModalVisible(false)}
+                onSuccess={() => fetchBiens(userRole || "tenant", userId || undefined)}
+                ownerId={userId || ""}
+            />
         </View>
     );
 }

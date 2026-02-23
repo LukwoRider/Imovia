@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,7 +17,28 @@ import {
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  async function handleLogin() {
+    if (!email || !password) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      Alert.alert("Erreur de connexion", error.message);
+      setLoading(false);
+    } else {
+      router.replace("/(locataire)");
+    }
+  }
 
   return (
     <KeyboardAvoidingView
@@ -62,11 +85,10 @@ export default function LoginPage() {
           />
 
           <Button
-            onPress={() => {
-              // TODO: implement login logic
-            }}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text>Se connecter</Text>
+            <Text>{loading ? "Connexion..." : "Se connecter"}</Text>
           </Button>
         </View>
 

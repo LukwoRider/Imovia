@@ -1,35 +1,35 @@
-import { Ionicons } from "@expo/vector-icons";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
+import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef } from "react";
-import { Pressable, ScrollView, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 
-const LOGEMENT = {
-    titre: "Appartement lumineux - Marais",
-    adresse: "25 Rue des Francs-Bourgeois, 75004 Paris",
-    surface: 200,
-    pieces: 4,
-    loyer: 1950,
-    meuble: true,
-    description:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
+type LogementData = {
+    titre: string;
+    adresse: string;
+    surface: number;
+    pieces: number;
+    loyer: number;
+    meuble: boolean;
+    description: string;
 };
 
-const CONTRAT = {
-    debut: "01/01/2024",
-    finPrevue: "Indéterminée",
-    depotGarantie: "1950€",
-    totalMensuel: "1950€",
+type ContratData = {
+    debut: string;
+    finPrevue: string;
+    depotGarantie: string;
+    totalMensuel: string;
 };
 
-const PROPRIETAIRE = {
-    nom: "Jean Martin",
-    tel: "06 12 34 56 78",
-    email: "jean.martin@email.com",
+type ProprietaireData = {
+    nom: string;
+    tel: string;
+    email: string;
 };
 
 function InfoRow({
@@ -99,6 +99,7 @@ function ContactRow({
     icon: string;
     text: string;
 }) {
+    if (!text) return null;
     return (
         <View
             style={{
@@ -172,6 +173,111 @@ function Badge({ icon, label }: { icon: string; label: string }) {
 export default function LogementPage() {
     const scrollViewRef = useRef<ScrollView>(null);
     useScrollToTopOnFocus(scrollViewRef);
+
+    const [loading, setLoading] = useState(true);
+    const [logement, setLogement] = useState<LogementData | null>(null);
+    const [contrat, setContrat] = useState<ContratData | null>(null);
+    const [proprietaire, setProprietaire] = useState<ProprietaireData | null>(null);
+
+    useEffect(() => {
+        fetchLogementData();
+    }, []);
+
+    async function fetchLogementData() {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Utilisateur non connecté");
+
+            const { data: leaseData, error: leaseError } = await supabase
+                .from("lease_tenants")
+                .select(`
+                    lease_id,
+                    leases (
+                        *,
+                        properties (
+                            *,
+                            profiles:owner_id (
+                                full_name,
+                                phone
+                            )
+                        )
+                    )
+                `)
+                .eq("tenant_id", user.id)
+                .maybeSingle();
+
+            if (leaseError) throw leaseError;
+
+            if (!leaseData || !leaseData.leases) {
+                setLogement(null);
+                setContrat(null);
+                setProprietaire(null);
+                return;
+            }
+
+            const l = leaseData.leases as any;
+            const p = l.properties;
+            const owner = p.profiles;
+
+            const { data: authOwner } = await supabase.auth.admin?.getUserById?.(p.owner_id) as any;
+
+            setLogement({
+                titre: p.title || "Votre logement",
+                adresse: p.address || "Adresse non renseignée",
+                surface: p.surface_m2 || 0,
+                pieces: p.rooms || 0,
+                loyer: l.rent_amount || 0,
+                meuble: p.is_furnished || false,
+                description: p.description || "Aucune description disponible.",
+            });
+
+            setContrat({
+                debut: l.start_date ? new Date(l.start_date).toLocaleDateString("fr-FR") : "N/C",
+                finPrevue: l.end_date ? new Date(l.end_date).toLocaleDateString("fr-FR") : "Indéterminée",
+                depotGarantie: l.deposit_amount ? `${l.deposit_amount}€` : "Non spécifié",
+                totalMensuel: l.rent_amount ? `${Number(l.rent_amount) + Number(l.charges_amount || 0)}€` : "Non spécifié",
+            });
+
+            setProprietaire({
+                nom: owner?.full_name || "Propriétaire",
+                tel: owner?.phone || "Non renseigné",
+                email: "Non renseignée", // Not in profiles table by default in this schema
+            });
+
+        } catch (error: any) {
+            console.error("[Logement] Fetch error:", error);
+            Alert.alert("Erreur", "Impossible de charger les données du logement.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, backgroundColor: "#f9fafb", justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" color="#3153A1" />
+                <Text style={{ marginTop: 12, color: "#6b7280", fontFamily: "Montserrat_500Medium" }}>Chargement...</Text>
+            </View>
+        );
+    }
+
+    if (!logement) {
+        return (
+            <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
+                <View style={{ paddingTop: 60, paddingHorizontal: 20 }}>
+                    <Text style={{ fontSize: 24, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>Mon Logement</Text>
+                    <View style={{ marginTop: 40, alignItems: "center" }}>
+                        <Ionicons name="home-outline" size={60} color="#d1d5db" />
+                        <Text style={{ fontSize: 16, fontWeight: "600", color: "#6b7280", marginTop: 16 }}>Aucun logement trouvé</Text>
+                        <Text style={{ fontSize: 14, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
+                            Vous n'avez pas de bail actif associé à votre compte.
+                        </Text>
+                    </View>
+                </View>
+            </View>
+        );
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -276,7 +382,7 @@ export default function LogementPage() {
                                     }}
                                     numberOfLines={1}
                                 >
-                                    {LOGEMENT.titre}
+                                    {logement.titre}
                                 </Text>
                                 <Text
                                     style={{
@@ -287,7 +393,7 @@ export default function LogementPage() {
                                     }}
                                     numberOfLines={1}
                                 >
-                                    {LOGEMENT.adresse}
+                                    {logement.adresse}
                                 </Text>
                             </View>
                         </View>
@@ -300,12 +406,12 @@ export default function LogementPage() {
                                 marginBottom: 16,
                             }}
                         >
-                            <Badge icon="resize-outline" label={`${LOGEMENT.surface} m²`} />
-                            <Badge icon="grid-outline" label={`${LOGEMENT.pieces} Pièces`} />
-                            {LOGEMENT.meuble ? (
+                            <Badge icon="resize-outline" label={`${logement.surface} m²`} />
+                            {logement.pieces > 0 && <Badge icon="grid-outline" label={`${logement.pieces} Pièces`} />}
+                            {logement.meuble ? (
                                 <Badge icon="bed-outline" label="Meublé" />
                             ) : null}
-                            <Badge icon="cash-outline" label={`${LOGEMENT.loyer} €`} />
+                            <Badge icon="cash-outline" label={`${logement.loyer} €`} />
                         </View>
 
                         <Text
@@ -327,182 +433,186 @@ export default function LogementPage() {
                                 fontFamily: "Montserrat_400Regular",
                             }}
                         >
-                            {LOGEMENT.description}
+                            {logement.description}
                         </Text>
                     </View>
 
-                    <View
-                        style={{
-                            backgroundColor: "#fff",
-                            borderRadius: 16,
-                            padding: 16,
-                            borderWidth: 1,
-                            borderColor: "#e5e7eb",
-                            marginBottom: 14,
-                        }}
-                    >
+                    {contrat && (
                         <View
                             style={{
-                                flexDirection: "row",
-                                alignItems: "center",
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
                                 marginBottom: 14,
                             }}
                         >
                             <View
                                 style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 12,
-                                    backgroundColor: "#eef2ff",
+                                    flexDirection: "row",
                                     alignItems: "center",
-                                    justifyContent: "center",
-                                    marginRight: 12,
+                                    marginBottom: 14,
                                 }}
                             >
-                                <Ionicons
-                                    name="document-text-outline"
-                                    size={20}
-                                    color="#3153A1"
-                                />
-                            </View>
-                            <View>
-                                <Text
+                                <View
                                     style={{
-                                        fontSize: 15,
-                                        fontWeight: "700",
-                                        color: "#1e293b",
-                                        fontFamily: "Montserrat_700Bold",
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 12,
+                                        backgroundColor: "#eef2ff",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: 12,
                                     }}
                                 >
-                                    Contrat de location
-                                </Text>
-                                <Text
-                                    style={{
-                                        fontSize: 11,
-                                        color: "#9ca3af",
-                                        marginTop: 1,
-                                        fontFamily: "Montserrat_400Regular",
-                                    }}
-                                >
-                                    Informations de contacts
-                                </Text>
+                                    <Ionicons
+                                        name="document-text-outline"
+                                        size={20}
+                                        color="#3153A1"
+                                    />
+                                </View>
+                                <View>
+                                    <Text
+                                        style={{
+                                            fontSize: 15,
+                                            fontWeight: "700",
+                                            color: "#1e293b",
+                                            fontFamily: "Montserrat_700Bold",
+                                        }}
+                                    >
+                                        Contrat de location
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontSize: 11,
+                                            color: "#9ca3af",
+                                            marginTop: 1,
+                                            fontFamily: "Montserrat_400Regular",
+                                        }}
+                                    >
+                                        Détails de votre engagement
+                                    </Text>
+                                </View>
                             </View>
-                        </View>
 
-                        <InfoRow
-                            icon="calendar-outline"
-                            label="Début"
-                            value={CONTRAT.debut}
-                        />
-                        <InfoRow
-                            icon="time-outline"
-                            label="Fin prévue"
-                            value={CONTRAT.finPrevue}
-                        />
-                        <InfoRow
-                            icon="shield-checkmark-outline"
-                            label="Dépôt de garantie"
-                            value={CONTRAT.depotGarantie}
-                        />
-                        <InfoRow
-                            icon="wallet-outline"
-                            label="Total mensuel"
-                            value={CONTRAT.totalMensuel}
-                        />
-                    </View>
-
-                    <View
-                        style={{
-                            backgroundColor: "#fff",
-                            borderRadius: 16,
-                            padding: 16,
-                            borderWidth: 1,
-                            borderColor: "#e5e7eb",
-                            marginBottom: 14,
-                        }}
-                    >
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                marginBottom: 14,
-                            }}
-                        >
-                            <View
-                                style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 12,
-                                    backgroundColor: "#eef2ff",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginRight: 12,
-                                }}
-                            >
-                                <Ionicons
-                                    name="people-outline"
-                                    size={20}
-                                    color="#3153A1"
-                                />
-                            </View>
-                            <View>
-                                <Text
-                                    style={{
-                                        fontSize: 15,
-                                        fontWeight: "700",
-                                        color: "#1e293b",
-                                        fontFamily: "Montserrat_700Bold",
-                                    }}
-                                >
-                                    Contact Propriétaire
-                                </Text>
-                                <Text
-                                    style={{
-                                        fontSize: 11,
-                                        color: "#9ca3af",
-                                        marginTop: 1,
-                                        fontFamily: "Montserrat_400Regular",
-                                    }}
-                                >
-                                    Informations de contacts
-                                </Text>
-                            </View>
-                        </View>
-
-                        <ContactRow icon="person-outline" text={PROPRIETAIRE.nom} />
-                        <ContactRow icon="call-outline" text={PROPRIETAIRE.tel} />
-                        <ContactRow icon="mail-outline" text={PROPRIETAIRE.email} />
-
-                        <Pressable
-                            style={{
-                                backgroundColor: "#3153A1",
-                                borderRadius: 12,
-                                paddingVertical: 14,
-                                paddingHorizontal: 24,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginTop: 8,
-                            }}
-                        >
-                            <Ionicons
-                                name="call-outline"
-                                size={16}
-                                color="#fff"
-                                style={{ marginRight: 8 }}
+                            <InfoRow
+                                icon="calendar-outline"
+                                label="Début"
+                                value={contrat.debut}
                             />
-                            <Text
+                            <InfoRow
+                                icon="time-outline"
+                                label="Fin prévue"
+                                value={contrat.finPrevue}
+                            />
+                            <InfoRow
+                                icon="shield-checkmark-outline"
+                                label="Dépôt de garantie"
+                                value={contrat.depotGarantie}
+                            />
+                            <InfoRow
+                                icon="wallet-outline"
+                                label="Total mensuel"
+                                value={contrat.totalMensuel}
+                            />
+                        </View>
+                    )}
+
+                    {proprietaire && (
+                        <View
+                            style={{
+                                backgroundColor: "#fff",
+                                borderRadius: 16,
+                                padding: 16,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                                marginBottom: 14,
+                            }}
+                        >
+                            <View
                                 style={{
-                                    color: "#fff",
-                                    fontSize: 14,
-                                    fontWeight: "600",
-                                    fontFamily: "Montserrat_600SemiBold",
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    marginBottom: 14,
                                 }}
                             >
-                                Contacter
-                            </Text>
-                        </Pressable>
-                    </View>
+                                <View
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 12,
+                                        backgroundColor: "#eef2ff",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: 12,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="people-outline"
+                                        size={20}
+                                        color="#3153A1"
+                                    />
+                                </View>
+                                <View>
+                                    <Text
+                                        style={{
+                                            fontSize: 15,
+                                            fontWeight: "700",
+                                            color: "#1e293b",
+                                            fontFamily: "Montserrat_700Bold",
+                                        }}
+                                    >
+                                        Contact Propriétaire
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontSize: 11,
+                                            color: "#9ca3af",
+                                            marginTop: 1,
+                                            fontFamily: "Montserrat_400Regular",
+                                        }}
+                                    >
+                                        Informations de contact
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <ContactRow icon="person-outline" text={proprietaire.nom} />
+                            <ContactRow icon="call-outline" text={proprietaire.tel} />
+                            {proprietaire.email !== "Non renseignée" && <ContactRow icon="mail-outline" text={proprietaire.email} />}
+
+                            <Pressable
+                                style={{
+                                    backgroundColor: "#3153A1",
+                                    borderRadius: 12,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 24,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginTop: 8,
+                                }}
+                            >
+                                <Ionicons
+                                    name="call-outline"
+                                    size={16}
+                                    color="#fff"
+                                    style={{ marginRight: 8 }}
+                                />
+                                <Text
+                                    style={{
+                                        color: "#fff",
+                                        fontSize: 14,
+                                        fontWeight: "600",
+                                        fontFamily: "Montserrat_600SemiBold",
+                                    }}
+                                >
+                                    Contacter
+                                </Text>
+                            </Pressable>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
         </View>

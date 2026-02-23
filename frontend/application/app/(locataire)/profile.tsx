@@ -4,11 +4,13 @@ import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
+import { supabase } from "@/lib/supabase";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
 
@@ -27,9 +29,8 @@ function InfoField({
 }) {
   return (
     <View
-      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${
-        split ? "flex-1 min-w-0" : ""
-      }`}
+      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${split ? "flex-1 min-w-0" : ""
+        }`}
     >
       <Feather name={icon} size={18} color="#3158B8" />
       <TextInput
@@ -45,17 +46,128 @@ function InfoField({
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
-  const [firstName, setFirstName] = useState("David");
-  const [lastName, setLastName] = useState("Martin");
-  const [email, setEmail] = useState("David.martin@imovia.com");
-  const [phone, setPhone] = useState("+33 6 24 87 12 97");
-  const [address, setAddress] = useState("Rue des Marais; 73000 Paris");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  async function fetchProfile() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setEmail(user.email || "");
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (profile) {
+        const names = (profile.full_name || "").split(" ");
+        setFirstName(names[0] || "");
+        setLastName(names.slice(1).join(" ") || "");
+        setPhone(profile.phone || "");
+      }
+    } catch (error: any) {
+      console.error("[Profile] Error fetching profile:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }
   useScrollToTopOnFocus(scrollViewRef);
+
+  async function handleSignOut() {
+    console.log("[Logout] Starting signOut process...");
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      console.log("[Logout] SignOut successful, redirecting to /login...");
+      router.replace("/login");
+    } catch (error: any) {
+      console.error("[Logout] SignOut error:", error);
+      Alert.alert("Erreur", "Impossible de se déconnecter : " + error.message);
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
+
+  async function handleUpdatePassword() {
+    if (!newPassword || !confirmPassword) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      Alert.alert("Succès", "Votre mot de passe a été mis à jour.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("[Profile] Update password error:", error);
+      Alert.alert("Erreur", "Impossible de mettre à jour le mot de passe : " + error.message);
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
+  async function handleUpdateProfile() {
+    setIsUpdatingProfile(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utilisateur non trouvé");
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: `${firstName} ${lastName}`.trim(),
+          phone: phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      Alert.alert("Succès", "Votre profil a été mis à jour.");
+    } catch (error: any) {
+      console.error("[Profile] Update profile error:", error);
+      Alert.alert("Erreur", "Impossible de mettre à jour le profil : " + error.message);
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -113,6 +225,22 @@ export default function ProfilePage() {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <NotificationBellButton />
+              <Pressable
+                onPress={handleSignOut}
+                disabled={isSigningOut}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: isSigningOut ? 0.6 : 1,
+                }}
+                hitSlop={6}
+              >
+                <Feather name="log-out" size={17} color="#fff" />
+              </Pressable>
               <ProfileHeaderButton />
             </View>
           </View>
@@ -172,18 +300,16 @@ export default function ProfilePage() {
                 onChangeText={setPhone}
                 placeholder="Telephone"
               />
-              <InfoField
-                icon="map-pin"
-                value={address}
-                onChangeText={setAddress}
-                placeholder="Adresse"
-              />
 
-              <Button className="h-12 mt-2 rounded-xl">
+              <Button
+                className="h-12 mt-2 rounded-xl"
+                onPress={handleUpdateProfile}
+                disabled={isUpdatingProfile}
+              >
                 <View className="flex-row items-center gap-2">
                   <Feather name="save" size={16} color="#FFFFFF" />
                   <Text className="text-white text-[14px] font-semibold">
-                    Enregistrer
+                    {isUpdatingProfile ? "Enregistrement..." : "Enregistrer"}
                   </Text>
                 </View>
               </Button>
@@ -232,11 +358,15 @@ export default function ProfilePage() {
                 className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
               />
 
-              <Button className="h-12 mt-2 rounded-xl">
+              <Button
+                className="h-12 mt-2 rounded-xl"
+                onPress={handleUpdatePassword}
+                disabled={isUpdatingPassword}
+              >
                 <View className="flex-row items-center gap-2">
                   <Feather name="save" size={16} color="#FFFFFF" />
                   <Text className="text-white text-[14px] font-semibold">
-                    Enregistrer
+                    {isUpdatingPassword ? "Mise à jour..." : "Enregistrer"}
                   </Text>
                 </View>
               </Button>

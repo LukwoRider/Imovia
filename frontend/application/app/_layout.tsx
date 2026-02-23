@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 
+import { NotificationBellProvider } from "@/components/ui/notification-bell-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 // Keep splash screen visible while fonts load
@@ -38,15 +39,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen name="register-form" options={{ headerShown: false }} />
-        <Stack.Screen name="register-agency" options={{ headerShown: false }} />
-        <Stack.Screen name="(locataire)" options={{ headerShown: false }} />
-        <Stack.Screen name="bien/[id]" options={{ headerShown: false }} />
-      </Stack>
+      <NotificationBellProvider>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="register" options={{ headerShown: false }} />
+          <Stack.Screen name="register-form" options={{ headerShown: false }} />
+          <Stack.Screen name="register-agency" options={{ headerShown: false }} />
+          <Stack.Screen name="(locataire)" options={{ headerShown: false }} />
+          <Stack.Screen name="(proprietaire)" options={{ headerShown: false }} />
+          <Stack.Screen name="bien/[id]" options={{ headerShown: false }} />
+        </Stack>
+      </NotificationBellProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

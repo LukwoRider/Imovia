@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -20,6 +22,82 @@ export default function RegisterAgencyPage() {
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    async function handleAgencySignUp() {
+        if (!email || !password || !agencyName || !siret) {
+            Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+            return;
+        }
+
+        setLoading(true);
+
+        const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: agencyName,
+                    role: "agency",
+                    phone: phone,
+                },
+            },
+        });
+
+        if (signUpError) {
+            Alert.alert("Erreur d'inscription", signUpError.message);
+            setLoading(false);
+            return;
+        }
+
+        if (user) {
+            // Wait a bit for the trigger to create the profile
+            // Actually, we can just try to update the role and insert the agency profile
+            // But if the trigger worked, we just need to insert the agency profile
+
+            // First, ensure the profile has the correct role (just in case trigger defaults to tenant)
+            const { error: roleError } = await supabase
+                .from('profiles')
+                .update({ role: 'agency' as any })
+                .eq('id', user.id);
+
+            if (roleError) {
+                console.error("Error updating profile role:", roleError);
+                // We proceed anyway to try inserting agency_profile
+            }
+
+            const { error: profileError } = await supabase
+                .from("agency_profiles")
+                .insert({
+                    profile_id: user.id,
+                    agency_name: agencyName,
+                    siret: siret,
+                    business_email: email,
+                    business_phone: phone,
+                });
+
+            if (profileError) {
+                console.error("Error creating agency profile:", profileError);
+                Alert.alert(
+                    "Partiel",
+                    "Compte créé mais erreur lors de l'enregistrement des détails de l'agence. Contactez le support."
+                );
+            } else {
+                Alert.alert(
+                    "Compte créé",
+                    "Votre compte agence a été créé avec succès. Veuillez vérifier vos emails.",
+                    [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
+                );
+            }
+        }
+
+        setLoading(false);
+    }
 
     return (
         <KeyboardAvoidingView
@@ -131,11 +209,10 @@ export default function RegisterAgencyPage() {
                     </View>
 
                     <Button
-                        onPress={() => {
-                            // TODO: implement agency registration logic
-                        }}
+                        onPress={handleAgencySignUp}
+                        disabled={loading}
                     >
-                        <Text>Créer votre compte</Text>
+                        <Text>{loading ? "Création..." : "Créer votre compte"}</Text>
                     </Button>
                 </View>
 

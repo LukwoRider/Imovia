@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -14,12 +16,50 @@ import {
 
 export default function RegisterFormPage() {
     const router = useRouter();
+    const { role } = useLocalSearchParams<{ role: string }>();
     const [lastName, setLastName] = useState("");
     const [firstName, setFirstName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    async function handleSignUp() {
+        if (!email || !password || !lastName || !firstName) {
+            Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+            return;
+        }
+
+        setLoading(true);
+        const { error, data } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: `${firstName} ${lastName}`,
+                    role: role || "tenant",
+                    phone: phone,
+                },
+            },
+        });
+
+        if (error) {
+            Alert.alert("Erreur d'inscription", error.message);
+            setLoading(false);
+        } else {
+            Alert.alert(
+                "Compte créé",
+                "Votre compte a été créé avec succès. Veuillez vérifier vos emails pour confirmer votre inscription.",
+                [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
+            );
+        }
+    }
 
     return (
         <KeyboardAvoidingView
@@ -133,11 +173,10 @@ export default function RegisterFormPage() {
                     </View>
 
                     <Button
-                        onPress={() => {
-                            // TODO: implement registration logic
-                        }}
+                        onPress={handleSignUp}
+                        disabled={loading}
                     >
-                        <Text>Créer votre compte</Text>
+                        <Text>{loading ? "Création..." : "Créer votre compte"}</Text>
                     </Button>
                 </View>
 

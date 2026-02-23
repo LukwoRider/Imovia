@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/text";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
 function formatPhone(raw: string): string {
     const digits = raw.replace(/\D/g, "");
@@ -470,8 +470,10 @@ export default function DeclarerIncidentView({
                                 : "#e5e7eb",
                             minHeight: 120,
                             marginBottom: 20,
-                            outlineStyle: "none",
-                        } as any
+                            ...(Platform.OS === "web"
+                                ? ({ outlineStyle: "none" } as any)
+                                : {}),
+                        }
                     }
                 />
 
@@ -522,8 +524,10 @@ export default function DeclarerIncidentView({
                                     color: "#1e293b",
                                     fontFamily: "Montserrat_400Regular",
                                     padding: 0,
-                                    outlineStyle: "none",
-                                } as any
+                                    ...(Platform.OS === "web"
+                                        ? ({ outlineStyle: "none" } as any)
+                                        : {}),
+                                }
                             }
                         />
                     </View>

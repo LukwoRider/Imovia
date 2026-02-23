@@ -13,6 +13,7 @@ import {
     Alert,
     GestureResponderEvent,
     LayoutChangeEvent,
+    Platform,
     Pressable,
     ScrollView,
     TextInput,
@@ -596,8 +597,10 @@ export default function BiensPage() {
                                     color: "#1e293b",
                                     paddingVertical: 0,
                                     fontFamily: "Montserrat_400Regular",
-                                    outlineStyle: "none",
-                                } as any}
+                                    ...(Platform.OS === "web"
+                                        ? ({ outlineStyle: "none" } as any)
+                                        : {}),
+                                }}
                                 returnKeyType="search"
                             />
                             {search.length > 0 && (

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
-import { TextInput, TextInputProps } from "react-native";
+import { Platform, TextInput, TextInputProps } from "react-native";
 
 interface InputProps extends TextInputProps {
     className?: string;
@@ -15,7 +15,7 @@ const Input = React.forwardRef<TextInput, InputProps>(
                 selectionColor="#3153A1"
                 cursorColor="#3153A1"
                 underlineColorAndroid="transparent"
-                style={{ outlineStyle: "none" } as any}
+                style={Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : undefined}
                 className={cn(
                     "h-12 rounded-lg border border-input bg-background px-4 text-base text-foreground",
                     "placeholder:text-muted-foreground",

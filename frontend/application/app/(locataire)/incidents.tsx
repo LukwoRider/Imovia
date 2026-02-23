@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
 import DeclarerIncidentView from "@/components/incidents/DeclarerIncidentModal";
 import IncidentCard from "@/components/incidents/IncidentCard";
@@ -418,8 +418,10 @@ export default function IncidentsPage() {
                                             color: "#1e293b",
                                             fontFamily: "Montserrat_400Regular",
                                             padding: 0,
-                                            outlineStyle: "none",
-                                        } as any
+                                            ...(Platform.OS === "web"
+                                                ? ({ outlineStyle: "none" } as any)
+                                                : {}),
+                                        }
                                     }
                                 />
                                 {search.length > 0 && (

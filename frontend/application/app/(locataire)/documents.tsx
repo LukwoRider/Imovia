@@ -783,8 +783,10 @@ export default function DocumentsPage() {
                                 color: "#1e293b",
                                 fontFamily: "Montserrat_400Regular",
                                 padding: 0,
-                                outlineStyle: "none",
-                            } as any}
+                                ...(Platform.OS === "web"
+                                    ? ({ outlineStyle: "none" } as any)
+                                    : {}),
+                            }}
                         />
                         {search.length > 0 && (
                             <Pressable

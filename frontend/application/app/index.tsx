@@ -1,9 +1,10 @@
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
-import { Text } from "@/components/ui/text";
-import { Image } from "expo-image";
+import { View } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -48,110 +49,23 @@ export default function HomeScreen() {
             textAlign: "center",
           }}
         >
-          Choisissez votre espace pour commencer
+          Connectez-vous pour commencer
         </Text>
       </LinearGradient>
 
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24, gap: 16, marginTop: -20 }}>
-        <Pressable
-          onPress={() => router.push("/(locataire)")}
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 16,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: "#e5e7eb",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
+        <Button
+          onPress={() => router.push("/login")}
+          size="lg"
+          className="rounded-2xl h-16 shadow-lg shadow-primary/20"
         >
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              backgroundColor: "#eef2ff",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 14,
-            }}
-          >
-            <Ionicons name="person-outline" size={24} color="#3153A1" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: "#1e293b",
-                fontFamily: "Montserrat_700Bold",
-              }}
-            >
-              Espace Locataire
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: "#9ca3af",
-                marginTop: 2,
-                fontFamily: "Montserrat_400Regular",
-              }}
-            >
-              Accéder au tableau de bord locataire
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Ionicons name="log-in-outline" size={24} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', fontFamily: 'Montserrat_700Bold' }}>
+              Se connecter
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-        </Pressable>
-
-        <Pressable
-          onPress={() => router.push("/(proprietaire)")}
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 16,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: "#e5e7eb",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              backgroundColor: "#eef2ff",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 14,
-            }}
-          >
-            <Ionicons name="key-outline" size={24} color="#3153A1" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: "#1e293b",
-                fontFamily: "Montserrat_700Bold",
-              }}
-            >
-              Espace Propriétaire
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: "#9ca3af",
-                marginTop: 2,
-                fontFamily: "Montserrat_400Regular",
-              }}
-            >
-              Accéder au tableau de bord propriétaire
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-        </Pressable>
+        </Button>
       </View>
     </View>
   );

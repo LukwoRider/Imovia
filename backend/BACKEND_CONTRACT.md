@@ -1,6 +1,6 @@
 # Backend Contract (Frontend Integration)
 
-Contract version: `v1.2.0`  
+Contract version: `v1.4.0`  
 Status: `stable`  
 Last updated: `2026-02-21`
 This document is the practical contract for frontend developers using Supabase directly.
@@ -17,6 +17,29 @@ This document is the practical contract for frontend developers using Supabase d
 - All writes require an authenticated session.
 - Roles are stored in `public.profiles.role` (`tenant`, `owner`, `agency`, `admin`).
 - Client apps must not use the service role key.
+
+### Signup Role Selection
+
+Frontend can choose the role at signup time via auth metadata:
+
+```ts
+await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: {
+      full_name: "Jane Doe",
+      role: "owner", // allowed: tenant | owner | agency
+    },
+  },
+});
+```
+
+Rules:
+- Allowed public signup roles: `tenant`, `owner`, `agency`.
+- If missing/invalid, backend defaults to `tenant`.
+- `admin` cannot be self-selected at signup.
+- Role change is blocked for users through direct `profiles` update after signup.
 
 ## Agency Profile Model
 
@@ -209,8 +232,8 @@ Legacy compatibility still present:
 ## Storage Contract
 
 - Bucket: `documents` (private)
-- Bucket: `property-images` (private)
-- Bucket: `avatars` (private)
+- Bucket: `property-images` (public)
+- Bucket: `avatars` (public)
 - Object path format (documents): `leases/{leaseId}/{uuid}-{filename}`
 - Object path format (property images): `properties/{propertyId}/{uuid}-{filename}`
 - Object path format (avatars): `profiles/{userId}/{uuid}-{filename}`
@@ -229,6 +252,13 @@ Download example:
 
 ```ts
 await supabase.storage.from("documents").createSignedUrl(storagePath, 60);
+```
+
+Public media URL examples:
+
+```ts
+const imageUrl = supabase.storage.from("property-images").getPublicUrl(storagePath).data.publicUrl;
+const avatarUrl = supabase.storage.from("avatars").getPublicUrl(storagePath).data.publicUrl;
 ```
 
 Important:

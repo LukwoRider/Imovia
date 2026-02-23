@@ -168,14 +168,14 @@ Frontend guidance:
 - prefer RPCs for business transitions (status changes, lease creation, payment marking)
 
 Contract source of truth:
-- `backend/BACKEND_CONTRACT.md` (current: `v1.2.0`)
+- `backend/BACKEND_CONTRACT.md` (current: `v1.4.0`)
 
 ## Storage Contract
 
 Buckets:
 - `documents` (private)
-- `property-images` (private)
-- `avatars` (private)
+- `property-images` (public)
+- `avatars` (public)
 
 Object key convention:
 - `leases/{leaseId}/{uuid}-{filename}`

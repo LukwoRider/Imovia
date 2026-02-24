@@ -23,122 +23,18 @@ import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
-type Document = {
-    id: string;
-    titre: string;
-    date: string;
-    categorie: DocCategory;
-    storage_path: string;
-    lease_id: string;
-};
-
-
-const ITEMS_PER_PAGE = 4;
-
-const CATEGORIES: { key: DocCategory; label: string; icon: string }[] = [
-    { key: "tous", label: "Tous", icon: "list-outline" },
-    { key: "contrats", label: "Contrats", icon: "briefcase-outline" },
-    { key: "etat", label: "Etat", icon: "clipboard-outline" },
-    { key: "quittances", label: "Quittances", icon: "receipt-outline" },
-    { key: "autres", label: "Autres", icon: "albums-outline" },
-];
-
-function DocumentRow({
-    doc,
-    isManagement,
-    onDelete
-}: {
-    doc: Document;
-    isManagement: boolean;
-    onDelete: () => void;
-}) {
-    const [isDownloading, setIsDownloading] = useState(false);
-
-    const handleDownload = async () => {
-        if (isDownloading) return;
-        setIsDownloading(true);
-        try {
-            let fullPath = doc.storage_path;
-
-            if (!fullPath.startsWith("leases/")) {
-                const cleanName = fullPath.replace(/^\//, "");
-                fullPath = `leases/${doc.lease_id}/${cleanName}`;
-            }
-
-
-            const { data, error } = await supabase.storage
-                .from("documents")
-                .createSignedUrl(fullPath, 60);
-
-            if (error) throw error;
-            if (data?.signedUrl) {
-                await Linking.openURL(data.signedUrl);
-            }
-        } catch (error: any) {
-            console.error("[Documents] Download error:", error);
-            Alert.alert("Erreur", "Impossible de récupérer le fichier : " + (error.message || "Fichier non trouvé"));
-        } finally {
-            setIsDownloading(false);
-        }
-    };
-
-    const handleDelete = async () => {
-
-        const executeDelete = async () => {
-            try {
-                if (doc.storage_path) {
-                    const { error: storageError } = await supabase.storage
-                        .from("documents")
-                        .remove([doc.storage_path]);
-
-                    if (storageError) {
-                        console.error("[Documents] Storage delete error:", storageError);
-                    }
-                }
-
-                const { error: dbError } = await supabase
-                    .from("documents")
-                    .delete()
-                    .eq("id", doc.id);
-
-                if (dbError) {
-                    console.error("[Documents] Database delete error:", dbError);
-                    throw dbError;
-                }
-
-                Alert.alert("Succès", "Document supprimé.");
-                onDelete();
-            } catch (e: any) {
-                console.error("[Documents] Full delete crash:", e);
-                Alert.alert("Erreur", "Impossible de supprimer le document : " + (e.message || "Erreur inconnue"));
-            }
-        };
-
-        if (Platform.OS === "web") {
-            if (window.confirm("Voulez-vous vraiment supprimer ce document ?")) {
-                await executeDelete();
-            }
-        } else {
-            Alert.alert("Supprimer", "Voulez-vous vraiment supprimer ce document ?", [
-                { text: "Annuler", style: "cancel", onPress: () => console.log("[Documents] Delete cancelled") },
-                {
-                    text: "Supprimer",
-                    style: "destructive",
-                    onPress: executeDelete
-                }
-            ]);
-        }
-    };
-
+function isOwnerOrAgencyRole(role?: string | null) {
+    if (!role) return false;
+    const normalized = role.trim().toLowerCase();
     return (
         normalized === "owner" ||
         normalized === "agency" ||
         normalized === "propriétaire" ||
         normalized === "proprietaire" ||
-        normalized === "propriÃ©taire"
+        normalized === "propriÃ©taire" ||
+        normalized === "propriÃƒÂ©taire"
     );
 }
-
 export default function DocumentsPage() {
     const scrollViewRef = useRef<ScrollView>(null);
     const [documents, setDocuments] = useState<Document[]>([]);
@@ -157,7 +53,7 @@ export default function DocumentsPage() {
 
     const generateZip = async () => {
         if (documents.length === 0) {
-            Alert.alert("Information", "Aucun document à compresser.");
+            Alert.alert("Information", "Aucun document Ã  compresser.");
             return null;
         }
 
@@ -196,7 +92,7 @@ export default function DocumentsPage() {
             }
         } catch (error) {
             console.error("ZIP Generation error:", error);
-            Alert.alert("Erreur", "Impossible de générer le fichier ZIP.");
+            Alert.alert("Erreur", "Impossible de gÃ©nÃ©rer le fichier ZIP.");
             return null;
         } finally {
             setIsZipping(false);
@@ -221,7 +117,7 @@ export default function DocumentsPage() {
             const uri = result as string;
             await Sharing.shareAsync(uri, {
                 mimeType: "application/zip",
-                dialogTitle: "Télécharger mes documents",
+                dialogTitle: "TÃ©lÃ©charger mes documents",
                 UTI: "com.pkware.zip-archive",
             });
         }
@@ -232,7 +128,7 @@ export default function DocumentsPage() {
         if (!result) return;
 
         if (Platform.OS === 'web') {
-            const confirmEmail = window.confirm("Sur navigateur, vous devez télécharger le fichier ZIP puis l'attacher manuellement. Voulez-vous télécharger le ZIP et ouvrir votre messagerie ?");
+            const confirmEmail = window.confirm("Sur navigateur, vous devez tÃ©lÃ©charger le fichier ZIP puis l'attacher manuellement. Voulez-vous tÃ©lÃ©charger le ZIP et ouvrir votre messagerie ?");
             if (confirmEmail) {
                 handleDownloadAll();
                 Linking.openURL("mailto:?subject=Mes Documents Imovia&body=Veuillez trouver ci-joint mes documents Imovia.");
@@ -423,7 +319,7 @@ export default function DocumentsPage() {
                                     fontFamily: "Montserrat_400Regular",
                                 }}
                             >
-                                Accédez à tous vos documents de location
+                                AccÃ©dez Ã  tous vos documents de location
                             </Text>
                         </View>
                         <View
@@ -610,7 +506,7 @@ export default function DocumentsPage() {
                                     fontFamily: "Montserrat_500Medium",
                                 }}
                             >
-                                Aucun document trouvé
+                                Aucun document trouvÃ©
                             </Text>
                         </View>
                     )}

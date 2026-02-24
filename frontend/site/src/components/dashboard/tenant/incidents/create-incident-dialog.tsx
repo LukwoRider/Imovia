@@ -46,8 +46,11 @@ export function CreateIncidentDialog() {
 
             if (leaseData) {
                 setLeaseId(leaseData.lease_id)
-                // @ts-expect-error - Supabase join type might be complex
-                setPropertyId(leaseData.leases?.property_id)
+                // Access nested property from Supabase join
+                const leaseInfo = leaseData.leases as unknown as { property_id: string } | null;
+                if (leaseInfo?.property_id) {
+                    setPropertyId(leaseInfo.property_id)
+                }
             }
         } catch {
             // Silently fail or handle error appropriately for UI

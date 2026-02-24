@@ -79,8 +79,9 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
             toast.success("Bail mis à jour avec succès")
             setIsEditingLease(false)
             onRefresh?.()
-        } catch (error: any) {
-            toast.error(error.message || "Erreur lors de la mise à jour")
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Erreur lors de la mise à jour"
+            toast.error(message)
         } finally {
             setIsSavingLease(false)
         }

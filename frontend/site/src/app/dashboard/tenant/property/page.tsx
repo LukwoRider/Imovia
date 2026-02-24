@@ -26,7 +26,7 @@ export default function TenantPropertyPage() {
 
                 const activeLease = await getTenantActiveLease(user.id)
                 setLease(activeLease)
-            } catch (err) {
+            } catch {
             } finally {
                 setLoading(false)
             }

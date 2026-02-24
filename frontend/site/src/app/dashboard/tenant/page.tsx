@@ -50,7 +50,7 @@ export default function TenantDashboard() {
             link.remove()
             window.URL.revokeObjectURL(url)
             toast.success("Téléchargement réussi")
-        } catch (error: unknown) {
+        } catch {
             toast.error("Erreur lors du téléchargement")
         }
     }, [supabase])
@@ -68,7 +68,7 @@ export default function TenantDashboard() {
                     const [pts, incs, docs] = await Promise.all([
                         getTenantPayments(activeLease.id),
                         getTenantIncidents(currentUser.id),
-                        getTenantDocuments()
+                        getTenantDocuments(currentUser.id)
                     ])
                     setPayments(pts)
                     setIncidents(incs)

@@ -47,11 +47,11 @@ export default function DocumentsPage() {
             })
 
             setDocuments(formattedDocs)
-        } catch (error: unknown) {
+        } catch {
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [supabase])
 
     useEffect(() => {
         fetchDocuments()
@@ -106,7 +106,7 @@ export default function DocumentsPage() {
 
                     // Add to ZIP
                     zip.file(finalFileName, data)
-                } catch (err) {
+                } catch {
                 }
             }
 
@@ -130,7 +130,7 @@ export default function DocumentsPage() {
         } finally {
             setIsDownloadingAll(false)
         }
-    }, [documents])
+    }, [documents, supabase])
 
     const filteredDocuments = documents.filter((doc) => {
         const matchesFilter = filter === "ALL" || doc.type === filter

@@ -47,7 +47,7 @@ export default function OwnerRentalsPage() {
             })) as unknown as Lease[]
 
             setLeases(transformedData)
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors du chargement des locations")
         } finally {
             setLoading(false)

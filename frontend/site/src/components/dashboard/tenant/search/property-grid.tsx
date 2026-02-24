@@ -32,7 +32,7 @@ export function PropertyGrid() {
 
             if (error) throw error
             setProperties(data || [])
-        } catch (err) {
+        } catch {
             toast.error("Erreur lors de la récupération des biens")
         } finally {
             setLoading(false)

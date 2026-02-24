@@ -147,7 +147,7 @@ export async function onboardTenant(data: OnboardingData) {
             `Votre bail pour le logement situé au ${addressStr} a été créé. Il débute le ${formattedDate}. Bienvenue !`,
             'info'
         )
-    } catch (e) {
+    } catch {
     }
 
     return lease
@@ -200,7 +200,7 @@ export async function terminateLease(leaseId: string, propertyId: string) {
                 'warning'
             )
         }
-    } catch (e) {
+    } catch {
     }
 
     return true

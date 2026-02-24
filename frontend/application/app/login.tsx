@@ -28,6 +28,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function isOwnerOrAgencyRole(role?: string | null) {
+    const normalized = (role || "").toLowerCase().trim();
+    return (
+      normalized === "owner" ||
+      normalized === "agency" ||
+      normalized === "proprietaire" ||
+      normalized === "propriétaire"
+    );
+  }
+
   function showError(title: string, message: string) {
     if (Platform.OS === "web" && typeof window !== "undefined") {
       window.alert(message);
@@ -68,7 +78,7 @@ export default function LoginPage() {
     setEmailError("");
     setPasswordError("");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -86,7 +96,29 @@ export default function LoginPage() {
       showError("Erreur de connexion", message);
       setLoading(false);
     } else {
-      router.replace("/(locataire)");
+      try {
+        const userId = signInData.user?.id;
+        if (!userId) {
+          router.replace("/(locataire)");
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+
+        const profileRole = profile?.role || signInData.user.user_metadata?.role || "tenant";
+        if (isOwnerOrAgencyRole(profileRole)) {
+          router.replace("/proprietaire" as any);
+        } else {
+          router.replace("/(locataire)");
+        }
+      } catch (routeError) {
+        console.error("[Login] Role routing error:", routeError);
+        router.replace("/(locataire)");
+      }
     }
   }
 

@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -60,7 +60,8 @@ function InfoRow({ icon, text }: { icon: string; text: string }) {
 // --- Main Detail Page ---
 export default function BienDetailPage() {
     const router = useRouter();
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const pathname = usePathname();
+    const { id, space } = useLocalSearchParams<{ id: string; space?: string }>();
     const [activeImage, setActiveImage] = useState(0);
     const [bien, setBien] = useState<BienDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -70,7 +71,15 @@ export default function BienDetailPage() {
         const checkRole = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                const role = session.user.user_metadata?.role || "tenant";
+                let role = session.user.user_metadata?.role || "tenant";
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", session.user.id)
+                    .maybeSingle();
+                if (profile?.role) {
+                    role = profile.role;
+                }
                 setUserRole(role);
             }
         };
@@ -136,6 +145,14 @@ export default function BienDetailPage() {
     if (!bien) return null;
 
     const images = bien.images.length > 0 ? bien.images : [null]; // Fallback if no images
+    const isOwnerSpace =
+        pathname.startsWith("/proprietaire") ||
+        space === "owner" ||
+        userRole === "owner" ||
+        userRole === "agency" ||
+        userRole === "proprietaire" ||
+        userRole === "propriétaire";
+    const backToBiensPath = isOwnerSpace ? "/proprietaire/biens" : "/(locataire)/biens";
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -145,7 +162,7 @@ export default function BienDetailPage() {
             >
                 {/* === HEADER === */}
                 <LinearGradient
-                    colors={["#1e3a6d", "#3153A1"]}
+                    colors={isOwnerSpace ? ["#18A6E3", "#0D51C5", "#0A2B97"] : ["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={{
@@ -164,10 +181,10 @@ export default function BienDetailPage() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700", marginTop: 4, fontFamily: "Montserrat_700Bold" }}>
-                                {userRole === 'owner' || userRole === 'agency' ? "Mes Biens" : "Recherche de biens"}
+                                {isOwnerSpace ? "Mes Biens" : "Recherche de biens"}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, marginTop: 2, fontFamily: "Montserrat_400Regular" }}>
-                                {userRole === 'owner' || userRole === 'agency' ? "Gérez vos logements et baux" : "Recherchez votre futur chez vous"}
+                                {isOwnerSpace ? "Gérez vos logements et baux" : "Recherchez votre futur chez vous"}
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -180,7 +197,7 @@ export default function BienDetailPage() {
                 <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
                     {/* === BACK + ADDRESS === */}
                     <Pressable
-                        onPress={() => router.push("/(locataire)/biens")}
+                        onPress={() => router.push(backToBiensPath as any)}
                         style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
                     >
                         <View

@@ -41,7 +41,8 @@ export default function ProfileHeaderButton() {
                 runPressAnimation();
                 if (!focused) {
                     setTimeout(() => {
-                        router.push("/(locataire)/profile");
+                        const baseGroup = pathname.startsWith("/proprietaire") ? "/proprietaire" : "/(locataire)";
+                        router.push(`${baseGroup}/profile` as any);
                     }, 120);
                 }
             }}

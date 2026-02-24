@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader, LucideIcon } from "lucide-react"
+import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader } from "lucide-react"
+import { StatCard } from "@/components/dashboard/shared/stat-card"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
@@ -49,8 +50,7 @@ export default function TenantDashboard() {
             link.remove()
             window.URL.revokeObjectURL(url)
             toast.success("Téléchargement réussi")
-        } catch (error: unknown) {
-            console.error("Download error:", error)
+        } catch {
             toast.error("Erreur lors du téléchargement")
         }
     }, [supabase])
@@ -83,28 +83,14 @@ export default function TenantDashboard() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Loader className="h-12 w-12 animate-spin text-[#3153A1]" />
+                <Loader className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-slate-500 font-medium">Chargement de votre tableau de bord...</p>
             </div>
         )
     }
 
     if (!lease) {
-        return (
-            <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-                <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                    <Home className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-[#12182C] mb-2">Pas de bail actif</h3>
-                    <p className="text-slate-500 max-w-md mx-auto mb-6">
-                        Vous n&apos;avez pas encore de bail actif enregistré.
-                        Contactez votre propriétaire ou agence si vous pensez qu&apos;il s&apos;agit d&apos;une erreur.
-                    </p>
-                    <Button asChild className="bg-[#3153A1] hover:bg-[#25468d]">
-                        <Link href="/dashboard/tenant/search">Rechercher un bien</Link>
-                    </Button>
-                </div>
-            </div>
-        )
+        return <TenantOnboardingView />
     }
 
     const nextPaymentDate = setDate(addMonths(new Date(), 1), lease.payment_day)
@@ -112,7 +98,7 @@ export default function TenantDashboard() {
     const totalMonthly = (lease.property?.monthly_rent ?? lease.rent_amount) + lease.charges_amount
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
 
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -122,7 +108,7 @@ export default function TenantDashboard() {
                     trend="Charges incluses"
                     trendUp={true}
                     icon={Home}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Prochain Prélèvement"
@@ -130,7 +116,7 @@ export default function TenantDashboard() {
                     trend={`Le ${lease.payment_day} du mois`}
                     trendUp={false}
                     icon={Clock}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                     trendLabel="avant échéance"
                 />
                 <StatCard
@@ -139,7 +125,7 @@ export default function TenantDashboard() {
                     trend="À jour"
                     trendUp={true}
                     icon={FileText}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Incidents"
@@ -147,26 +133,26 @@ export default function TenantDashboard() {
                     trend={activeIncidentsCount > 0 ? "Priorité" : "Tout va bien"}
                     trendUp={activeIncidentsCount === 0}
                     icon={FireExtinguisher}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Mon Logement */}
-                <Card className="border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+                <Card className="border-slate-100 shadow-sm overflow-hidden flex flex-col h-full rounded-3xl bg-white/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <Home className="h-5 w-5 text-[#3153A1]" />
+                                <Home className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mon logement</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mon logement</CardTitle>
                                 <p className="text-sm text-slate-500">Informations sur votre location actuelle</p>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col pt-4">
-                        <div className="relative h-48 w-full rounded-xl overflow-hidden mb-4">
+                        <div className="relative h-48 w-full rounded-2xl overflow-hidden mb-4 shadow-sm border border-slate-100/50">
                             <Image
                                 src={lease.property?.images?.find(img => img.is_cover)?.storage_path
                                     ? getPublicUrl(lease.property.images.find(img => img.is_cover)!.storage_path)
@@ -176,53 +162,44 @@ export default function TenantDashboard() {
                                 className="object-cover"
                             />
                         </div>
-                        <h3 className="text-lg font-bold text-[#12182C] mb-1">{lease.property?.property_type || "Bien"} - {lease.property?.city}</h3>
+                        <h3 className="text-lg font-bold text-foreground mb-1">{lease.property?.property_type || "Bien"} - {lease.property?.city}</h3>
                         <p className="text-slate-500 text-sm mb-4">{lease.property?.address}, {lease.property?.postal_code || ""} {lease.property?.city}</p>
 
                         <div className="grid grid-cols-3 gap-2 mb-6">
-                            <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
-                                <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <ArrowUpRight className="h-12 w-12 text-[#12182C]" />
-                                </div>
-                                <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Surface</span>
-                                <span className="block text-sm font-bold text-[#12182C] relative z-10">{lease.property?.surface_m2} m²</span>
+                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
+                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Surface</span>
+                                <span className="block text-sm font-black text-foreground">{lease.property?.surface_m2} m²</span>
                             </div>
-                            <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
-                                <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <Home className="h-12 w-12 text-[#12182C]" />
-                                </div>
-                                <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Pièces</span>
-                                <span className="block text-sm font-bold text-[#12182C]">{lease.property?.rooms || '-'} Pièces</span>
+                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
+                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Pièces</span>
+                                <span className="block text-sm font-black text-foreground">{lease.property?.rooms || '-'}</span>
                             </div>
-                            <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
-                                <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <Download className="h-12 w-12 text-[#12182C]" />
-                                </div>
-                                <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Loyer</span>
-                                <span className="block text-sm font-bold text-[#12182C]">{totalMonthly} €</span>
+                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
+                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Loyer</span>
+                                <span className="block text-sm font-black text-foreground">{totalMonthly} €</span>
                             </div>
                         </div>
 
-                        <Button asChild className="w-full mt-auto bg-[#3153A1] hover:bg-[#25468d] text-white">
+                        <Button asChild className="w-full mt-auto bg-primary hover:bg-primary/90 text-white rounded-2xl h-12 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/10">
                             <Link href="/dashboard/tenant/property">Voir les détails</Link>
                         </Button>
                     </CardContent>
                 </Card>
 
                 {/* État des paiements */}
-                <Card className="border-slate-100 shadow-sm flex flex-col h-full">
+                <Card className="border-slate-100 shadow-sm flex flex-col h-full rounded-3xl bg-white/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-[#3153A1]" />
+                                <FileText className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Etat des paiements</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Etat des paiements</CardTitle>
                                 <p className="text-sm text-slate-500">Suivi de vos paiements de loyer</p>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 pt-6 flex flex-col gap-4">
+                    <CardContent className="flex-1 pt-6 flex flex-col gap-4 text-sm font-medium text-foreground p-3">
                         {payments.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 text-slate-400">
                                 <Clock className="h-8 w-8 mb-2 opacity-20" />
@@ -230,19 +207,19 @@ export default function TenantDashboard() {
                             </div>
                         ) : (
                             payments.slice(0, 4).map((payment) => (
-                                <div key={payment.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
-                                    <div className="flex items-center gap-3">
+                                <div key={payment.id} className="flex items-center justify-between p-4 bg-white/70 border border-slate-100/50 rounded-2xl shadow-sm hover:border-primary/20 transition-all group">
+                                    <div className="flex items-center gap-4 text-xs font-medium text-foreground p-2">
                                         <div className={cn(
-                                            "h-8 w-8 rounded-full flex items-center justify-center",
+                                            "h-10 w-10 rounded-xl flex items-center justify-center",
                                             payment.status === 'paid' ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
                                         )}>
                                             {payment.status === 'paid' ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-[#12182C] capitalize">
+                                            <p className="font-black text-foreground capitalize text-sm">
                                                 {format(new Date(payment.period_start), "MMMM yyyy", { locale: fr })}
                                             </p>
-                                            <p className="text-xs text-slate-500">
+                                            <p className="text-[11px] text-slate-400 font-bold">
                                                 {payment.status === 'paid'
                                                     ? `Payé le ${format(new Date(payment.paid_at!), "dd/MM/yyyy")}`
                                                     : `Attendu le ${format(new Date(payment.due_date), "dd/MM/yyyy")}`}
@@ -250,8 +227,8 @@ export default function TenantDashboard() {
                                         </div>
                                     </div>
                                     <Badge variant="outline" className={cn(
-                                        "text-[#12182C] border-slate-200",
-                                        payment.status === 'late' ? "bg-red-50 text-red-600 border-red-100" : "bg-slate-50"
+                                        "text-xs font-black px-3 py-1 rounded-lg border-slate-200",
+                                        payment.status === 'late' ? "bg-red-50 text-red-600 border-red-100" : "bg-slate-50/80"
                                     )}>
                                         {payment.amount_due} €
                                     </Badge>
@@ -259,17 +236,17 @@ export default function TenantDashboard() {
                             ))
                         )}
 
-                        <div className="mt-auto pt-6">
-                            <div className="flex justify-between items-center mb-2 text-sm">
-                                <span className="font-medium text-[#12182C]">Paiements à jour</span>
-                                <span className="text-slate-500">
+                        <div className="mt-auto pt-6 px-2">
+                            <div className="flex justify-between items-center mb-2.5 text-[11px] font-black uppercase tracking-wider text-slate-400">
+                                <span>Progression des paiements</span>
+                                <span className="text-primary">
                                     {payments.filter(p => p.status === 'paid').length}/{payments.length}
                                 </span>
                             </div>
                             <Progress
                                 value={payments.length > 0 ? (payments.filter(p => p.status === 'paid').length / payments.length) * 100 : 0}
-                                className="h-2 bg-slate-100"
-                                indicatorClassName="bg-[#3153A1]"
+                                className="h-2.5 bg-slate-100 rounded-full"
+                                indicatorClassName="bg-primary rounded-full transition-all duration-1000"
                             />
                         </div>
                     </CardContent>
@@ -278,72 +255,68 @@ export default function TenantDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Mes Incidents */}
-                <Card className="border-slate-100 shadow-sm">
+                <Card className="border-slate-100 shadow-sm rounded-3xl bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col h-full">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FireExtinguisher className="h-5 w-5 text-[#3153A1]" />
+                                <FireExtinguisher className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mes incidents</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mes incidents</CardTitle>
                                 <p className="text-sm text-slate-500">Suivi de vos déclarations</p>
                             </div>
                         </div>
-                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl">
                             <Link href="/dashboard/tenant/incidents">Voir tout</Link>
                         </Button>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-4">
+                    <CardContent className="pt-6 space-y-4 flex-1">
                         {incidents.length === 0 ? (
-                            <div className="text-center py-6 text-slate-400">
-                                <p className="text-sm italic">Aucun incident déclaré</p>
+                            <div className="text-center py-10 text-slate-400">
+                                <p className="text-sm italic font-medium">Aucun incident déclaré</p>
                             </div>
                         ) : (
-                            incidents.map((incident) => {
+                            incidents.slice(0, 3).map((incident) => {
                                 const isResolved = incident.status === 'resolved' || incident.status === 'closed';
                                 const isInProgress = incident.status === 'in_progress';
                                 const isOpen = incident.status === 'open';
 
                                 return (
-                                    <div key={incident.id} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-[#3153A1]/30 transition-colors cursor-pointer group">
+                                    <div key={incident.id} className="p-4 bg-white/70 border border-slate-100/50 rounded-2xl hover:border-primary/20 transition-all cursor-pointer group shadow-sm">
                                         <div className="flex items-start justify-between mb-2">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-3">
                                                 <div className={cn(
-                                                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                                                    "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
                                                     isResolved ? "bg-green-100 text-green-600" :
                                                         isInProgress ? "bg-amber-100 text-amber-600" :
                                                             "bg-slate-100 text-slate-500"
                                                 )}>
-                                                    {isResolved ? <CheckCircle2 className="h-4 w-4" /> :
-                                                        isInProgress ? <Loader className="h-4 w-4 animate-spin" /> :
-                                                            <Clock className="h-4 w-4" />}
+                                                    {isResolved ? <CheckCircle2 className="h-5 w-5" /> :
+                                                        isInProgress ? <Loader className="h-5 w-5 animate-spin" /> :
+                                                            <Clock className="h-5 w-5" />}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-[#12182C] line-clamp-1">{incident.description}</h4>
-                                                    <p className="text-xs text-slate-400">Déclaré le {format(new Date(incident.created_at), "dd MMM")}</p>
+                                                    <h4 className="font-black text-foreground text-sm line-clamp-1 group-hover:text-primary transition-colors">{incident.description}</h4>
+                                                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Déclaré le {format(new Date(incident.created_at), "dd MMM")}</p>
                                                 </div>
                                             </div>
                                             <Badge variant="outline" className={cn(
-                                                "capitalize gap-1 px-2 py-0.5 h-auto font-medium",
+                                                "capitalize gap-1.5 px-3 py-1 rounded-lg font-black text-[10px]",
                                                 isOpen ? "bg-slate-50 text-slate-500 border-slate-200" :
                                                     isInProgress ? "bg-amber-50 text-amber-600 border-amber-200" :
                                                         "bg-green-50 text-green-600 border-green-200"
                                             )}>
-                                                {isOpen ? <Clock className="h-3 w-3" /> :
-                                                    isInProgress ? <Loader className="h-3 w-3 animate-spin" /> :
-                                                        <CheckCircle2 className="h-3 w-3" />}
                                                 {isOpen ? "En attente" :
                                                     isInProgress ? "En cours" :
                                                         "Résolu"}
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-slate-500 pl-[42px] line-clamp-2">{incident.location_details || "Pas de détails de localisation précis."}</p>
                                     </div>
                                 );
                             })
                         )}
 
-                        <Button asChild className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white mt-2">
+                        <Button asChild className="w-full bg-foreground text-white hover:bg-primary transition-all rounded-2xl h-12 shadow-lg shadow-black/5 mt-auto">
                             <Link href="/dashboard/tenant/incidents">
                                 <FireExtinguisher className="mr-2 h-4 w-4" /> Déclarer un incident
                             </Link>
@@ -352,28 +325,29 @@ export default function TenantDashboard() {
                 </Card>
 
                 {/* Mes Documents */}
-                <Card className="border-slate-100 shadow-sm">
+                <Card className="border-slate-100 shadow-sm rounded-3xl bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col h-full">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-[#3153A1]" />
+                                <FileText className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mes documents</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mes documents</CardTitle>
                                 <p className="text-sm text-slate-500">Accès rapide à vos documents</p>
                             </div>
                         </div>
-                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl">
                             <Link href="/dashboard/tenant/documents">Voir tout</Link>
                         </Button>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-3">
+                    <CardContent className="pt-6 space-y-3 flex-1">
                         {documents.length === 0 ? (
-                            <div className="text-center py-6 text-slate-400">
-                                <p className="text-sm italic">Aucun document partagé</p>
+                            <div className="text-center py-12 text-slate-400">
+                                <FileText className="h-10 w-10 mx-auto mb-2 opacity-10" />
+                                <p className="text-sm italic font-medium">Aucun document partagé</p>
                             </div>
                         ) : (
-                            documents.map((doc) => (
+                            documents.slice(0, 5).map((doc) => (
                                 <DocumentRow
                                     key={doc.id}
                                     title={doc.title}
@@ -382,6 +356,9 @@ export default function TenantDashboard() {
                                 />
                             ))
                         )}
+                        <Button asChild variant="outline" className="w-full mt-auto border-slate-100 rounded-2xl h-12 hover:bg-slate-50 transition-all font-bold text-slate-600 sm:hidden">
+                            <Link href="/dashboard/tenant/documents">Voir tous mes documents</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
@@ -389,38 +366,60 @@ export default function TenantDashboard() {
     )
 }
 
-
-interface StatCardProps {
-    title: string
-    value: string
-    trend: string
-    trendUp: boolean
-    icon: LucideIcon
-    color: string
-    trendLabel?: string
-}
-
-function StatCard({ title, value, trend, trendUp, icon: Icon, color, trendLabel }: StatCardProps) {
+function TenantOnboardingView() {
     return (
-        <Card className="border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-medium text-slate-500">{title}</p>
-                    <div className={cn("p-2 rounded-lg text-white", color)}>
-                        <Icon className="h-4 w-4" />
+        <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <Card className="border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-slate-50 to-blue-50/30 backdrop-blur-xl">
+                <CardContent className="p-8 sm:p-16 flex flex-col items-center text-center space-y-10">
+                    <div className="relative group">
+                        <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-500" />
+                        <div className="relative bg-white p-8 rounded-full shadow-inner border border-slate-100 flex items-center justify-center">
+                            <Home className="h-16 w-16 text-primary animate-pulse" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-blue-500 text-white p-2 rounded-full shadow-lg">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <span className="text-2xl font-bold text-[#12182C] block mb-1">{value}</span>
-                    <div className="flex items-center gap-1 text-xs">
-                        <span className={cn("font-medium", trendUp === true ? "text-green-600" : trendUp === false ? "text-amber-600" : "text-slate-500")}>
-                            {trend}
-                        </span>
-                        <span className="text-slate-400">{trendLabel || ""}</span>
+
+                    <div className="space-y-4 max-w-sm">
+                        <h1 className="text-4xl font-black tracking-tight text-foreground">Bienvenue sur Imovia</h1>
+                        <p className="text-slate-500 text-lg leading-relaxed">
+                            Trouvez le logement qui vous correspond et gérez votre location en toute simplicité.
+                        </p>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full pt-4">
+                        <div className="flex flex-col items-center space-y-2 p-4 rounded-2xl bg-white/60 shadow-sm border border-slate-100/50">
+                            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-2">
+                                <FileText className="h-6 w-6" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700">Documents Sécurisés</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-2 p-4 rounded-2xl bg-white/60 shadow-sm border border-slate-100/50">
+                            <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 mb-2">
+                                <CheckCircle2 className="h-6 w-6" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700">Loyers Facilités</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-2 p-4 rounded-2xl bg-white/60 shadow-sm border border-slate-100/50">
+                            <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-2">
+                                <FireExtinguisher className="h-6 w-6" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700">Assistance 24/7</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full justify-center pt-8">
+                        <Button asChild size="lg" className="h-14 px-10 rounded-2xl text-lg font-bold bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <Link href="/dashboard/tenant/search">
+                                Rechercher un bien
+                                <ArrowUpRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     )
 }
 
@@ -432,27 +431,26 @@ interface DocumentRowProps {
 
 function DocumentRow({ title, date, onDownload }: DocumentRowProps) {
     return (
-        <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors group">
+        <div className="flex items-center justify-between p-3.5 bg-white/70 border border-slate-100/70 rounded-2xl hover:bg-white hover:border-primary/20 transition-all group shadow-sm">
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:text-[#3153A1] group-hover:bg-blue-50 transition-colors">
-                    <FileText className="h-4 w-4" />
+                <div className="p-2.5 bg-slate-100/70 rounded-xl text-slate-500 group-hover:text-primary group-hover:bg-blue-50 transition-colors shadow-inner">
+                    <FileText className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                    <p className="text-sm font-semibold text-[#12182C]">{title}</p>
-                    <p className="text-xs text-slate-500">{date}</p>
+                    <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{title}</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{date}</p>
                 </div>
             </div>
             <Button
-                variant="outline"
-                size="sm"
-                className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[100px]"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-xl hover:bg-blue-50 hover:text-primary transition-all shrink-0"
                 onClick={(e) => {
                     e.preventDefault();
                     onDownload();
                 }}
             >
-                <Download className="h-3 w-3 shrink-0" />
-                <span className="sr-only sm:not-sr-only sm:inline-block text-[10px] font-bold truncate lowercase">{title}</span>
+                <Download className="h-4 w-4" />
             </Button>
         </div>
     )

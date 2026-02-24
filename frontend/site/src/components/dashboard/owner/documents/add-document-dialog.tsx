@@ -64,7 +64,6 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                     .eq('leases.status', 'active')
 
                 if (error) {
-                    console.error("Erreur fetch données:", error)
                     return
                 }
 
@@ -77,14 +76,13 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                             address: p.address || "Adresse inconnue",
                             tenant: firstTenant ? {
                                 id: firstTenant.tenant_id,
-                                full_name: (firstTenant.profiles as any)?.full_name || "Locataire sans nom"
+                                full_name: (firstTenant.profiles as unknown as { full_name: string })?.full_name || "Locataire sans nom"
                             } : null
                         }
                     })
                     setRealProperties(formatted)
                 }
-            } catch (err) {
-                console.error("Fetch error:", err)
+            } catch {
             }
         }
         if (open) {
@@ -166,7 +164,6 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
             resetForm()
             onSuccess?.()
         } catch (error: unknown) {
-            console.error("Upload error:", error)
             toast.error(error instanceof Error ? error.message : "Erreur lors de l'ajout du document")
         } finally {
             setIsLoading(false)
@@ -184,7 +181,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-[#3153A1] hover:bg-[#25468d] text-white h-11 px-6 rounded-xl shadow-lg shadow-blue-900/10 gap-2">
+                <Button className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-lg shadow-primary/10 gap-2">
                     <Plus className="h-5 w-5" />
                     Ajouter un document
                 </Button>
@@ -193,7 +190,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                 <DialogHeader className="p-8 bg-white border-b border-slate-50">
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                            <DialogTitle className="text-2xl font-bold text-[#12182C]">Ajouter un document</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold text-foreground">Ajouter un document</DialogTitle>
                             <DialogDescription className="text-slate-500 text-sm">
                                 Partager un document<br />Pensez &agrave; remplir toutes les informations n&eacute;cessaires
                             </DialogDescription>
@@ -205,7 +202,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                         {/* Uploader (First) */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Uploader document :</Label>
+                            <Label className="text-[15px] font-semibold text-foreground">Uploader document :</Label>
                             <div
                                 onClick={() => fileInputRef.current?.click()}
                                 className="relative cursor-pointer"
@@ -220,13 +217,13 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                                 <Input
                                     placeholder={selectedFile ? selectedFile.name : "Cliquez pour sélectionner un fichier"}
                                     className={cn(
-                                        "h-12 bg-white border-slate-200 rounded-xl px-4 pr-10 focus-visible:ring-[#3153A1] cursor-pointer text-left",
-                                        selectedFile && "text-[#3153A1] font-medium border-[#3153A1]/30 bg-blue-50/30"
+                                        "h-12 bg-white border-slate-200 rounded-xl px-4 pr-10 focus-visible:ring-primary cursor-pointer text-left",
+                                        selectedFile && "text-primary font-medium border-primary/30 bg-blue-50/30"
                                     )}
                                     readOnly
                                 />
                                 {selectedFile ? (
-                                    <FileIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#3153A1]" />
+                                    <FileIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
                                 ) : (
                                     <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 )}
@@ -235,10 +232,10 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
 
                         {/* Title (Second) */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Titre document :</Label>
+                            <Label className="text-[15px] font-semibold text-foreground">Titre document :</Label>
                             <Input
                                 placeholder="Ecrivez le titre de votre document"
-                                className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-[#3153A1]"
+                                className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-primary"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 required
@@ -247,9 +244,9 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
 
                         {/* Property */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Logement :</Label>
+                            <Label className="text-[15px] font-semibold text-foreground">Logement :</Label>
                             <Select onValueChange={setProperty} value={property} required>
-                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-[#3153A1]">
+                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-primary">
                                     <SelectValue placeholder="Choisir le logement" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -267,9 +264,9 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
 
                         {/* Tenant Selection */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Locataire destinataire :</Label>
+                            <Label className="text-[15px] font-semibold text-foreground">Locataire destinataire :</Label>
                             <Select onValueChange={setRecipientId} value={recipientId} required>
-                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-[#3153A1]">
+                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-primary">
                                     <SelectValue placeholder="Choisir le locataire" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -288,9 +285,9 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
 
                         {/* Category */}
                         <div className="space-y-2">
-                            <Label className="text-[15px] font-semibold text-[#12182C]">Catégorie :</Label>
+                            <Label className="text-[15px] font-semibold text-foreground">Catégorie :</Label>
                             <Select onValueChange={setCategory} value={category} required>
-                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-[#3153A1]">
+                                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl px-4 focus-visible:ring-primary">
                                     <SelectValue placeholder="Choisir la catégorie" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -307,7 +304,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="bg-[#3153A1] hover:bg-[#25468d] text-white h-14 px-12 rounded-xl text-lg font-medium shadow-xl shadow-blue-900/10 min-w-[240px] gap-2"
+                            className="bg-primary hover:bg-primary/90 text-white h-14 px-12 rounded-xl text-lg font-medium shadow-xl shadow-primary/10 min-w-[240px] gap-2"
                         >
                             {isLoading ? (
                                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />

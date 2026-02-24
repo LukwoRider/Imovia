@@ -242,9 +242,29 @@ export default function BiensPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+                    {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') && (
+                        <Pressable
+                            onPress={() => setIsAddModalVisible(true)}
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                backgroundColor: "#3153A1",
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                alignSelf: "flex-start",
+                                marginBottom: 12,
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Ionicons name="add-circle" size={18} color="#fff" />
+                                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
+                            </View>
+                        </Pressable>
+                    )}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
-                            {isOwnerOrAgencyRole(userRole) ? "Vos biens immobiliers" : "Trouver un bien ?"}
+                            {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Vos biens immobiliers" : "Trouver un appartement ?"}
                         </Text>
                     </View>
 

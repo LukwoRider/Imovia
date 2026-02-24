@@ -22,7 +22,7 @@ export function Navbar() {
                 {/* Logo */}
                 <div className="flex-shrink-0 z-50 relative">
                     <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
-                        <Logo className="h-8 w-auto text-[#12182C]" />
+                        <Logo className="h-8 w-auto text-foreground" />
                     </Link>
                 </div>
 
@@ -32,7 +32,7 @@ export function Navbar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="text-sm font-medium text-slate-500 hover:text-[#3153A1] transition-colors"
+                            className="text-sm font-medium text-slate-500 hover:text-primary transition-colors"
                         >
                             {item.title}
                         </Link>
@@ -41,10 +41,10 @@ export function Navbar() {
 
                 {/* Desktop Auth Buttons */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Button variant="ghost" asChild className="text-slate-600 hover:text-[#3153A1] hover:bg-blue-50">
+                    <Button variant="ghost" asChild className="text-slate-600 hover:text-primary hover:bg-blue-50">
                         <Link href="/auth/login">Se connecter</Link>
                     </Button>
-                    <Button asChild className="bg-[#12182C] hover:bg-[#3153A1] text-white shadow-lg shadow-blue-900/10 transition-all hover:shadow-blue-900/20">
+                    <Button asChild className="bg-foreground hover:bg-primary text-white shadow-lg shadow-primary/10 transition-all hover:shadow-blue-900/20">
                         <Link href="/auth/register">Inscription</Link>
                     </Button>
                 </div>
@@ -52,7 +52,7 @@ export function Navbar() {
                 {/* Mobile Menu Toggle Button */}
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="md:hidden z-50 p-2 text-[#12182C] focus:outline-none"
+                    className="md:hidden z-50 p-2 text-foreground focus:outline-none"
                     aria-label="Ouvrir le menu"
                 >
                     <Menu className="w-7 h-7" />

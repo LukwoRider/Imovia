@@ -26,8 +26,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
         try {
             const data = await getUnreadNotifications()
             setNotifications(data)
-        } catch (error) {
-            console.error("Error fetching notifications:", error)
+        } catch {
         } finally {
             setLoading(false)
         }
@@ -68,7 +67,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <button className="p-2 text-slate-400 hover:text-[#3153A1] transition-colors relative outline-none">
+                <button className="p-2 text-slate-400 hover:text-primary transition-colors relative outline-none">
                     <Bell className="h-6 w-6" />
                     {unreadCount > 0 && (
                         <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border border-white text-[10px] text-white flex items-center justify-center font-bold animate-in zoom-in duration-300">
@@ -79,9 +78,9 @@ export function NotificationCenter({ userId }: { userId: string }) {
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0 rounded-2xl border-slate-200 shadow-xl overflow-hidden" align="end">
                 <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <h3 className="font-bold text-[#12182C]">Notifications</h3>
+                    <h3 className="font-bold text-foreground">Notifications</h3>
                     {unreadCount > 0 && (
-                        <span className="text-[10px] font-bold bg-[#3153A1]/10 text-[#3153A1] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">
                             {unreadCount} Nouvelles
                         </span>
                     )}
@@ -110,7 +109,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
                                             {getIcon(notif.type)}
                                         </div>
                                         <div className="flex-1 space-y-1 pr-6">
-                                            <p className="text-sm font-bold text-[#12182C] leading-none">
+                                            <p className="text-sm font-bold text-foreground leading-none">
                                                 {notif.title}
                                             </p>
                                             <p className="text-xs text-slate-500 leading-relaxed">
@@ -131,7 +130,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
                                     {notif.link && (
                                         <Link
                                             href={notif.link}
-                                            className="mt-3 block w-full py-1.5 text-center text-xs font-bold text-[#3153A1] bg-blue-50/50 rounded-lg hover:bg-blue-50 transition-colors"
+                                            className="mt-3 block w-full py-1.5 text-center text-xs font-bold text-primary bg-blue-50/50 rounded-lg hover:bg-blue-50 transition-colors"
                                             onClick={() => {
                                                 handleMarkAsRead(notif.id)
                                                 setIsOpen(false)
@@ -147,7 +146,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
                 </div>
 
                 <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
-                    <button className="text-[10px] font-bold text-slate-400 hover:text-[#3153A1] uppercase tracking-widest transition-colors">
+                    <button className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest transition-colors">
                         Tout marquer comme lu
                     </button>
                 </div>

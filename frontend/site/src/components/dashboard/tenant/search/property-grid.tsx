@@ -32,8 +32,7 @@ export function PropertyGrid() {
 
             if (error) throw error
             setProperties(data || [])
-        } catch (err) {
-            console.error("Fetch properties error:", err)
+        } catch {
             toast.error("Erreur lors de la récupération des biens")
         } finally {
             setLoading(false)
@@ -59,7 +58,7 @@ export function PropertyGrid() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-[#3153A1]" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-slate-500 font-medium animate-pulse">Recherche des meilleurs biens...</p>
             </div>
         )
@@ -71,11 +70,11 @@ export function PropertyGrid() {
                 <div className="bg-slate-50 p-4 rounded-full mb-4">
                     <SearchX className="h-8 w-8 text-slate-400" />
                 </div>
-                <p className="text-lg font-bold text-[#12182C]">Aucun bien ne correspond à vos critères.</p>
+                <p className="text-lg font-bold text-foreground">Aucun bien ne correspond à vos critères.</p>
                 <p className="text-slate-500 mb-6">Essayez de modifier vos filtres pour voir plus de résultats.</p>
                 <button
                     onClick={() => window.location.href = window.location.pathname}
-                    className="text-[#3153A1] hover:underline font-bold"
+                    className="text-primary hover:underline font-bold"
                 >
                     Réinitialiser tous les filtres
                 </button>

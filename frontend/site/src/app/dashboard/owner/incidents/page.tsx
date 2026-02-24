@@ -94,7 +94,7 @@ export default function OwnerIncidentsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#12182C]">Gestion des Incidents</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Gestion des Incidents</h1>
                     <p className="text-slate-500">Gérez les demandes d&apos;intervention de vos locataires.</p>
                 </div>
             </div>
@@ -110,7 +110,7 @@ export default function OwnerIncidentsPage() {
 
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                            <Loader2 className="h-8 w-8 animate-spin text-[#3153A1] mb-4" />
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                             <p className="text-slate-500 font-medium">Chargement des incidents...</p>
                         </div>
                     ) : (
@@ -129,7 +129,7 @@ export default function OwnerIncidentsPage() {
                             <div className="p-2 bg-amber-100 rounded-lg">
                                 <AlertCircle className="h-5 w-5 text-amber-600" />
                             </div>
-                            <h3 className="font-bold text-[#12182C]">Priorités</h3>
+                            <h3 className="font-bold text-foreground">Priorités</h3>
                         </div>
                         <p className="text-sm text-slate-600 leading-relaxed">
                             Pensez à traiter les incidents &quot;En attente&quot; rapidement pour garantir la satisfaction de vos locataires.

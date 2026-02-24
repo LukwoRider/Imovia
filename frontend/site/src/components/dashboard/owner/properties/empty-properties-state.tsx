@@ -13,14 +13,14 @@ export function EmptyPropertiesState({ onAddProperty }: EmptyPropertiesStateProp
             <div className="relative mb-8">
                 <div className="absolute -inset-4 bg-blue-50 rounded-full blur-2xl opacity-50 animate-pulse" />
                 <div className="relative bg-white p-6 rounded-3xl shadow-xl shadow-blue-900/5 border border-slate-50">
-                    <Building2 className="h-16 w-16 text-[#3153A1]" />
+                    <Building2 className="h-16 w-16 text-primary" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 bg-[#12182C] p-2.5 rounded-2xl shadow-lg border-2 border-white">
+                <div className="absolute -bottom-2 -right-2 bg-foreground p-2.5 rounded-2xl shadow-lg border-2 border-white">
                     <Plus className="h-5 w-5 text-white" />
                 </div>
             </div>
 
-            <h2 className="text-3xl font-extrabold text-[#12182C] mb-4">
+            <h2 className="text-3xl font-extrabold text-foreground mb-4">
                 Commençons votre patrimoine
             </h2>
             <p className="text-slate-500 max-w-md mx-auto mb-10 text-lg leading-relaxed">
@@ -30,7 +30,7 @@ export function EmptyPropertiesState({ onAddProperty }: EmptyPropertiesStateProp
             <Button
                 onClick={onAddProperty}
                 size="lg"
-                className="bg-[#3153A1] hover:bg-[#25468d] text-white px-10 py-7 rounded-2xl text-lg font-bold shadow-xl shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                className="bg-primary hover:bg-primary/90 text-white px-10 py-7 rounded-2xl text-lg font-bold shadow-xl shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
                 <Plus className="mr-3 h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
                 Ajouter mon premier logement

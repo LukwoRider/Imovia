@@ -11,7 +11,6 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
 
     if (!user) return null
 
-    const isOwnerOrAgency = user.role === "owner" || user.role === "agency"
 
     return (
         <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
@@ -25,8 +24,8 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
                     <Menu className="h-6 w-6 text-slate-700" />
                 </Button>
                 <div>
-                    <h1 className="text-xl font-bold text-[#12182C]">
-                        {isOwnerOrAgency ? `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !` : `Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !`}
+                    <h1 className="text-xl font-bold text-foreground">
+                        {`Bonjour, ${user.name?.split(' ')[0] || 'Utilisateur'} !`}
                     </h1>
                     <p className="text-sm text-slate-500 hidden sm:block">
                         {user.role === "agency" ? "Espace Agence Imovia" :

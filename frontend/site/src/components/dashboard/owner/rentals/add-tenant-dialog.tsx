@@ -120,7 +120,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
-                <div className="bg-[#12182C] p-8 text-white relative">
+                <div className="bg-foreground p-8 text-white relative">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <ShieldCheck size={120} />
                     </div>
@@ -141,7 +141,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                             <div key={s.step} className="flex items-center gap-2">
                                 <div className={cn(
                                     "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300",
-                                    step === s.step ? "bg-[#3153A1] text-white ring-4 ring-[#3153A1]/20" :
+                                    step === s.step ? "bg-primary text-white ring-4 ring-primary/20" :
                                         step > s.step ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500"
                                 )}>
                                     {step > s.step ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
@@ -163,7 +163,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                 className="space-y-6 flex-1"
                             >
                                 <div className="space-y-4">
-                                    <Label className="text-sm font-bold text-[#12182C] uppercase tracking-wider">Sélection du bien</Label>
+                                    <Label className="text-sm font-bold text-foreground uppercase tracking-wider">Sélection du bien</Label>
                                     {fetchingProperties ? (
                                         <div className="flex items-center gap-2 text-slate-500 py-10 justify-center">
                                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -187,17 +187,17 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                                     }}
                                                     className={cn(
                                                         "p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4 group",
-                                                        formData.propertyId === prop.id ? "border-[#3153A1] bg-blue-50/50 shadow-sm" : "border-slate-100 hover:border-slate-200"
+                                                        formData.propertyId === prop.id ? "border-primary bg-blue-50/50 shadow-sm" : "border-slate-100 hover:border-slate-200"
                                                     )}
                                                 >
                                                     <div className={cn(
                                                         "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                                                        formData.propertyId === prop.id ? "bg-[#3153A1] text-white" : "bg-slate-100 text-slate-400 group-hover:text-[#3153A1]"
+                                                        formData.propertyId === prop.id ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover:text-primary"
                                                     )}>
                                                         <Home className="h-5 w-5" />
                                                     </div>
                                                     <div className="flex-1 min-w-0 text-left">
-                                                        <p className="font-bold text-[#12182C] truncate">{prop.address}</p>
+                                                        <p className="font-bold text-foreground truncate">{prop.address}</p>
                                                         <p className="text-xs text-slate-500">{prop.city} • {prop.surface_m2}m²</p>
                                                     </div>
                                                     {formData.propertyId === prop.id && (
@@ -222,7 +222,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                 className="space-y-6 flex-1"
                             >
                                 <div className="space-y-4">
-                                    <Label className="text-sm font-bold text-[#12182C] uppercase tracking-wider">Sélectionnez le locataire</Label>
+                                    <Label className="text-sm font-bold text-foreground uppercase tracking-wider">Sélectionnez le locataire</Label>
 
                                     {fetchingTenants ? (
                                         <div className="flex items-center gap-2 text-slate-500 py-20 justify-center">
@@ -243,17 +243,17 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                                     onClick={() => setFoundProfile(tenant)}
                                                     className={cn(
                                                         "p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4 group",
-                                                        foundProfile?.id === tenant.id ? "border-[#3153A1] bg-blue-50/50 shadow-md ring-1 ring-[#3153A1]/10" : "border-slate-50 bg-white hover:border-slate-200 hover:shadow-sm"
+                                                        foundProfile?.id === tenant.id ? "border-primary bg-blue-50/50 shadow-md ring-1 ring-primary/10" : "border-slate-50 bg-white hover:border-slate-200 hover:shadow-sm"
                                                     )}
                                                 >
                                                     <Avatar className="h-12 w-12 shrink-0 border-2 border-white shadow-sm">
                                                         <AvatarImage src={tenant.avatar_url} />
-                                                        <AvatarFallback className="bg-[#12182C] text-white font-bold">
+                                                        <AvatarFallback className="bg-foreground text-white font-bold">
                                                             {tenant.full_name?.charAt(0)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex-1 min-w-0 text-left">
-                                                        <p className="font-bold text-[#12182C] truncate group-hover:text-[#3153A1] transition-colors">{tenant.full_name}</p>
+                                                        <p className="font-bold text-foreground truncate group-hover:text-primary transition-colors">{tenant.full_name}</p>
                                                         <div className="flex items-center gap-3 mt-0.5">
                                                             <p className="text-xs text-slate-500 truncate flex items-center gap-1">
                                                                 <Mail className="h-3 w-3" /> {tenant.email}
@@ -290,7 +290,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                                 type="number"
                                                 value={formData.rentAmount}
                                                 onChange={(e) => updateFormData({ rentAmount: Number(e.target.value) })}
-                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-[#3153A1]"
+                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-primary"
                                             />
                                             <Euro className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         </div>
@@ -303,7 +303,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                                 type="number"
                                                 value={formData.chargesAmount}
                                                 onChange={(e) => updateFormData({ chargesAmount: Number(e.target.value) })}
-                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-[#3153A1]"
+                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-primary"
                                             />
                                             <Euro className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         </div>
@@ -318,7 +318,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                                 type="date"
                                                 value={formData.startDate || ""}
                                                 onChange={(e) => updateFormData({ startDate: e.target.value })}
-                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-[#3153A1]"
+                                                className="rounded-xl pl-10 border-slate-200 h-12 focus:ring-primary"
                                             />
                                             <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         </div>
@@ -329,7 +329,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                             value={String(formData.paymentDay)}
                                             onValueChange={(v) => updateFormData({ paymentDay: Number(v) })}
                                         >
-                                            <SelectTrigger className="rounded-xl border-slate-200 h-12 focus:ring-[#3153A1]">
+                                            <SelectTrigger className="rounded-xl border-slate-200 h-12 focus:ring-primary">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl">
@@ -365,7 +365,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                         (step === 1 && !formData.propertyId) ||
                                         (step === 2 && !foundProfile)
                                     }
-                                    className="bg-[#12182C] hover:bg-[#12182C]/90 text-white rounded-xl h-12 px-10 font-bold group shadow-lg shadow-slate-200"
+                                    className="bg-foreground hover:bg-foreground/90 text-white rounded-xl h-12 px-10 font-bold group shadow-lg shadow-slate-200"
                                 >
                                     Suivant <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Button>
@@ -373,7 +373,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={loading}
-                                    className="bg-[#3153A1] hover:bg-[#3153A1]/90 text-white rounded-xl h-12 px-10 font-bold shadow-xl shadow-[#3153A1]/20"
+                                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-10 font-bold shadow-xl shadow-primary/20"
                                 >
                                     {loading ? (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

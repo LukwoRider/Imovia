@@ -36,7 +36,6 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
                 window.open(data.signedUrl, '_blank')
             }
         } catch (error: unknown) {
-            console.error("View error:", error)
             toast.error("Impossible d'ouvrir le document: " + (error instanceof Error ? error.message : "Erreur inconnue"))
         }
     }
@@ -64,7 +63,6 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
             link.remove()
             window.URL.revokeObjectURL(url)
         } catch (error: unknown) {
-            console.error("Download error:", error)
             toast.error(error instanceof Error ? error.message : "Erreur lors du téléchargement")
         } finally {
             setIsDownloading(false)
@@ -87,7 +85,6 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
                     .remove([doc.storagePath])
 
                 if (storageError) {
-                    console.error("Storage delete error:", storageError)
                 }
             }
 
@@ -108,23 +105,22 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
 
             onRefresh?.()
         } catch (error: unknown) {
-            console.error("Delete error:", error)
             toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression")
         } finally {
             setIsDeleting(false)
         }
     }
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-[#3153A1]/30 transition-all group">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-primary/30 transition-all group">
             <div className="flex items-center gap-4">
                 {/* Icon */}
                 <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 shadow-xs">
-                    <FileText className="h-6 w-6 text-[#3153A1]" />
+                    <FileText className="h-6 w-6 text-primary" />
                 </div>
 
                 {/* Info */}
                 <div className="flex flex-col">
-                    <span className="font-semibold text-[#12182C] group-hover:text-[#3153A1] transition-colors">
+                    <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
                         {doc.title}
                     </span>
                     <span className="text-slate-500 text-xs mt-0.5 font-medium">
@@ -143,7 +139,7 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
                     {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                 </button>
                 <button
-                    className="p-2 text-slate-400 hover:text-[#3153A1] hover:bg-blue-50 rounded-lg transition-all"
+                    className="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all"
                     title="Voir"
                     onClick={handleView}
                 >
@@ -151,7 +147,7 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
                 </button>
                 <Button
                     variant="default"
-                    className="bg-[#3153A1] hover:bg-[#25468d] h-9 px-4 gap-2 shadow-sm disabled:opacity-50"
+                    className="bg-primary hover:bg-primary/90 h-9 px-4 gap-2 shadow-sm disabled:opacity-50"
                     onClick={handleDownload}
                     disabled={isDownloading}
                 >

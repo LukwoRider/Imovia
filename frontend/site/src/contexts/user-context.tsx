@@ -44,21 +44,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     .eq('id', authUser.id)
                     .maybeSingle()
 
+                // If email is missing in the profile but available in Auth, sync it!
+                if (profile && !profile.email && authUser.email) {
+                    await supabase
+                        .from('profiles')
+                        .update({ email: authUser.email })
+                        .eq('id', authUser.id)
+                }
+
                 setUser({
                     id: authUser.id,
                     name: profile?.full_name || authUser.user_metadata?.full_name || "Utilisateur",
-                    email: authUser.email || "",
+                    email: profile?.email || authUser.email || "",
                     phone: profile?.phone || authUser.user_metadata?.phone || "",
                     avatar: profile?.avatar_url || authUser.user_metadata?.avatar_url || "",
-                    role: profile?.role || authUser.user_metadata?.role || ((profile?.full_name || authUser.user_metadata?.full_name || "").includes("Agence") ? "agency" : "tenant"),
+                    role: profile?.role || authUser.user_metadata?.role || "tenant",
                     siret: profile?.siret || authUser.user_metadata?.siret || "",
                     address: profile?.address || authUser.user_metadata?.address || ""
                 })
             } else {
                 setUser(null)
             }
-        } catch (error) {
-            console.error("Error fetching user:", error)
+        } catch {
             setUser(null)
         } finally {
             setLoading(false)
@@ -83,6 +90,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 dbUpdates.phone = updates.phone
             }
 
+            if (updates.email !== undefined) {
+                dbUpdates.email = updates.email
+            }
+
             if (updates.avatar) {
                 dbUpdates.avatar_url = updates.avatar
             }
@@ -102,7 +113,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 return { ...prev, ...localUpdates }
             })
         } catch (error) {
-            console.error("Error updating profile:", error)
             throw error
         }
     }

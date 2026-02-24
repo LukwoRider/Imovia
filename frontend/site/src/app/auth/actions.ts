@@ -31,8 +31,7 @@ export async function signup(_prevState: unknown, formData: FormData) {
     let origin = ''
     try {
         origin = (await headers()).get('origin') || ''
-    } catch (e) {
-        console.error("Failed to get origin header", e)
+    } catch {
     }
 
     const email = formData.get('email') as string
@@ -58,7 +57,6 @@ export async function signup(_prevState: unknown, formData: FormData) {
     })
 
     if (error) {
-        console.error("Signup Failed:", error.message)
         return { error: error.message }
     }
 
@@ -69,7 +67,6 @@ export async function signup(_prevState: unknown, formData: FormData) {
             .eq('id', data.user.id)
 
         if (updateError) {
-            console.error("Failed to update role:", updateError)
         }
     }
 

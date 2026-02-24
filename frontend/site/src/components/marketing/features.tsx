@@ -13,6 +13,7 @@ const features = [
         icon: LineChart,
         color: "from-green-500/20 to-green-500/5",
         iconColor: "text-green-500",
+        bgColor: "bg-green-100",
     },
     {
         name: "Gestion Automatisée",
@@ -20,6 +21,7 @@ const features = [
         icon: Zap,
         color: "from-amber-500/20 to-amber-500/5",
         iconColor: "text-amber-500",
+        bgColor: "bg-amber-100",
     },
     {
         name: "Sécurité Bancaire",
@@ -27,6 +29,7 @@ const features = [
         icon: Shield,
         color: "from-blue-500/20 to-blue-500/5",
         iconColor: "text-blue-500",
+        bgColor: "bg-blue-100",
     },
     {
         name: "Scalabilité Totale",
@@ -34,6 +37,7 @@ const features = [
         icon: Building2,
         color: "from-purple-500/20 to-purple-500/5",
         iconColor: "text-purple-500",
+        bgColor: "bg-purple-100",
     },
 ]
 
@@ -71,11 +75,11 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
                 <div className={cn("absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br", feature.color)} />
 
                 <div className="relative flex flex-col h-full">
-                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-slate-50 group-hover:scale-110 transition-transform duration-300", feature.iconColor.replace('text-', 'bg-').replace('500', '100'))}>
+                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 scale-100 group-hover:scale-110 transition-transform duration-300", feature.bgColor)}>
                         <feature.icon className={cn("h-7 w-7", feature.iconColor)} />
                     </div>
 
-                    <h3 className="text-xl font-bold text-[#12182C] mb-3 group-hover:text-[#3153A1] transition-colors">
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                         {feature.name}
                     </h3>
 
@@ -99,7 +103,7 @@ export function Features() {
 
             <div className="container px-4 md:px-6 mx-auto relative z-10">
                 <FadeInUp className="text-center max-w-3xl mx-auto mb-20">
-                    <h2 className="text-4xl font-extrabold tracking-tight text-[#12182C] sm:text-5xl mb-6">
+                    <h2 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl mb-6">
                         <AnimatedGradientText className="block" from="#12182C" via="#94a3b8" to="#12182C">
                             L&apos;immobilier,
                         </AnimatedGradientText>

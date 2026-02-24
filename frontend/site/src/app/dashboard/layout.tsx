@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Logo } from "@/components/ui/logo"
 import { LogOut } from "lucide-react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import { UserProvider, useUser } from "@/contexts/user-context"
 import { logout } from "@/app/auth/actions"
 import { DashboardHeader } from "@/components/dashboard/shared/dashboard-header"
@@ -41,9 +42,32 @@ function DashboardContent({
     }, [user, loading, router])
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-slate-50">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        return (
+            <div className="min-h-screen bg-slate-50 flex">
+                <aside className="hidden md:flex w-64 flex-col bg-foreground fixed h-full z-30">
+                    <div className="p-6">
+                        <Skeleton className="h-8 w-32 bg-white/10" />
+                    </div>
+                    <div className="px-4 py-6 space-y-2">
+                        {[...Array(5)].map((_, i) => (
+                            <Skeleton key={i} className="h-10 w-full rounded-xl bg-white/5" />
+                        ))}
+                    </div>
+                </aside>
+                <main className="flex-1 md:ml-64 p-6 md:p-8 space-y-6">
+                    <Skeleton className="h-10 w-64" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                            <Skeleton key={i} className="h-28 rounded-xl" />
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Skeleton className="h-64 rounded-xl" />
+                        <Skeleton className="h-64 rounded-xl" />
+                    </div>
+                </main>
+            </div>
+        )
     }
 
     if (!user) return null
@@ -51,7 +75,7 @@ function DashboardContent({
     return (
         <div className="min-h-screen bg-slate-50 flex">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-[#12182C] text-white fixed h-full z-30">
+            <aside className="hidden md:flex w-64 flex-col bg-foreground text-white fixed h-full z-30">
                 <div className="p-6 flex items-center gap-2">
                     <Logo className="h-8 w-auto" variant="white" />
                 </div>
@@ -75,7 +99,7 @@ function DashboardContent({
 
             {/* Mobile Sidebar (Sheet) */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetContent side="left" className="p-0 bg-[#12182C] text-white w-64 border-r-0">
+                <SheetContent side="left" className="p-0 bg-foreground text-white w-64 border-r-0">
                     <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
                     <div className="p-6 flex items-center gap-2">
                         <Logo className="h-8 w-auto" variant="white" />

@@ -23,6 +23,18 @@ import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
+function isOwnerOrAgencyRole(role?: string | null) {
+    if (!role) return false;
+    const normalized = role.trim().toLowerCase();
+    return (
+        normalized === "owner" ||
+        normalized === "agency" ||
+        normalized === "propriétaire" ||
+        normalized === "proprietaire" ||
+        normalized === "propriÃ©taire"
+    );
+}
+
 export default function DocumentsPage() {
     const scrollViewRef = useRef<ScrollView>(null);
     const [documents, setDocuments] = useState<Document[]>([]);
@@ -35,11 +47,7 @@ export default function DocumentsPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    const isOwnerOrAgency = useMemo(() => {
-        if (!userRole) return false;
-        const role = userRole.toLowerCase();
-        return role === 'owner' || role === 'agency' || role === 'propriétaire';
-    }, [userRole]);
+    const isOwnerOrAgency = useMemo(() => isOwnerOrAgencyRole(userRole), [userRole]);
 
     const [isZipping, setIsZipping] = useState(false);
 
@@ -164,8 +172,7 @@ export default function DocumentsPage() {
             const profileRole = profile?.role || user.user_metadata?.role || "tenant";
             setUserRole(profileRole);
 
-            const checkRole = profileRole.toLowerCase();
-            const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+            const isManagement = isOwnerOrAgencyRole(profileRole);
 
             let dbDocs: any[] = [];
             let docError: any = null;

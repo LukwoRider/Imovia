@@ -68,7 +68,7 @@ export default function TenantDashboard() {
                     const [pts, incs, docs] = await Promise.all([
                         getTenantPayments(activeLease.id),
                         getTenantIncidents(currentUser.id),
-                        getTenantDocuments()
+                        getTenantDocuments(currentUser.id)
                     ])
                     setPayments(pts)
                     setIncidents(incs)

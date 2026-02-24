@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react"
 import { Search, FileText, Briefcase, FileSearch, MoreHorizontal, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { DocumentType, Document as DocumentMock } from "@/lib/types/document"
+import { DocumentType, Document as DocumentMock, docTypeMap } from "@/lib/types/document"
 import { DocumentList } from "./document-list"
 import { AddDocumentDialog } from "./add-document-dialog"
 import { createClient } from "@/lib/supabase/client"
@@ -39,16 +39,19 @@ export function DocumentsClient() {
 
             if (error) throw error
 
-            const formattedDocs: DocumentMock[] = (data || []).map(doc => ({
-                id: doc.id,
-                title: doc.title || "Document sans titre",
-                date: new Date(doc.created_at).toLocaleDateString(),
-                category: (doc.doc_type || "Autres") as DocumentType,
-                type: (doc.doc_type || "Autres") as DocumentType,
-                propertyName: doc.property_name || "N/A",
-                tenantName: doc.tenant_name || "N/A",
-                storagePath: doc.storage_path
-            }))
+            const formattedDocs: DocumentMock[] = (data || []).map(doc => {
+                const category = docTypeMap[doc.document_type] || "Autres"
+                return {
+                    id: doc.id,
+                    title: doc.title || "Document sans titre",
+                    date: new Date(doc.created_at).toLocaleDateString(),
+                    category: category,
+                    type: category,
+                    propertyName: doc.property_name || "N/A",
+                    tenantName: doc.tenant_name || "N/A",
+                    storagePath: doc.storage_path
+                }
+            })
 
             setDocuments(formattedDocs)
         } catch {

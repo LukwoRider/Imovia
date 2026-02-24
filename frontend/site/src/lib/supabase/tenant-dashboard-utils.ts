@@ -1,7 +1,7 @@
 import { createClient } from './client'
 import { Lease, RentPayment } from '../types/lease'
 import { Incident } from '../types/incident'
-import { Document } from '../types/document'
+import { Document, docTypeMap } from '../types/document'
 
 export async function getTenantActiveLease(tileId: string): Promise<Lease | null> {
     const supabase = createClient()
@@ -82,11 +82,12 @@ export async function getTenantIncidents(userId: string): Promise<Incident[]> {
     return data as unknown as Incident[]
 }
 
-export async function getTenantDocuments(): Promise<Document[]> {
+export async function getTenantDocuments(userId: string): Promise<Document[]> {
     const supabase = createClient()
     const { data, error } = await supabase
         .from('documents')
         .select('*')
+        .eq('target_tenant_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -94,12 +95,15 @@ export async function getTenantDocuments(): Promise<Document[]> {
         return []
     }
 
-    return (data || []).map((doc: { id: string; title: string; created_at: string; document_type: string; storage_path: string }) => ({
-        id: doc.id,
-        title: doc.title || 'Document sans titre',
-        date: new Date(doc.created_at).toLocaleDateString('fr-FR'),
-        category: doc.document_type || 'Autres',
-        type: doc.document_type || 'Autres',
-        storagePath: doc.storage_path
-    })) as Document[]
+    return (data || []).map((doc: { id: string; title: string; created_at: string; document_type: string; storage_path: string }) => {
+        const category = docTypeMap[doc.document_type] || 'Autres'
+        return {
+            id: doc.id,
+            title: doc.title || 'Document sans titre',
+            date: new Date(doc.created_at).toLocaleDateString('fr-FR'),
+            category: category,
+            type: category,
+            storagePath: doc.storage_path
+        }
+    }) as Document[]
 }

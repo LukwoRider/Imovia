@@ -6,7 +6,7 @@ import { DocumentFilters } from "@/components/dashboard/tenant/documents/documen
 import { DocumentList } from "@/components/dashboard/tenant/documents/document-list"
 import { QuickActions } from "@/components/dashboard/shared/quick-actions"
 import { HelpCenter } from "@/components/dashboard/shared/help-center"
-import { DocumentType, Document as DocumentMock } from "@/lib/types/document"
+import { DocumentType, Document as DocumentMock, docTypeMap } from "@/lib/types/document"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -29,18 +29,22 @@ export default function DocumentsPage() {
             const { data, error } = await supabase
                 .from('documents')
                 .select('*')
+                .eq('target_tenant_id', user.id)
                 .order('created_at', { ascending: false })
 
             if (error) throw error
 
-            const formattedDocs: DocumentMock[] = (data || []).map(doc => ({
-                id: doc.id,
-                title: doc.title || "Document sans titre",
-                date: new Date(doc.created_at).toLocaleDateString(),
-                category: (doc.document_type || "Autres") as DocumentType,
-                type: (doc.document_type || "Autres") as DocumentType,
-                storagePath: doc.storage_path
-            }))
+            const formattedDocs: DocumentMock[] = (data || []).map(doc => {
+                const category = docTypeMap[doc.document_type] || "Autres"
+                return {
+                    id: doc.id,
+                    title: doc.title || "Document sans titre",
+                    date: new Date(doc.created_at).toLocaleDateString(),
+                    category: category,
+                    type: category,
+                    storagePath: doc.storage_path
+                }
+            })
 
             setDocuments(formattedDocs)
         } catch (error: unknown) {

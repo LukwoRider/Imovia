@@ -1,24 +1,18 @@
+import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
-import { Text } from "@/components/ui/text";
 import type { Incident } from "./types";
 
 
-function getStatusBgColor(statut: Incident["statut"]): string {
-    switch (statut) {
-        case "en_cours":
-            return "#e17100";
-        case "resolus":
-            return "#08cb56";
-        case "attente":
-            return "#ff0000";
-        default:
-            return "#6b7280";
-    }
-}
+const PROBLEM_CONFIG: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
+    plumbing: { label: "Plomberie", color: "#0056BD", icon: "water-outline" }, // lab(44.0605% 29.0279 -86.0352)
+    electricity: { label: "Électrique", color: "#EDD632", icon: "flash-outline" }, // lab(76.3898% 14.5258 98.4589)
+    appliance: { label: "Panne d'appareil", color: "#FF8100", icon: "build-outline" }, // lab(64.272% 57.1788 90.3583)
+    other: { label: "Autre", color: "#6B7280", icon: "alert-circle-outline" }, // lab(48.0876% -2.03595 -16.5814)
+};
 
 export default function IncidentCard({ incident }: { incident: Incident }) {
-    const statusBg = getStatusBgColor(incident.statut);
+    const config = PROBLEM_CONFIG[incident.typeProb] || PROBLEM_CONFIG.other;
 
     return (
         <View
@@ -43,13 +37,13 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
                         width: 42,
                         height: 42,
                         borderRadius: 12,
-                        backgroundColor: statusBg,
+                        backgroundColor: config.color,
                         alignItems: "center",
                         justifyContent: "center",
                         marginRight: 12,
                     }}
                 >
-                    <Ionicons name="water" size={20} color="#FDF8F2" />
+                    <Ionicons name={config.icon} size={20} color="#fff" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <Text
@@ -61,7 +55,7 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
                         }}
                         numberOfLines={2}
                     >
-                        {incident.titre}
+                        {config.label}
                     </Text>
                     <Text
                         style={{
@@ -97,26 +91,28 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
                     marginBottom: 14,
                 }}
             >
-                <View
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: "#f3f4f6",
-                        borderRadius: 20,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                    }}
-                >
-                    <Text
+                {incident.localisation && (
+                    <View
                         style={{
-                            fontSize: 11,
-                            color: "#374151",
-                            fontFamily: "Montserrat_500Medium",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            backgroundColor: "#f3f4f6",
+                            borderRadius: 20,
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
                         }}
                     >
-                        {incident.localisation}
-                    </Text>
-                </View>
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                color: "#374151",
+                                fontFamily: "Montserrat_500Medium",
+                            }}
+                        >
+                            {incident.localisation}
+                        </Text>
+                    </View>
+                )}
                 <View
                     style={{
                         flexDirection: "row",

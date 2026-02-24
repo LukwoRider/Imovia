@@ -409,8 +409,6 @@ export default function AjouterDocumentModal({ visible, onClose, onSuccess, owne
                                 <Text style={styles.submitBtnText}>Valider</Text>
                             </View>
                         </Pressable>
-
-                        <Text style={styles.footerInfo}>Vos informations sont sécurisées et nous contacterons rapidement</Text>
                     </ScrollView>
                 </View>
             </View>

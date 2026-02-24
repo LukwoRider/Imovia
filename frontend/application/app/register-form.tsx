@@ -2,6 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import {
+    isValidSignupPhone,
+    sanitizeSignupPhoneInput,
+    SIGNUP_PHONE_ERROR_MESSAGE,
+} from "@/lib/phone-validation";
 import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -23,18 +28,34 @@ export default function RegisterFormPage() {
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [phoneError, setPhoneError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    function showError(message: string) {
+        if (Platform.OS === "web" && typeof window !== "undefined") {
+            window.alert(message);
+            return;
+        }
+        Alert.alert("Erreur", message);
+    }
 
     async function handleSignUp() {
         if (!email || !password || !lastName || !firstName) {
-            Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires.");
+            showError("Veuillez remplir tous les champs obligatoires.");
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+            showError("Les mots de passe ne correspondent pas.");
             return;
         }
+
+        if (!isValidSignupPhone(phone)) {
+            setPhoneError(SIGNUP_PHONE_ERROR_MESSAGE);
+            showError(SIGNUP_PHONE_ERROR_MESSAGE);
+            return;
+        }
+        setPhoneError("");
 
         setLoading(true);
         const { error, data } = await supabase.auth.signUp({
@@ -138,10 +159,23 @@ export default function RegisterFormPage() {
                         <Input
                             placeholder="+33"
                             value={phone}
-                            onChangeText={setPhone}
+                            onChangeText={(value) => {
+                                setPhone(sanitizeSignupPhoneInput(value));
+                                if (phoneError) setPhoneError("");
+                            }}
+                            onBlur={() => {
+                                if (phone && !isValidSignupPhone(phone)) {
+                                    setPhoneError(SIGNUP_PHONE_ERROR_MESSAGE);
+                                }
+                            }}
                             keyboardType="phone-pad"
                             autoComplete="tel"
                         />
+                        {phoneError ? (
+                            <Text className="text-xs text-red-500 mt-1">
+                                {phoneError}
+                            </Text>
+                        ) : null}
                     </View>
 
                     <View style={{ marginBottom: 10 }}>

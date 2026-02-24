@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { login } from "../actions"
 import { useTransition, useState } from "react"
@@ -63,12 +64,12 @@ export default function LoginPage() {
                 </div>
 
                 {error && (
-                    <div className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-200">
-                        {error}
-                    </div>
+                    <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                 )}
 
-                <Button className="w-full bg-[#25468d] hover:bg-[#1e3a75] text-white" disabled={isPending}>
+                <Button className="w-full bg-primary/90 hover:bg-primary text-white" disabled={isPending}>
                     {isPending ? "Connexion..." : "Se connecter"}
                 </Button>
             </form>

@@ -17,13 +17,13 @@ const categories = [
     { label: "Autres", value: "Autres", icon: FileText },
 ] as const
 
-const supabase = createClient()
 
 export function DocumentsClient() {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<DocumentType | "all">("all")
     const [documents, setDocuments] = useState<DocumentMock[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const supabase = createClient()
 
     const fetchDocuments = useCallback(async () => {
         try {
@@ -51,11 +51,8 @@ export function DocumentsClient() {
             }))
 
             setDocuments(formattedDocs)
-        } catch (error: unknown) {
-            const err = error instanceof Error ? error : new Error(String(error))
-            console.error("Error fetching documents (Raw):", err)
-            console.error("Error fetching documents (Message):", err.message)
-            console.error("Error fetching documents (Full):", JSON.stringify(err, null, 2))
+        } catch {
+            // Error handled silently
         } finally {
             setIsLoading(false)
         }
@@ -82,10 +79,10 @@ export function DocumentsClient() {
             {/* Top Bar: Search and Add Button */}
             <div className="flex items-center gap-4">
                 <div className="relative flex-1 group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#3153A1] transition-colors" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="Search..."
-                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl focus-visible:ring-1 focus-visible:ring-[#3153A1] focus-visible:border-[#3153A1]"
+                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -107,11 +104,11 @@ export function DocumentsClient() {
                                     className={cn(
                                         "flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all cursor-pointer whitespace-nowrap",
                                         isActive
-                                            ? "bg-blue-50 text-[#3153A1] ring-1 ring-[#3153A1]/20"
+                                            ? "bg-blue-50 text-primary ring-1 ring-primary/20"
                                             : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                                     )}
                                 >
-                                    <Icon className={cn("h-4 w-4", isActive ? "text-[#3153A1]" : "text-slate-400")} />
+                                    <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-slate-400")} />
                                     {cat.label}
                                 </button>
                             )
@@ -122,7 +119,7 @@ export function DocumentsClient() {
                 <div className="p-6">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-24 gap-4">
-                            <Loader2 className="h-8 w-8 text-[#3153A1] animate-spin" />
+                            <Loader2 className="h-8 w-8 text-primary animate-spin" />
                             <p className="text-slate-500 font-medium">Chargement de vos documents...</p>
                         </div>
                     ) : (

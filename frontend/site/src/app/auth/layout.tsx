@@ -20,7 +20,7 @@ export default function AuthLayout({
                 <Button
                     variant="ghost"
                     asChild
-                    className="absolute top-8 left-8 text-slate-500 hover:text-[#12182C] hover:bg-slate-100"
+                    className="absolute top-8 left-8 text-slate-500 hover:text-foreground hover:bg-slate-100"
                 >
                     <Link href="/" className="flex items-center gap-2">
                         <ChevronLeft className="h-4 w-4" />

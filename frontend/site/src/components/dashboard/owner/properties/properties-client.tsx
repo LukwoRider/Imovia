@@ -29,9 +29,7 @@ export function PropertiesClient() {
 
             if (error) throw error
             setProperties(data || [])
-        } catch (error) {
-            const err = error as Error
-            console.error("Error fetching properties:", err)
+        } catch {
             toast.error("Erreur lors de la récupération des biens")
         } finally {
             setLoading(false)
@@ -59,7 +57,6 @@ export function PropertiesClient() {
             setProperties(prev => prev.filter(p => p.id !== id))
             toast.success("Bien supprimé avec succès")
         } catch (error) {
-            console.error("Error deleting property:", error)
             toast.error("Erreur lors de la suppression du bien")
         } finally {
             setDeletingId(null)
@@ -69,7 +66,7 @@ export function PropertiesClient() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-[#3153A1]" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }

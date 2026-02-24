@@ -50,7 +50,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     email: authUser.email || "",
                     phone: profile?.phone || authUser.user_metadata?.phone || "",
                     avatar: profile?.avatar_url || authUser.user_metadata?.avatar_url || "",
-                    role: profile?.role || authUser.user_metadata?.role || ((profile?.full_name || authUser.user_metadata?.full_name || "").includes("Agence") ? "agency" : "tenant"),
+                    role: profile?.role || authUser.user_metadata?.role || "tenant",
                     siret: profile?.siret || authUser.user_metadata?.siret || "",
                     address: profile?.address || authUser.user_metadata?.address || ""
                 })
@@ -58,7 +58,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 setUser(null)
             }
         } catch (error) {
-            console.error("Error fetching user:", error)
             setUser(null)
         } finally {
             setLoading(false)
@@ -102,7 +101,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 return { ...prev, ...localUpdates }
             })
         } catch (error) {
-            console.error("Error updating profile:", error)
             throw error
         }
     }

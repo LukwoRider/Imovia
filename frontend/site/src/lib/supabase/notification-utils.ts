@@ -40,7 +40,6 @@ export async function sendNotification(
             console.warn("Notifications table missing. Run migration.")
             return null
         }
-        console.error("Error sending notification - Code:", error.code, "Message:", error.message, "Details:", error.details)
         throw new Error(`Impossible d'envoyer la notification: ${error.message}`)
     }
 
@@ -67,7 +66,6 @@ export async function getUnreadNotifications() {
             // Silently return empty list if table is missing
             return []
         }
-        console.error("Error fetching notifications - Code:", error.code, "Message:", error.message)
         return []
     }
 
@@ -86,7 +84,6 @@ export async function markNotificationAsRead(notificationId: string) {
 
     if (error) {
         if (error.code === '42P01') return false
-        console.error("Error marking notification as read:", error)
         return false
     }
 

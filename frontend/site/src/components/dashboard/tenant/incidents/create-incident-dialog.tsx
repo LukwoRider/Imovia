@@ -128,14 +128,14 @@ export function CreateIncidentDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-[#3153A1] hover:bg-[#25468d] text-white" suppressHydrationWarning>
+                <Button className="bg-primary hover:bg-primary/90 text-white" suppressHydrationWarning>
                     <FireExtinguisher className="mr-2 h-4 w-4" />
                     Déclarer un incident
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-[#12182C]">Déclarer un incident</DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-foreground">Déclarer un incident</DialogTitle>
                     <DialogDescription>
                         Vous rencontrez un problème dans votre logement ?
                         <br />
@@ -146,7 +146,7 @@ export function CreateIncidentDialog() {
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                     {/* Type Selection */}
                     <div className="space-y-3">
-                        <Label className="text-base font-semibold text-[#12182C]">Choisir un type d&apos;incident</Label>
+                        <Label className="text-base font-semibold text-foreground">Choisir un type d&apos;incident</Label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {incidentTypes.map((type) => (
                                 <div
@@ -155,8 +155,8 @@ export function CreateIncidentDialog() {
                                     className={cn(
                                         "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border cursor-pointer transition-all",
                                         selectedType === type.id
-                                            ? "bg-[#3153A1] border-[#3153A1] text-white shadow-md"
-                                            : "bg-white border-slate-200 text-slate-600 hover:border-[#3153A1]/50 hover:bg-slate-50"
+                                            ? "bg-primary border-primary text-white shadow-md"
+                                            : "bg-white border-slate-200 text-slate-600 hover:border-primary/50 hover:bg-slate-50"
                                     )}
                                 >
                                     <type.icon className={cn("h-6 w-6 mb-1", selectedType === type.id ? "text-white" : "text-slate-500")} />
@@ -168,11 +168,11 @@ export function CreateIncidentDialog() {
 
                     {/* Description */}
                     <div className="space-y-3">
-                        <Label htmlFor="description" className="text-base font-semibold text-[#12182C]">Décrire le problème</Label>
+                        <Label htmlFor="description" className="text-base font-semibold text-foreground">Décrire le problème</Label>
                         <Textarea
                             id="description"
                             placeholder="Décrivez l'incident le plus précisément possible..."
-                            className="min-h-[120px] resize-none border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl"
+                            className="min-h-[120px] resize-none border-slate-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
@@ -182,11 +182,11 @@ export function CreateIncidentDialog() {
 
                     {/* Location */}
                     <div className="space-y-3">
-                        <Label htmlFor="location" className="text-base font-semibold text-[#12182C]">Localisation précise</Label>
+                        <Label htmlFor="location" className="text-base font-semibold text-foreground">Localisation précise</Label>
                         <Input
                             id="location"
                             placeholder="Ex: Cuisine, sous l'évier"
-                            className="bg-white border-slate-200 focus:border-[#3153A1] focus:ring-[#3153A1]/20 rounded-xl h-11"
+                            className="bg-white border-slate-200 focus:border-primary focus:ring-primary/20 rounded-xl h-11"
                             value={locationDetail}
                             onChange={(e) => setLocationDetail(e.target.value)}
                             required
@@ -197,7 +197,7 @@ export function CreateIncidentDialog() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white h-11 rounded-xl text-base font-medium"
+                            className="w-full bg-primary hover:bg-primary/90 text-white h-11 rounded-xl text-base font-medium"
                         >
                             {loading ? (
                                 <>

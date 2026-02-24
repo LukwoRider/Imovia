@@ -48,7 +48,6 @@ export default function OwnerDocumentsPage() {
                         .download(doc.storage_path)
 
                     if (error) {
-                        console.error(`Erreur pour ${doc.title}:`, error)
                         continue
                     }
 
@@ -77,7 +76,6 @@ export default function OwnerDocumentsPage() {
                     // Add to ZIP instead of triggering immediate download
                     zip.file(finalFileName, data)
                 } catch (err) {
-                    console.error(`Download loop error for ${doc.title}:`, err)
                 }
             }
 
@@ -97,7 +95,6 @@ export default function OwnerDocumentsPage() {
 
             toast.success("Archive ZIP créée et téléchargée avec succès")
         } catch (error: unknown) {
-            console.error("Download all error:", error)
             toast.error("Erreur lors du téléchargement groupé : " + (error instanceof Error ? error.message : "Erreur inconnue"))
         } finally {
             setIsDownloadingAll(false)
@@ -107,7 +104,7 @@ export default function OwnerDocumentsPage() {
     return (
         <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col gap-2 mb-8">
-                <h1 className="text-2xl font-bold text-[#12182C]">Mes Documents</h1>
+                <h1 className="text-2xl font-bold text-foreground">Mes Documents</h1>
                 <p className="text-slate-500">Accédez à tous vos documents de location</p>
             </div>
 

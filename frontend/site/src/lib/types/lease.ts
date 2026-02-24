@@ -1,6 +1,6 @@
 import { Property } from "./property"
 
-export type LeaseStatus = 'active' | 'terminated' | 'draft' | 'pending'
+export type LeaseStatus = 'active' | 'ended' | 'draft' | 'pending'
 export type PaymentStatus = 'due' | 'paid' | 'late' | 'partial' | 'refunded'
 
 export interface Lease {

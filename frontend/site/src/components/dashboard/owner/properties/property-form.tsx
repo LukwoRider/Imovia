@@ -147,7 +147,6 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                         .upload(filePath, file)
 
                     if (uploadError) {
-                        console.error(`Erreur d'upload pour l'image ${i + 1}:`, uploadError)
                         throw new Error(`Erreur d'upload pour l'image ${i + 1}: ${uploadError.message}`)
                     }
 
@@ -160,7 +159,6 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     }])
 
                     if (dbError) {
-                        console.error(`Lien de l'image ${i + 1} non enregistré:`, dbError)
                         throw new Error(`Lien de l'image ${i + 1} non enregistré: ${dbError.message}`)
                     }
 
@@ -173,7 +171,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                 .select('id')
                 .eq('property_id', propertyId)
 
-            if (checkError) console.error("Error checking final images:", checkError)
+            if (checkError) { /* non-critical */ }
 
             if (!finalImages || finalImages.length === 0) {
                 const { error: placeholderError } = await supabase.from('property_images').insert([{
@@ -181,7 +179,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     storage_path: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2580&auto=format&fit=crop",
                     is_cover: true
                 }])
-                if (placeholderError) console.error("Placeholder error:", placeholderError)
+                if (placeholderError) { /* non-critical */ }
             }
 
             toast.success(mode === 'edit' ? "Bien mis à jour !" : "Bien publié avec succès !")
@@ -199,9 +197,9 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
             <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <Camera className="h-5 w-5 text-[#3153A1]" />
+                        <Camera className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-[#12182C]">Photos du bien</h3>
+                    <h3 className="text-xl font-bold text-foreground">Photos du bien</h3>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -221,18 +219,18 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                                 <Trash2 className="h-4 w-4" />
                             </button>
                             {index === 0 && (
-                                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-[#3153A1] text-white text-[10px] font-bold rounded-md shadow-sm">
+                                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-md shadow-sm">
                                     Couverture
                                 </div>
                             )}
                         </div>
                     ))}
 
-                    <label className="flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#3153A1] hover:bg-blue-50/50 cursor-pointer transition-all group">
+                    <label className="flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:bg-blue-50/50 cursor-pointer transition-all group">
                         <div className="p-3 bg-slate-50 group-hover:bg-blue-50 rounded-full mb-2 transition-colors">
-                            <Plus className="h-6 w-6 text-slate-400 group-hover:text-[#3153A1]" />
+                            <Plus className="h-6 w-6 text-slate-400 group-hover:text-primary" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-500 group-hover:text-[#3153A1]">Ajouter</span>
+                        <span className="text-xs font-semibold text-slate-500 group-hover:text-primary">Ajouter</span>
                         <input
                             type="file"
                             multiple
@@ -251,9 +249,9 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
             <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <MapPin className="h-5 w-5 text-[#3153A1]" />
+                        <MapPin className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-[#12182C]">Localisation</h3>
+                    <h3 className="text-xl font-bold text-foreground">Localisation</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,9 +273,9 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
             <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <Building className="h-5 w-5 text-[#3153A1]" />
+                        <Building className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-[#12182C]">Caractéristiques</h3>
+                    <h3 className="text-xl font-bold text-foreground">Caractéristiques</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -344,9 +342,9 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
             <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <Euro className="h-5 w-5 text-[#3153A1]" />
+                        <Euro className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-[#12182C]">Financier & Détails</h3>
+                    <h3 className="text-xl font-bold text-foreground">Financier & Détails</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -402,7 +400,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="h-12 px-12 bg-[#3153A1] hover:bg-[#25468d] text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="h-12 px-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                     {loading ? (
                         <>

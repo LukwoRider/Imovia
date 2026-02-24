@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signup } from "../actions"
 import { toast } from "sonner"
 import { PhoneInput } from "@/components/ui/phone-input"
@@ -103,12 +104,12 @@ export default function RegisterPage() {
                         {role === "agency" ? <AgencyForm /> : <UserForm />}
 
                         {error && (
-                            <div className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-200">
-                                {error}
-                            </div>
+                            <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
                         )}
 
-                        <Button className="w-full bg-[#25468d] hover:bg-[#1e3a75] text-white mt-4" disabled={isPending}>
+                        <Button className="w-full bg-primary/90 hover:bg-primary text-white mt-4" disabled={isPending}>
                             {isPending ? "Création en cours..." : "Créer votre compte"}
                         </Button>
                     </form>
@@ -145,9 +146,9 @@ export default function RegisterPage() {
 
 function RoleCard({ icon, title, description, onClick }: { icon: React.ReactNode, title: string, description: string, onClick: () => void }) {
     return (
-        <Card className="cursor-pointer hover:border-[#25468d] hover:bg-slate-50 transition-all" onClick={onClick}>
+        <Card className="cursor-pointer hover:border-primary/90 hover:bg-slate-50 transition-all" onClick={onClick}>
             <CardContent className="flex items-start gap-4 p-4">
-                <div className="mt-1 text-[#25468d]">{icon}</div>
+                <div className="mt-1 text-primary">{icon}</div>
                 <div className="space-y-1 text-left">
                     <h3 className="font-medium leading-none">{title}</h3>
                     <p className="text-xs text-muted-foreground">{description}</p>

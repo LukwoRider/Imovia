@@ -77,7 +77,7 @@ export function FilterBar() {
                     {/* Surface Slider */}
                     <div className="w-full space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="font-semibold text-[#12182C]">Surface</span>
+                            <span className="font-semibold text-foreground">Surface</span>
                             <span className="text-slate-500 font-medium">
                                 {surfaceRange[0]} - {surfaceRange[1]} m² {surfaceRange[1] === 300 && "+"}
                             </span>
@@ -97,7 +97,7 @@ export function FilterBar() {
                     {/* Price Slider */}
                     <div className="w-full space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="font-semibold text-[#12182C]">Loyer</span>
+                            <span className="font-semibold text-foreground">Loyer</span>
                             <span className="text-slate-500 font-medium">
                                 {priceRange[0]} - {priceRange[1]} € {priceRange[1] === 5000 && "+"}
                             </span>
@@ -116,7 +116,7 @@ export function FilterBar() {
                 {/* Action Button */}
                 <Button
                     onClick={applyFilters}
-                    className="w-full lg:w-auto h-11 px-8 bg-[#3153A1] hover:bg-[#25468d] text-white font-medium rounded-lg shadow-lg shadow-blue-900/20 shrink-0 transition-all active:scale-95"
+                    className="w-full lg:w-auto h-11 px-8 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-lg shadow-blue-900/20 shrink-0 transition-all active:scale-95"
                 >
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                     Filtrer

@@ -33,7 +33,7 @@ export function DocumentFilters({ currentFilter, onFilterChange, onSearchChange 
                 />
             </div>
 
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-1 w-full md:w-auto bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-1 w-full md:w-auto bg-white/60 backdrop-blur-md p-1.5 rounded-2xl border border-slate-100/50 shadow-sm">
                 {filters.map((filter) => (
                     <Button
                         key={filter.id}
@@ -41,10 +41,10 @@ export function DocumentFilters({ currentFilter, onFilterChange, onSearchChange 
                         size="sm"
                         onClick={() => onFilterChange(filter.id as DocumentType | "ALL")}
                         className={cn(
-                            "flex items-center gap-1.5 rounded-lg text-sm font-medium transition-all px-3 h-9 whitespace-nowrap",
+                            "flex items-center gap-1.5 rounded-xl text-sm font-medium transition-all px-3 h-9 whitespace-nowrap",
                             currentFilter === filter.id
-                                ? "bg-primary text-white shadow-md shadow-blue-900/20 hover:bg-primary/90 hover:text-white"
-                                : "text-slate-500 hover:text-foreground hover:bg-slate-100"
+                                ? "bg-primary text-white shadow-md shadow-primary/10 hover:bg-primary/90 hover:text-white"
+                                : "text-slate-500 hover:text-foreground hover:bg-slate-50"
                         )}
                     >
                         <filter.icon className="h-3.5 w-3.5" />

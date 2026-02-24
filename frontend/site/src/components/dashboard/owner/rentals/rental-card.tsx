@@ -161,7 +161,7 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
     const tenantName = mainTenant?.full_name || "Aucun locataire"
 
     return (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group overflow-hidden relative">
+        <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-[2rem] p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group overflow-hidden relative">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
 
             <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
@@ -456,7 +456,7 @@ export function RentalCard({ lease, onRefresh }: RentalCardProps) {
                             <Button
                                 onClick={handleSaveLease}
                                 disabled={isSavingLease}
-                                className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-2xl text-base font-bold gap-2 transition-all shadow-lg hover:shadow-primary/20 mt-4"
+                                className="w-full bg-primary text-white hover:bg-primary/90 h-12 rounded-2xl text-base font-bold gap-2 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] mt-4"
                             >
                                 {isSavingLease ? (
                                     <>

@@ -80,6 +80,12 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
         const formData = new FormData(e.currentTarget)
         const { data: { user } } = await supabase.auth.getUser()
 
+        if (images.length === 0) {
+            toast.error("Veuillez ajouter au moins une photo du bien")
+            setLoading(false)
+            return
+        }
+
         if (!user) {
             toast.error("Vous devez être connecté pour continuer")
             setLoading(false)
@@ -199,7 +205,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                     <div className="p-2 bg-blue-50 rounded-lg">
                         <Camera className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground">Photos du bien</h3>
+                    <h3 className="text-xl font-bold text-foreground">Photos du bien <span className="text-red-500 ml-1 font-normal text-sm">* Obligatoire</span></h3>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -256,16 +262,56 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="address">Adresse complète</Label>
-                        <Input id="address" name="address" defaultValue={initialData?.address} placeholder="Ex: 25 Rue des Lilas" required className="h-12 rounded-xl" />
+                        <Label htmlFor="address">Adresse complète <span className="text-red-500 ml-0.5">*</span></Label>
+                        <Input
+                            id="address"
+                            name="address"
+                            defaultValue={initialData?.address}
+                            placeholder="Ex: 25 Rue des Lilas"
+                            required
+                            className="h-12 rounded-xl"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                        />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="city">Ville</Label>
-                        <Input id="city" name="city" defaultValue={initialData?.city} placeholder="Ex: Paris" required className="h-12 rounded-xl" />
+                        <Label htmlFor="city">Ville <span className="text-red-500 ml-0.5">*</span></Label>
+                        <Input
+                            id="city"
+                            name="city"
+                            defaultValue={initialData?.city}
+                            placeholder="Ex: Paris"
+                            required
+                            className="h-12 rounded-xl"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                        />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="postal_code">Code Postal</Label>
-                        <Input id="postal_code" name="postal_code" defaultValue={initialData?.postal_code || ""} placeholder="Ex: 75001" required className="h-12 rounded-xl" />
+                        <Label htmlFor="postal_code">Code Postal <span className="text-red-500 ml-0.5">*</span></Label>
+                        <Input
+                            id="postal_code"
+                            name="postal_code"
+                            defaultValue={initialData?.postal_code || ""}
+                            placeholder="Ex: 75001"
+                            required
+                            className="h-12 rounded-xl"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={5}
+                            onInput={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                target.value = target.value.replace(/[^0-9]/g, '');
+                            }}
+                        />
                     </div>
                 </div>
             </div>
@@ -294,14 +340,14 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="surface_m2">Surface (m²)</Label>
+                        <Label htmlFor="surface_m2">Surface (m²) <span className="text-red-500 ml-0.5">*</span></Label>
                         <div className="relative">
                             <Input id="surface_m2" name="surface_m2" type="number" defaultValue={initialData?.surface_m2} placeholder="Ex: 45" required className="h-12 rounded-xl pr-10" />
                             <Ruler className="absolute right-3 top-3.5 h-5 w-5 text-slate-400" />
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="rooms">Nombre de pièces</Label>
+                        <Label htmlFor="rooms">Nombre de pièces <span className="text-red-500 ml-0.5">*</span></Label>
                         <Input id="rooms" name="rooms" type="number" defaultValue={initialData?.rooms || ""} placeholder="Ex: 2" required className="h-12 rounded-xl" />
                     </div>
                     <div className="space-y-2">
@@ -349,7 +395,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="monthly_rent">Loyer Mensuel (Charges comprises)</Label>
+                        <Label htmlFor="monthly_rent">Loyer Mensuel <span className="text-red-500 ml-0.5">*</span></Label>
                         <div className="relative">
                             <Input id="monthly_rent" name="monthly_rent" type="number" defaultValue={initialData?.monthly_rent || ""} placeholder="Ex: 850" required className="h-12 rounded-xl pr-10" />
                             <Euro className="absolute right-3 top-3.5 h-5 w-5 text-slate-400" />
@@ -375,7 +421,7 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                         </div>
                     )}
                     <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">Description <span className="text-red-500 ml-0.5">*</span></Label>
                         <Textarea
                             id="description"
                             name="description"
@@ -383,6 +429,10 @@ export function PropertyForm({ initialData, mode = 'create' }: PropertyFormProps
                             placeholder="Décrivez votre bien en quelques mots..."
                             className="min-h-[120px] rounded-2xl p-4 resize-none focus:ring-2 focus:ring-blue-100"
                             required
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
                         />
                     </div>
                 </div>

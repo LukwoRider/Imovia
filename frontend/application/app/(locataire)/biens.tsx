@@ -1,4 +1,15 @@
 import AjouterBienModal from "@/components/biens/AjouterBienModal";
+import BiensPaginationBar from "@/components/biens/BiensPaginationBar";
+import PropertyCard from "@/components/biens/PropertyCard";
+import RangeSlider from "@/components/biens/RangeSlider";
+import {
+    ITEMS_PER_PAGE,
+    LOYER_MAX,
+    LOYER_MIN,
+    SURFACE_MAX,
+    SURFACE_MIN,
+    type Property,
+} from "@/components/biens/types";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
@@ -11,8 +22,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Alert,
-    GestureResponderEvent,
-    LayoutChangeEvent,
     Platform,
     Pressable,
     ScrollView,
@@ -20,330 +29,15 @@ import {
     View,
 } from "react-native";
 
-type Property = {
-    id: string;
-    adresse: string;
-    ville: string;
-    prix: number;
-    surface: number;
-    type: string;
-    imagesCount: number;
-    thumbnail?: string;
-};
-
-const ITEMS_PER_PAGE = 4;
-
-const SURFACE_MIN = 0;
-const SURFACE_MAX = 300;
-const LOYER_MIN = 0;
-const LOYER_MAX = 5000;
-
-function RangeSlider({
-    label,
-    minValue,
-    maxValue,
-    startValue,
-    endValue,
-    onRangeChange,
-    formatRange,
-}: {
-    label: string;
-    minValue: number;
-    maxValue: number;
-    startValue: number;
-    endValue: number;
-    onRangeChange: (start: number, end: number) => void;
-    formatRange: (start: number, end: number) => string;
-}) {
-    const trackWidth = useRef(0);
-    const activeThumb = useRef<"start" | "end" | null>(null);
-
-    const getPercent = (v: number) => ((v - minValue) / (maxValue - minValue)) * 100;
-    const startPercent = getPercent(startValue);
-    const endPercent = getPercent(endValue);
-
-    const handleTrackLayout = (e: LayoutChangeEvent) => {
-        trackWidth.current = e.nativeEvent.layout.width;
-    };
-
-    const updateRangeFromTouch = (e: GestureResponderEvent) => {
-        if (trackWidth.current === 0) return;
-
-        const touchX = Math.max(0, Math.min(trackWidth.current, e.nativeEvent.locationX));
-        const ratio = Math.max(0, Math.min(1, touchX / trackWidth.current));
-        const nextValue = Math.round(minValue + ratio * (maxValue - minValue));
-
-        if (!activeThumb.current) {
-            const startX = (startPercent / 100) * trackWidth.current;
-            const endX = (endPercent / 100) * trackWidth.current;
-            activeThumb.current =
-                Math.abs(touchX - startX) <= Math.abs(touchX - endX) ? "start" : "end";
-        }
-
-        if (activeThumb.current === "start") {
-            onRangeChange(Math.min(nextValue, endValue), endValue);
-            return;
-        }
-
-        onRangeChange(startValue, Math.max(nextValue, startValue));
-    };
-
+function isOwnerOrAgencyRole(role?: string | null) {
+    if (!role) return false;
+    const normalized = role.trim().toLowerCase();
     return (
-        <View style={{ marginBottom: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>{label}</Text>
-                <View style={{ backgroundColor: "#f0f2f5", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 11, color: "#6b7280", fontWeight: "500", fontFamily: "Montserrat_500Medium" }}>
-                        {formatRange(startValue, endValue)}
-                    </Text>
-                </View>
-            </View>
-            <View
-                onLayout={handleTrackLayout}
-                onStartShouldSetResponder={() => true}
-                onMoveShouldSetResponder={() => true}
-                onResponderGrant={updateRangeFromTouch}
-                onResponderMove={updateRangeFromTouch}
-                onResponderRelease={() => {
-                    activeThumb.current = null;
-                }}
-                style={{
-                    height: 32,
-                    justifyContent: "center",
-                }}
-            >
-                <View style={{ height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
-                    <View
-                        style={{
-                            position: "absolute",
-                            height: 4,
-                            backgroundColor: "#3153A1",
-                            borderRadius: 2,
-                            left: `${startPercent}%`,
-                            width: `${Math.max(0, endPercent - startPercent)}%`,
-                        }}
-                    />
-                </View>
-                <View
-                    style={{
-                        position: "absolute",
-                        left: `${startPercent}%`,
-                        marginLeft: -10,
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        backgroundColor: "#fff",
-                        borderWidth: 3,
-                        borderColor: "#3153A1",
-                        shadowColor: "#000",
-                        shadowOpacity: 0.12,
-                        shadowRadius: 4,
-                        shadowOffset: { width: 0, height: 2 },
-                        elevation: 3,
-                    }}
-                />
-                <View
-                    style={{
-                        position: "absolute",
-                        left: `${endPercent}%`,
-                        marginLeft: -10,
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        backgroundColor: "#fff",
-                        borderWidth: 3,
-                        borderColor: "#3153A1",
-                        shadowColor: "#000",
-                        shadowOpacity: 0.12,
-                        shadowRadius: 4,
-                        shadowOffset: { width: 0, height: 2 },
-                        elevation: 3,
-                    }}
-                />
-            </View>
-        </View>
-    );
-}
-
-function PropertyCard({
-    item,
-    onPress,
-}: {
-    item: Property;
-    onPress: () => void;
-}) {
-    return (
-        <Pressable
-            onPress={onPress}
-            style={{
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#e5e7eb",
-                marginBottom: 14,
-                overflow: "hidden",
-                shadowColor: "#000",
-                shadowOpacity: 0.04,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 1,
-            }}
-        >
-            <View
-                style={{
-                    width: "100%",
-                    height: 160,
-                    backgroundColor: "#c7cdd6",
-                    justifyContent: "flex-end",
-                }}
-            >
-                {item.thumbnail && (
-                    <Image
-                        source={{ uri: item.thumbnail }}
-                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                        contentFit="cover"
-                    />
-                )}
-
-                {item.imagesCount > 0 && (
-                    <View
-                        style={{
-                            flexDirection: "row",
-                            justifyContent: "center",
-                            paddingBottom: 10,
-                            gap: 5,
-                        }}
-                    >
-                        {Array.from({ length: Math.min(item.imagesCount, 5) }).map((_, i) => (
-                            <View
-                                key={i}
-                                style={{
-                                    width: 6,
-                                    height: 6,
-                                    borderRadius: 3,
-                                    backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
-                                }}
-                            />
-                        ))}
-                    </View>
-                )}
-            </View>
-
-            <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
-                <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#1e293b", marginBottom: 2, fontFamily: "Montserrat_600SemiBold" }}
-                    numberOfLines={1}
-                >
-                    {item.adresse}
-                </Text>
-                <Text style={{ fontSize: 12, color: "#9ca3af", marginBottom: 6, fontFamily: "Montserrat_400Regular" }}>{item.ville}</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                    <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                        <Text style={{ fontSize: 16, fontWeight: "700", color: "#3153A1", fontFamily: "Montserrat_700Bold" }}>{item.prix}€</Text>
-                        <Text style={{ fontSize: 12, color: "#9ca3af", fontFamily: "Montserrat_400Regular" }}> /mois</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <Ionicons name="resize-outline" size={12} color="#9ca3af" />
-                            <Text style={{ fontSize: 11, color: "#6b7280", marginLeft: 3 }}>{item.surface}m²</Text>
-                        </View>
-                        {item.type ? (
-                            <View style={{ backgroundColor: "#eef2ff", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
-                                <Text style={{ fontSize: 10, color: "#3153A1", fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>{item.type}</Text>
-                            </View>
-                        ) : null}
-                    </View>
-                </View>
-            </View>
-        </Pressable>
-    );
-}
-
-function PaginationBar({
-    currentPage,
-    totalPages,
-    onPageChange,
-}: {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (p: number) => void;
-}) {
-    if (totalPages <= 1) return null;
-
-    const pages: (number | "...")[] = [];
-    for (let i = 1; i <= totalPages; i++) {
-        if (i <= 2 || i >= totalPages - 0 || i === currentPage) {
-            pages.push(i);
-        } else if (pages[pages.length - 1] !== "...") {
-            pages.push("...");
-        }
-    }
-
-    return (
-        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", paddingVertical: 18, gap: 2 }}>
-            <Pressable
-                onPress={() => currentPage > 1 && onPageChange(currentPage - 1)}
-                style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    backgroundColor: currentPage > 1 ? "#fff" : "transparent",
-                    borderWidth: currentPage > 1 ? 1 : 0,
-                    borderColor: "#e5e7eb",
-                }}
-            >
-                <Text style={{ fontSize: 12, color: currentPage > 1 ? "#1e293b" : "#d1d5db", fontWeight: "600" }}>
-                    Précédent
-                </Text>
-            </Pressable>
-
-            {pages.map((p, i) =>
-                p === "..." ? (
-                    <Text key={`dots-${i}`} style={{ fontSize: 13, color: "#9ca3af", paddingHorizontal: 6 }}>
-                        ...
-                    </Text>
-                ) : (
-                    <Pressable
-                        key={p}
-                        onPress={() => onPageChange(p as number)}
-                        style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 8,
-                            backgroundColor: currentPage === p ? "#3153A1" : "transparent",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontWeight: currentPage === p ? "700" : "500",
-                                color: currentPage === p ? "#fff" : "#6b7280",
-                            }}
-                        >
-                            {p}
-                        </Text>
-                    </Pressable>
-                )
-            )}
-
-            <Pressable
-                onPress={() => currentPage < totalPages && onPageChange(currentPage + 1)}
-                style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    backgroundColor: currentPage < totalPages ? "#fff" : "transparent",
-                    borderWidth: currentPage < totalPages ? 1 : 0,
-                    borderColor: "#e5e7eb",
-                }}
-            >
-                <Text style={{ fontSize: 12, color: currentPage < totalPages ? "#1e293b" : "#d1d5db", fontWeight: "600" }}>
-                    Suivant
-                </Text>
-            </Pressable>
-        </View>
+        normalized === "owner" ||
+        normalized === "agency" ||
+        normalized === "propriétaire" ||
+        normalized === "proprietaire" ||
+        normalized === "propriÃ©taire"
     );
 }
 
@@ -419,7 +113,7 @@ export default function BiensPage() {
                     )
                 `);
 
-            const isOwner = role.toLowerCase() === "owner" || role.toLowerCase() === "agency" || role.toLowerCase() === "propriétaire";
+            const isOwner = isOwnerOrAgencyRole(role);
 
             if (isOwner) {
                 if (uid) {
@@ -517,13 +211,30 @@ export default function BiensPage() {
                                 contentFit="contain"
                             />
                             <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", fontFamily: "Montserrat_700Bold" }}>
-                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Mes Biens" : "Recherche de biens"}
+                                {isOwnerOrAgencyRole(userRole) ? "Mes Biens" : "Recherche de biens"}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3, fontFamily: "Montserrat_400Regular" }}>
-                                {userRole && (userRole.toLowerCase() === 'owner' || userRole.toLowerCase() === 'agency' || userRole.toLowerCase() === 'propriétaire') ? "Gérez vos logements et locataires" : "Recherchez votre futur chez vous"}
+                                {isOwnerOrAgencyRole(userRole) ? "Gérez vos logements et locataires" : "Recherchez votre futur chez vous"}
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            {isOwnerOrAgencyRole(userRole) && (
+                                <Pressable
+                                    onPress={() => setIsAddModalVisible(true)}
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 8,
+                                        marginRight: 4
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                        <Ionicons name="add-circle" size={18} color="#3153A1" />
+                                        <Text style={{ color: '#3153A1', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
+                                    </View>
+                                </Pressable>
+                            )}
                             <NotificationBellButton />
                             <ProfileHeaderButton />
                         </View>
@@ -698,7 +409,7 @@ export default function BiensPage() {
                         </View>
                     )}
 
-                    <PaginationBar
+                    <BiensPaginationBar
                         currentPage={safePage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}

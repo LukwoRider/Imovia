@@ -1,4 +1,13 @@
 import AjouterDocumentModal from "@/components/documents/AjouterDocumentModal";
+import DocumentRow from "@/components/documents/DocumentRow";
+import DocumentsPaginationBar from "@/components/documents/DocumentsPaginationBar";
+import DocumentsQuickActionCard from "@/components/documents/DocumentsQuickActionCard";
+import {
+    CATEGORIES,
+    ITEMS_PER_PAGE,
+    type DocCategory,
+    type Document,
+} from "@/components/documents/types";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
@@ -13,8 +22,6 @@ import * as Sharing from "expo-sharing";
 import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
-
-type DocCategory = "tous" | "contrats" | "etat" | "quittances" | "autres";
 
 type Document = {
     id: string;
@@ -124,293 +131,11 @@ function DocumentRow({
     };
 
     return (
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                padding: 14,
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: "#e5e7eb",
-            }}
-        >
-            <View
-                style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    backgroundColor: "#eef2ff",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: 12,
-                }}
-            >
-                <Ionicons name="document-text-outline" size={18} color="#3153A1" />
-            </View>
-
-            <View style={{ flex: 1, marginRight: 10 }}>
-                <Text
-                    style={{
-                        fontSize: 13,
-                        fontWeight: "600",
-                        color: "#1e293b",
-                        fontFamily: "Montserrat_600SemiBold",
-                    }}
-                    numberOfLines={2}
-                >
-                    {doc.titre}
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 11,
-                        color: "#9ca3af",
-                        marginTop: 2,
-                        fontFamily: "Montserrat_400Regular",
-                    }}
-                >
-                    {doc.date}
-                </Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-                {isManagement && (
-                    <Pressable
-                        onPress={() => {
-                            handleDelete();
-                        }}
-                        hitSlop={15}
-                        style={({ pressed }) => ({
-                            flexDirection: "row",
-                            alignItems: "center",
-                            backgroundColor: pressed ? "#fca5a5" : "#fee2e2",
-                            borderRadius: 10,
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            opacity: pressed ? 0.7 : 1,
-                        })}
-                    >
-                        <Ionicons name="trash-outline" size={14} color="#ef4444" />
-                    </Pressable>
-                )}
-                <Pressable
-                    onPress={handleDownload}
-                    disabled={isDownloading}
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: isDownloading ? "#9ca3af" : "#3153A1",
-                        borderRadius: 10,
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                    }}
-                >
-                    <Text
-                        style={{
-                            color: "#fff",
-                            fontSize: 11,
-                            fontWeight: "600",
-                            marginRight: 6,
-                            fontFamily: "Montserrat_600SemiBold",
-                        }}
-                    >
-                        {isDownloading ? "..." : "Télécharger"}
-                    </Text>
-                    <Ionicons name="download-outline" size={14} color="#fff" />
-                </Pressable>
-            </View>
-        </View>
-    );
-}
-
-function PaginationBar({
-    currentPage,
-    totalPages,
-    onPageChange,
-}: {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (p: number) => void;
-}) {
-    if (totalPages <= 1) return null;
-
-    const pages: (number | "...")[] = [];
-    for (let i = 1; i <= totalPages; i++) {
-        if (i <= 2 || i >= totalPages || i === currentPage) {
-            pages.push(i);
-        } else if (pages[pages.length - 1] !== "...") {
-            pages.push("...");
-        }
-    }
-
-    return (
-        <View
-            style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                paddingVertical: 14,
-                gap: 2,
-            }}
-        >
-            <Pressable
-                onPress={() => currentPage > 1 && onPageChange(currentPage - 1)}
-                style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    backgroundColor: currentPage > 1 ? "#fff" : "transparent",
-                    borderWidth: currentPage > 1 ? 1 : 0,
-                    borderColor: "#e5e7eb",
-                }}
-            >
-                <Text
-                    style={{
-                        fontSize: 12,
-                        color: currentPage > 1 ? "#1e293b" : "#d1d5db",
-                        fontWeight: "600",
-                        fontFamily: "Montserrat_600SemiBold",
-                    }}
-                >
-                    Précédent
-                </Text>
-            </Pressable>
-
-            {pages.map((p, i) =>
-                p === "..." ? (
-                    <Text
-                        key={`dots-${i}`}
-                        style={{
-                            fontSize: 13,
-                            color: "#9ca3af",
-                            paddingHorizontal: 6,
-                            fontFamily: "Montserrat_400Regular",
-                        }}
-                    >
-                        ...
-                    </Text>
-                ) : (
-                    <Pressable
-                        key={p}
-                        onPress={() => onPageChange(p as number)}
-                        style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 8,
-                            backgroundColor: currentPage === p ? "#3153A1" : "transparent",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontWeight: currentPage === p ? "700" : "500",
-                                color: currentPage === p ? "#fff" : "#6b7280",
-                                fontFamily:
-                                    currentPage === p
-                                        ? "Montserrat_700Bold"
-                                        : "Montserrat_500Medium",
-                            }}
-                        >
-                            {p}
-                        </Text>
-                    </Pressable>
-                )
-            )}
-
-            <Pressable
-                onPress={() =>
-                    currentPage < totalPages && onPageChange(currentPage + 1)
-                }
-                style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    backgroundColor: currentPage < totalPages ? "#fff" : "transparent",
-                    borderWidth: currentPage < totalPages ? 1 : 0,
-                    borderColor: "#e5e7eb",
-                }}
-            >
-                <Text
-                    style={{
-                        fontSize: 12,
-                        color: currentPage < totalPages ? "#1e293b" : "#d1d5db",
-                        fontWeight: "600",
-                        fontFamily: "Montserrat_600SemiBold",
-                    }}
-                >
-                    Suivant
-                </Text>
-            </Pressable>
-        </View>
-    );
-}
-
-function QuickAction({
-    icon,
-    title,
-    subtitle,
-    onPress,
-}: {
-    icon: string;
-    title: string;
-    subtitle: string;
-    onPress?: () => void;
-}) {
-    return (
-        <Pressable
-            onPress={onPress}
-            style={({ pressed }) => ({
-                opacity: pressed ? 0.7 : 1,
-                flex: 1,
-                backgroundColor: "#f9fafb",
-                borderRadius: 14,
-                padding: 14,
-                borderWidth: 1,
-                borderColor: "#e5e7eb",
-                alignItems: "center",
-            })}
-        >
-            <View
-                style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 12,
-                    backgroundColor: "#eef2ff",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 8,
-                }}
-            >
-                <Ionicons name={icon as any} size={18} color="#3153A1" />
-            </View>
-            <Text
-                style={{
-                    fontSize: 12,
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    textAlign: "center",
-                    marginBottom: 4,
-                    fontFamily: "Montserrat_700Bold",
-                }}
-                numberOfLines={2}
-            >
-                {title}
-            </Text>
-            <Text
-                style={{
-                    fontSize: 10,
-                    color: "#9ca3af",
-                    textAlign: "center",
-                    fontFamily: "Montserrat_400Regular",
-                }}
-                numberOfLines={2}
-            >
-                {subtitle}
-            </Text>
-        </Pressable>
+        normalized === "owner" ||
+        normalized === "agency" ||
+        normalized === "propriétaire" ||
+        normalized === "proprietaire" ||
+        normalized === "propriÃ©taire"
     );
 }
 
@@ -426,11 +151,7 @@ export default function DocumentsPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    const isOwnerOrAgency = useMemo(() => {
-        if (!userRole) return false;
-        const role = userRole.toLowerCase();
-        return role === 'owner' || role === 'agency' || role === 'propriétaire';
-    }, [userRole]);
+    const isOwnerOrAgency = useMemo(() => isOwnerOrAgencyRole(userRole), [userRole]);
 
     const [isZipping, setIsZipping] = useState(false);
 
@@ -555,8 +276,7 @@ export default function DocumentsPage() {
             const profileRole = profile?.role || user.user_metadata?.role || "tenant";
             setUserRole(profileRole);
 
-            const checkRole = profileRole.toLowerCase();
-            const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+            const isManagement = isOwnerOrAgencyRole(profileRole);
 
             let dbDocs: any[] = [];
             let docError: any = null;
@@ -895,7 +615,7 @@ export default function DocumentsPage() {
                         </View>
                     )}
 
-                    <PaginationBar
+                    <DocumentsPaginationBar
                         currentPage={safePage}
                         totalPages={totalPages}
                         onPageChange={setCurrentPage}
@@ -948,13 +668,13 @@ export default function DocumentsPage() {
                         </View>
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
-                            <QuickAction
+                            <DocumentsQuickActionCard
                                 icon="download-outline"
                                 title={isZipping ? "Compression..." : "Telecharger tous Mes Documents"}
                                 subtitle="Telecharger tous vos documents"
                                 onPress={handleDownloadAll}
                             />
-                            <QuickAction
+                            <DocumentsQuickActionCard
                                 icon="mail-outline"
                                 title={isZipping ? "Compression..." : "Envoyer par e-mail"}
                                 subtitle="Envoyer vos documents par mail"
@@ -979,3 +699,4 @@ export default function DocumentsPage() {
         </View>
     );
 }
+

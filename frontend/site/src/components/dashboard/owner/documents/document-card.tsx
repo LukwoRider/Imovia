@@ -111,7 +111,7 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
         }
     }
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-primary/30 transition-all group">
+        <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 group">
             <div className="flex items-center gap-4">
                 {/* Icon */}
                 <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 shadow-xs">
@@ -147,7 +147,7 @@ export function DocumentCard({ doc, onRefresh, onDeleteOptimistic }: DocumentCar
                 </button>
                 <Button
                     variant="default"
-                    className="bg-primary hover:bg-primary/90 h-9 px-4 gap-2 shadow-sm disabled:opacity-50"
+                    className="bg-primary text-white hover:bg-primary/90 transition-all shadow-md shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl h-10 px-4 gap-2 disabled:opacity-50 disabled:hover:scale-100"
                     onClick={handleDownload}
                     disabled={isDownloading}
                 >

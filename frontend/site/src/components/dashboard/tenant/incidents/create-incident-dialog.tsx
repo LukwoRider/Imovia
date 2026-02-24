@@ -131,7 +131,7 @@ export function CreateIncidentDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 text-white" suppressHydrationWarning>
+                <Button className="bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl font-medium" suppressHydrationWarning>
                     <FireExtinguisher className="mr-2 h-4 w-4" />
                     Déclarer un incident
                 </Button>
@@ -200,7 +200,7 @@ export function CreateIncidentDialog() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-primary hover:bg-primary/90 text-white h-11 rounded-xl text-base font-medium"
+                            className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-xl text-base font-medium transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98]"
                         >
                             {loading ? (
                                 <>

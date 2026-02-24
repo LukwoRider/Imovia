@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader } from "lucide-react"
+import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader, Box, Sofa, DollarSign } from "lucide-react"
 import { StatCard } from "@/components/dashboard/shared/stat-card"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -138,21 +138,25 @@ export default function TenantDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Mon Logement */}
-                <Card className="border-slate-100 shadow-sm overflow-hidden flex flex-col h-full rounded-3xl bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-slate-100 rounded-lg">
-                                <Home className="h-5 w-5 text-primary" />
+                {/* Mon Logement (Accès direct) */}
+                <Card className="border-slate-100 shadow-sm flex flex-col h-full rounded-3xl bg-white/50 backdrop-blur-sm">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-slate-100 rounded-xl">
+                                <Home className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-foreground">Mon logement</CardTitle>
-                                <p className="text-sm text-slate-500">Informations sur votre location actuelle</p>
+                                <CardTitle className="text-xl font-bold text-foreground">
+                                    {lease.property?.property_type || "Appartement"} - {lease.property?.city || "Ville inconnue"}
+                                </CardTitle>
+                                <p className="text-slate-500">
+                                    {lease.property?.address}, {lease.property?.postal_code || ""} {lease.property?.city}
+                                </p>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col pt-4">
-                        <div className="relative h-48 w-full rounded-2xl overflow-hidden mb-4 shadow-sm border border-slate-100/50">
+                    <CardContent className="flex-1 flex flex-col pt-0">
+                        <div className="relative h-48 w-full rounded-2xl overflow-hidden mb-6 shadow-sm border border-slate-100/50">
                             <Image
                                 src={lease.property?.images?.find(img => img.is_cover)?.storage_path
                                     ? getPublicUrl(lease.property.images.find(img => img.is_cover)!.storage_path)
@@ -162,21 +166,23 @@ export default function TenantDashboard() {
                                 className="object-cover"
                             />
                         </div>
-                        <h3 className="text-lg font-bold text-foreground mb-1">{lease.property?.property_type || "Bien"} - {lease.property?.city}</h3>
-                        <p className="text-slate-500 text-sm mb-4">{lease.property?.address}, {lease.property?.postal_code || ""} {lease.property?.city}</p>
 
-                        <div className="grid grid-cols-3 gap-2 mb-6">
-                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
-                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Surface</span>
-                                <span className="block text-sm font-black text-foreground">{lease.property?.surface_m2} m²</span>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
+                                <Box className="h-5 w-5 text-primary" />
+                                <span className="font-bold text-foreground">{lease.property?.surface_m2} m²</span>
                             </div>
-                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
-                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Pièces</span>
-                                <span className="block text-sm font-black text-foreground">{lease.property?.rooms || '-'}</span>
+                            <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
+                                <Home className="h-5 w-5 text-primary" />
+                                <span className="font-bold text-foreground">{lease.property?.rooms || '-'} Pièces</span>
                             </div>
-                            <div className="bg-white/60 rounded-2xl p-3 text-center border border-slate-100/50 relative overflow-hidden group">
-                                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Loyer</span>
-                                <span className="block text-sm font-black text-foreground">{totalMonthly} €</span>
+                            <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
+                                <Sofa className="h-5 w-5 text-primary" />
+                                <span className="font-bold text-foreground text-sm">{lease.property?.is_furnished ? "Meublé" : "Non meublé"}</span>
+                            </div>
+                            <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
+                                <DollarSign className="h-5 w-5 text-primary" />
+                                <span className="font-bold text-foreground">{totalMonthly} €</span>
                             </div>
                         </div>
 
@@ -188,14 +194,14 @@ export default function TenantDashboard() {
 
                 {/* État des paiements */}
                 <Card className="border-slate-100 shadow-sm flex flex-col h-full rounded-3xl bg-white/50 backdrop-blur-sm">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-primary" />
+                    <CardHeader className="pb-4">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-slate-100 rounded-xl">
+                                <FileText className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-foreground">Etat des paiements</CardTitle>
-                                <p className="text-sm text-slate-500">Suivi de vos paiements de loyer</p>
+                                <CardTitle className="text-xl font-bold text-foreground">Etat des paiements</CardTitle>
+                                <p className="text-slate-500">Suivi de vos paiements de loyer</p>
                             </div>
                         </div>
                     </CardHeader>
@@ -256,17 +262,17 @@ export default function TenantDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Mes Incidents */}
                 <Card className="border-slate-100 shadow-sm rounded-3xl bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col h-full">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-slate-100 rounded-lg">
-                                <FireExtinguisher className="h-5 w-5 text-primary" />
+                    <CardHeader className="flex flex-row items-start justify-between pb-4 space-y-0">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-slate-100 rounded-xl">
+                                <FireExtinguisher className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-foreground">Mes incidents</CardTitle>
-                                <p className="text-sm text-slate-500">Suivi de vos déclarations</p>
+                                <CardTitle className="text-xl font-bold text-foreground">Mes incidents</CardTitle>
+                                <p className="text-slate-500">Suivi de vos déclarations</p>
                             </div>
                         </div>
-                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl">
+                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl mt-0">
                             <Link href="/dashboard/tenant/incidents">Voir tout</Link>
                         </Button>
                     </CardHeader>
@@ -316,7 +322,7 @@ export default function TenantDashboard() {
                             })
                         )}
 
-                        <Button asChild className="w-full bg-foreground text-white hover:bg-primary transition-all rounded-2xl h-12 shadow-lg shadow-black/5 mt-auto">
+                        <Button asChild className="w-full bg-primary text-white hover:bg-primary/90 transition-all rounded-2xl h-12 shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] mt-auto">
                             <Link href="/dashboard/tenant/incidents">
                                 <FireExtinguisher className="mr-2 h-4 w-4" /> Déclarer un incident
                             </Link>
@@ -326,17 +332,17 @@ export default function TenantDashboard() {
 
                 {/* Mes Documents */}
                 <Card className="border-slate-100 shadow-sm rounded-3xl bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col h-full">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-primary" />
+                    <CardHeader className="flex flex-row items-start justify-between pb-4 space-y-0">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-slate-100 rounded-xl">
+                                <FileText className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-foreground">Mes documents</CardTitle>
-                                <p className="text-sm text-slate-500">Accès rapide à vos documents</p>
+                                <CardTitle className="text-xl font-bold text-foreground">Mes documents</CardTitle>
+                                <p className="text-slate-500">Accès rapide à vos documents</p>
                             </div>
                         </div>
-                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl">
+                        <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-500 hover:text-primary rounded-xl mt-0">
                             <Link href="/dashboard/tenant/documents">Voir tout</Link>
                         </Button>
                     </CardHeader>

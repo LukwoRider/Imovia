@@ -26,7 +26,7 @@ export function NotificationCenter({ userId }: { userId: string }) {
         try {
             const data = await getUnreadNotifications()
             setNotifications(data)
-        } catch (error) {
+        } catch {
         } finally {
             setLoading(false)
         }

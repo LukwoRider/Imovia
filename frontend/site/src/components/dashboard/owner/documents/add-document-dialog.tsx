@@ -76,13 +76,13 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                             address: p.address || "Adresse inconnue",
                             tenant: firstTenant ? {
                                 id: firstTenant.tenant_id,
-                                full_name: (firstTenant.profiles as any)?.full_name || "Locataire sans nom"
+                                full_name: (firstTenant.profiles as unknown as { full_name: string })?.full_name || "Locataire sans nom"
                             } : null
                         }
                     })
                     setRealProperties(formatted)
                 }
-            } catch (err) {
+            } catch {
             }
         }
         if (open) {

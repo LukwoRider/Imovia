@@ -4,19 +4,33 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, MapPin, Camera, Building2 } from "lucide-react"
-import { useState, useRef } from "react"
+import { User, Mail, Camera, Building2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import { useUser } from "@/contexts/user-context"
 import { toast } from "sonner"
 import { PhoneInput } from "@/components/ui/phone-input"
+import { Home } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { getTenantActiveLease } from "@/lib/supabase/tenant-dashboard-utils"
+import { Lease } from "@/lib/types/lease"
 
 export function PersonalInfoForm() {
     const { user, updateProfile, updateAvatar } = useUser()
     const [isLoading, setIsLoading] = useState(false)
+    const [activeLease, setActiveLease] = useState<Lease | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const supabase = createClient()
+
+    useEffect(() => {
+        const fetchLease = async () => {
+            if (user?.role === "tenant") {
+                const lease = await getTenantActiveLease(user.id)
+                setActiveLease(lease)
+            }
+        }
+        fetchLease()
+    }, [user])
 
     if (!user) return null
 
@@ -50,7 +64,7 @@ export function PersonalInfoForm() {
             email,
             phone,
             siret: isAgency ? siret : undefined,
-            address: !isAgency ? address : undefined
+            address: (!isAgency && !isOwner) ? address : undefined
         }
 
         try {
@@ -66,7 +80,7 @@ export function PersonalInfoForm() {
             })
 
             toast.success("Informations mises à jour avec succès !")
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la mise à jour.")
         } finally {
             setIsLoading(false)
@@ -243,30 +257,12 @@ export function PersonalInfoForm() {
 
                 <div className="space-y-5">
                     {isOwner && (
-                        <>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium">Type de compte</Label>
-                                <div className="h-11 bg-slate-50 border border-slate-200 rounded-md px-3 flex items-center text-slate-500">
-                                    Propriétaire bailleur
-                                </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Type de compte</Label>
+                            <div className="h-11 bg-slate-50 border border-slate-200 rounded-md px-3 flex items-center text-slate-500">
+                                Propriétaire bailleur
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="address" className="sr-only">Adresse du propriétaire</Label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input
-                                        id="address"
-                                        name="address"
-                                        defaultValue={user.address || ""}
-                                        placeholder="Votre adresse postale de facturation"
-                                        className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                        suppressHydrationWarning
-                                        onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s{2,}/g, " ").replace(/^\s/, "")}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </>
+                        </div>
                     )}
 
                     {!isAgency && !isOwner && (
@@ -277,22 +273,22 @@ export function PersonalInfoForm() {
                                     Locataire
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="address" className="sr-only">Adresse actuelle</Label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input
-                                        id="address"
-                                        name="address"
-                                        defaultValue={user.address || ""}
-                                        placeholder="Votre adresse de résidence actuelle"
-                                        className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-                                        suppressHydrationWarning
-                                        onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\s{2,}/g, " ").replace(/^\s/, "")}
-                                        required
-                                    />
+
+                            {activeLease && (
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Logement attribué</Label>
+                                    <div className="relative">
+                                        <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            value={`${activeLease.property?.address}, ${activeLease.property?.city}`}
+                                            readOnly
+                                            className="pl-10 h-11 bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 italic">Ce champ ne peut être modifié que par votre propriétaire ou agence.</p>
                                 </div>
-                            </div>
+                            )}
+
                         </>
                     )}
 
@@ -309,7 +305,7 @@ export function PersonalInfoForm() {
                         </p>
                     </div>
                 </div>
-            </form>
-        </div>
+            </form >
+        </div >
     )
 }

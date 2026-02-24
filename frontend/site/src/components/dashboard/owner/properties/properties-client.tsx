@@ -55,8 +55,7 @@ export function PropertiesClient() {
             if (error) throw error
 
             setProperties(prev => prev.filter(p => p.id !== id))
-            toast.success("Bien supprimé avec succès")
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la suppression du bien")
         } finally {
             setDeletingId(null)

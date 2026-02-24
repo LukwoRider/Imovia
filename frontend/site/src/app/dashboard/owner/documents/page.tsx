@@ -75,7 +75,7 @@ export default function OwnerDocumentsPage() {
 
                     // Add to ZIP instead of triggering immediate download
                     zip.file(finalFileName, data)
-                } catch (err) {
+                } catch {
                 }
             }
 

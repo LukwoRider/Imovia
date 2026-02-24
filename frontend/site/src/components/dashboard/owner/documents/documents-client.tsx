@@ -59,7 +59,7 @@ export function DocumentsClient() {
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [supabase])
 
     useEffect(() => {
         fetchDocuments()

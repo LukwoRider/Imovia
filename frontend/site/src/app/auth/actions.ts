@@ -31,7 +31,7 @@ export async function signup(_prevState: unknown, formData: FormData) {
     let origin = ''
     try {
         origin = (await headers()).get('origin') || ''
-    } catch (e) {
+    } catch {
     }
 
     const email = formData.get('email') as string

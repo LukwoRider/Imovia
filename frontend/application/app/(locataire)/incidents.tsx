@@ -56,7 +56,7 @@ export default function IncidentsPage() {
                 }
 
                 const checkRole = role.toLowerCase();
-                const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+                const isManagement = ['owner', 'agency', 'agence', 'propriétaire', 'proprietaire'].includes(checkRole);
 
                 setUserRole(role);
                 setIsOwnerOrAgency(isManagement);
@@ -530,7 +530,18 @@ export default function IncidentsPage() {
                                 </View>
                             ) : pagedIncidents.length > 0 ? (
                                 pagedIncidents.map((inc) => (
-                                    <IncidentCard key={inc.id} incident={inc} />
+                                    <IncidentCard
+                                        key={inc.id}
+                                        incident={inc}
+                                        isManagement={isOwnerOrAgency}
+                                        onRefresh={() => {
+                                            supabase.auth.getSession().then(({ data }) => {
+                                                if (data.session?.user) {
+                                                    fetchIncidents(userRole || "tenant", data.session.user.id, isOwnerOrAgency);
+                                                }
+                                            });
+                                        }}
+                                    />
                                 ))
                             ) : (
                                 <View

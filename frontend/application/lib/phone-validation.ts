@@ -36,5 +36,17 @@ export function sanitizeSignupPhoneInput(input: string) {
   return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`;
 }
 
+export function isValidSignupEmail(email: string) {
+  const value = email.trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export function sanitizeSignupEmailInput(input: string) {
+  return input.replace(/\s/g, "");
+}
+
 export const SIGNUP_PHONE_ERROR_MESSAGE =
   "Numéro de téléphone invalide. Utilisez 10 chiffres (ex: 0612345678) ou le format +33612345678.";
+
+export const SIGNUP_EMAIL_ERROR_MESSAGE =
+  "Adresse email invalide. Utilisez un format du type nom@exemple.com.";

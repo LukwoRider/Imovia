@@ -3,8 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import {
+    isValidSignupEmail,
     isValidSignupPhone,
+    sanitizeSignupEmailInput,
     sanitizeSignupPhoneInput,
+    SIGNUP_EMAIL_ERROR_MESSAGE,
     SIGNUP_PHONE_ERROR_MESSAGE,
 } from "@/lib/phone-validation";
 import { supabase } from "@/lib/supabase";
@@ -28,6 +31,7 @@ export default function RegisterFormPage() {
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [emailError, setEmailError] = useState("");
     const [phoneError, setPhoneError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -44,6 +48,13 @@ export default function RegisterFormPage() {
             showError("Veuillez remplir tous les champs obligatoires.");
             return;
         }
+
+        if (!isValidSignupEmail(email)) {
+            setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+            showError(SIGNUP_EMAIL_ERROR_MESSAGE);
+            return;
+        }
+        setEmailError("");
 
         if (password !== confirmPassword) {
             showError("Les mots de passe ne correspondent pas.");
@@ -145,11 +156,24 @@ export default function RegisterFormPage() {
                         <Input
                             placeholder="nom@exemple.com"
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(value) => {
+                                setEmail(sanitizeSignupEmailInput(value));
+                                if (emailError) setEmailError("");
+                            }}
+                            onBlur={() => {
+                                if (email && !isValidSignupEmail(email)) {
+                                    setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+                                }
+                            }}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoComplete="email"
                         />
+                        {emailError ? (
+                            <Text className="text-xs text-red-500 mt-1">
+                                {emailError}
+                            </Text>
+                        ) : null}
                     </View>
 
                     <View style={{ marginBottom: 10 }}>

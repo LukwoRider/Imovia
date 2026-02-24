@@ -85,11 +85,10 @@ export default function RegisterFormPage() {
             Alert.alert("Erreur d'inscription", error.message);
             setLoading(false);
         } else {
-            Alert.alert(
-                "Compte créé",
-                "Votre compte a été créé avec succès. Veuillez vérifier vos emails pour confirmer votre inscription.",
-                [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
-            );
+            router.replace({
+                pathname: "/login",
+                params: { signupSuccess: "1" },
+            });
         }
     }
 

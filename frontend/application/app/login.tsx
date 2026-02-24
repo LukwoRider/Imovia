@@ -9,8 +9,8 @@ import {
 } from "@/lib/phone-validation";
 import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -20,6 +20,7 @@ import {
 } from "react-native";
 
 export default function LoginPage() {
+  const { signupSuccess } = useLocalSearchParams<{ signupSuccess?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -34,6 +35,21 @@ export default function LoginPage() {
     }
     Alert.alert(title, message);
   }
+
+  useEffect(() => {
+    if (signupSuccess !== "1") return;
+
+    const message =
+      "Compte créé avec succès. Vous pouvez maintenant vous connecter.";
+
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.alert(message);
+    } else {
+      Alert.alert("Compte créé", message);
+    }
+
+    router.replace("/login");
+  }, [signupSuccess, router]);
 
   async function handleLogin() {
     if (!email || !password) {

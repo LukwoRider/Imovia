@@ -120,11 +120,10 @@ export default function RegisterAgencyPage() {
                     "Compte créé mais erreur lors de l'enregistrement des détails de l'agence. Contactez le support."
                 );
             } else {
-                Alert.alert(
-                    "Compte créé",
-                    "Votre compte agence a été créé avec succès. Veuillez vérifier vos emails.",
-                    [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
-                );
+                router.replace({
+                    pathname: "/login",
+                    params: { signupSuccess: "1" },
+                });
             }
         }
 

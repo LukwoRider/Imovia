@@ -110,9 +110,11 @@ export default function PropertyDetailsPage() {
             </div>
 
             {/* Gallery */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-sm">
+            <div className={`grid gap-4 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-sm ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-4'
+                }`}>
                 <div
-                    className="md:col-span-2 h-full relative group cursor-pointer"
+                    className={`${images.length === 1 ? 'col-span-1' : 'md:col-span-2'
+                        } h-full relative group cursor-pointer`}
                     onClick={() => openLightbox(0)}
                 >
                     <Image
@@ -123,28 +125,34 @@ export default function PropertyDetailsPage() {
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </div>
-                <div className="md:col-span-2 grid grid-cols-2 gap-4 h-full">
-                    {(images.length > 1 ? images.slice(1, 5) : []).map((image, idx) => (
-                        <div
-                            key={idx}
-                            className="relative h-full overflow-hidden group cursor-pointer"
-                            onClick={() => openLightbox(idx + 1)}
-                        >
-                            <Image
-                                src={image}
-                                alt={`${property.address} ${idx + 2}`}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                        </div>
-                    ))}
-                    {images.length < 5 && Array.from({ length: 4 - (images.length - 1) }).map((_, idx) => (
-                        <div key={`empty-${idx}`} className="bg-slate-50 border border-slate-100 rounded-sm flex items-center justify-center">
-                            <Image className="h-8 w-8 text-slate-200" src="/logo.png" alt="Placeholder" width={32} height={32} />
-                        </div>
-                    ))}
-                </div>
+
+                {images.length > 1 && (
+                    <div className={`md:col-span-2 grid gap-4 h-full ${images.length === 2 ? 'grid-cols-1' :
+                        images.length === 3 ? 'grid-cols-1' :
+                            'grid-cols-2'
+                        }`}>
+                        {images.slice(1, 5).map((image, idx) => (
+                            <div
+                                key={idx}
+                                className="relative h-full overflow-hidden group cursor-pointer"
+                                onClick={() => openLightbox(idx + 1)}
+                            >
+                                <Image
+                                    src={image}
+                                    alt={`${property.address} ${idx + 2}`}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                {idx === 3 && images.length > 5 && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                                        <span className="text-white font-bold text-xl">+{images.length - 5}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>

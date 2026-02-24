@@ -14,7 +14,7 @@ import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 
-type DocCategory = "tous" | "contrats" | "etat" | "autres";
+type DocCategory = "tous" | "contrats" | "etat" | "quittances" | "autres";
 
 type Document = {
     id: string;
@@ -32,6 +32,7 @@ const CATEGORIES: { key: DocCategory; label: string; icon: string }[] = [
     { key: "tous", label: "Tous", icon: "list-outline" },
     { key: "contrats", label: "Contrats", icon: "briefcase-outline" },
     { key: "etat", label: "Etat", icon: "clipboard-outline" },
+    { key: "quittances", label: "Quittances", icon: "receipt-outline" },
     { key: "autres", label: "Autres", icon: "albums-outline" },
 ];
 
@@ -614,7 +615,7 @@ export default function DocumentsPage() {
         switch (type) {
             case "contract": return "contrats";
             case "inventory": return "etat";
-            case "receipt":
+            case "receipt": return "quittances";
             case "other":
             default: return "autres";
         }

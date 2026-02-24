@@ -244,7 +244,7 @@ export default function BiensPage() {
                 <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={{ fontSize: 17, fontWeight: "700", color: "#1e293b", marginBottom: 14, fontFamily: "Montserrat_700Bold" }}>
-                            {isOwnerOrAgencyRole(userRole) ? "Vos biens immobiliers" : "Trouver un appartement à Lille ?"}
+                            {isOwnerOrAgencyRole(userRole) ? "Vos biens immobiliers" : "Trouver un bien ?"}
                         </Text>
                     </View>
 

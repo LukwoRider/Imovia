@@ -75,7 +75,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
                         <feature.icon className={cn("h-7 w-7", feature.iconColor)} />
                     </div>
 
-                    <h3 className="text-xl font-bold text-[#12182C] mb-3 group-hover:text-[#3153A1] transition-colors">
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                         {feature.name}
                     </h3>
 
@@ -99,7 +99,7 @@ export function Features() {
 
             <div className="container px-4 md:px-6 mx-auto relative z-10">
                 <FadeInUp className="text-center max-w-3xl mx-auto mb-20">
-                    <h2 className="text-4xl font-extrabold tracking-tight text-[#12182C] sm:text-5xl mb-6">
+                    <h2 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl mb-6">
                         <AnimatedGradientText className="block" from="#12182C" via="#94a3b8" to="#12182C">
                             L&apos;immobilier,
                         </AnimatedGradientText>

@@ -67,7 +67,6 @@ export function PersonalInfoForm() {
 
             toast.success("Informations mises à jour avec succès !")
         } catch (error) {
-            console.error(error)
             toast.error("Erreur lors de la mise à jour.")
         } finally {
             setIsLoading(false)
@@ -96,7 +95,6 @@ export function PersonalInfoForm() {
             toast.success("Photo de profil mise à jour !")
         } catch (err) {
             const error = err as Error
-            console.error('Error uploading avatar:', error)
             toast.error(error.message || "Erreur lors de l&apos;upload de l&apos;image.")
         }
     }
@@ -104,11 +102,11 @@ export function PersonalInfoForm() {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
             <div className="flex items-center gap-3 mb-8">
-                <div className="h-10 w-10 bg-blue-50 text-[#3153A1] rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-blue-50 text-primary rounded-lg flex items-center justify-center">
                     <User className="h-5 w-5" />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-[#12182C]">
+                    <h2 className="text-xl font-bold text-foreground">
                         {isAgency && "Informations de l&apos;agence"}
                         {isOwner && "Informations du propriétaire"}
                         {!isAgency && !isOwner && "Informations personnelles"}
@@ -301,7 +299,7 @@ export function PersonalInfoForm() {
                     <div className="pt-4">
                         <Button
                             type="submit"
-                            className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white h-11 rounded-xl text-base font-medium"
+                            className="w-full bg-primary hover:bg-primary/90 text-white h-11 rounded-xl text-base font-medium"
                             disabled={isLoading}
                         >
                             {isLoading ? "Enregistrement..." : "Enregistrer"}

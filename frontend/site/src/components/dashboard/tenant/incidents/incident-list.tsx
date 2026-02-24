@@ -35,7 +35,7 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
                 <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
                     <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                 </div>
-                <h3 className="text-lg font-medium text-[#12182C]">Aucun incident</h3>
+                <h3 className="text-lg font-medium text-foreground">Aucun incident</h3>
                 <p className="text-slate-500 max-w-sm mx-auto mt-1">
                     Tout va bien ! Aucun incident à signaler pour le moment.
                 </p>
@@ -66,7 +66,7 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
                                     <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-3 flex-wrap">
-                                                <h3 className="text-lg font-bold text-[#12182C] group-hover:text-[#3153A1] transition-colors">
+                                                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                                                     {type.label}
                                                 </h3>
                                             </div>
@@ -144,18 +144,18 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
 
                                     <div className="pt-4 mt-4 border-t border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 bg-[#3153A1]/10 rounded-full flex items-center justify-center text-[#3153A1] font-bold text-sm">
+                                            <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
                                                 {contactInitial}
                                             </div>
                                             <div className="text-sm">
-                                                <p className="font-semibold text-[#12182C]">{incident.tenant?.full_name || "Locataire"}</p>
+                                                <p className="font-semibold text-foreground">{incident.tenant?.full_name || "Locataire"}</p>
                                                 <p className="text-slate-500">{incident.tenant?.phone || "Contact non renseigné"}</p>
                                             </div>
                                         </div>
 
                                         <Button
                                             size="sm"
-                                            className="bg-[#3153A1] hover:bg-[#25468d] text-white gap-2 rounded-lg"
+                                            className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-lg"
                                             onClick={() => incident.tenant?.phone && (window.location.href = `tel:${incident.tenant.phone}`)}
                                         >
                                             <Phone className="h-4 w-4" />

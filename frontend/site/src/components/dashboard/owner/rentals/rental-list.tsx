@@ -21,7 +21,7 @@ export function RentalList({ leases, onRefresh }: RentalListProps) {
     if (leases.length === 0) {
         return (
             <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                <h3 className="text-xl font-bold text-[#12182C] mb-2">Aucun bail trouvé</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Aucun bail trouvé</h3>
                 <p className="text-slate-500">Vous n&apos;avez pas encore de baux actifs ou enregistrés.</p>
             </div>
         )

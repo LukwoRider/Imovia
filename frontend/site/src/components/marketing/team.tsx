@@ -36,7 +36,7 @@ export function Team() {
 
             <div className="container px-4 md:px-6 mx-auto relative z-10">
                 <FadeInUp className="text-center mb-20">
-                    <h2 className="text-4xl font-extrabold tracking-tight text-[#12182C] sm:text-5xl mb-6">
+                    <h2 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl mb-6">
                         <AnimatedGradientText className="mr-3" from="#12182C" via="#94a3b8" to="#12182C">
                             L&apos;équipe
                         </AnimatedGradientText>
@@ -60,7 +60,7 @@ export function Team() {
                                 className="group relative bg-white rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100"
                             >
                                 {/* Pattern Background for Header */}
-                                <div className="h-32 bg-gradient-to-r from-[#12182C] to-[#3153A1] relative overflow-hidden">
+                                <div className="h-32 bg-gradient-to-r from-foreground to-primary relative overflow-hidden">
                                     <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-repeat" />
                                 </div>
 
@@ -77,10 +77,10 @@ export function Team() {
 
                                     {/* Content */}
                                     <div className="mt-6 text-center">
-                                        <h3 className="text-xl font-bold text-[#12182C] mb-1 group-hover:text-[#3153A1] transition-colors">
+                                        <h3 className="text-xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
                                             {member.name}
                                         </h3>
-                                        <p className="text-sm font-semibold text-[#3153A1] uppercase tracking-wide mb-4">
+                                        <p className="text-sm font-semibold text-primary uppercase tracking-wide mb-4">
                                             {member.role}
                                         </p>
                                         <p className="text-slate-500 text-sm leading-relaxed mb-6">

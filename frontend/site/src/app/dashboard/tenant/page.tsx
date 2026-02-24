@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader, LucideIcon } from "lucide-react"
+import { Home, ArrowUpRight, FileText, FireExtinguisher, CheckCircle2, Clock, Download, Loader } from "lucide-react"
+import { StatCard } from "@/components/dashboard/shared/stat-card"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
@@ -50,7 +51,6 @@ export default function TenantDashboard() {
             window.URL.revokeObjectURL(url)
             toast.success("Téléchargement réussi")
         } catch (error: unknown) {
-            console.error("Download error:", error)
             toast.error("Erreur lors du téléchargement")
         }
     }, [supabase])
@@ -68,7 +68,7 @@ export default function TenantDashboard() {
                     const [pts, incs, docs] = await Promise.all([
                         getTenantPayments(activeLease.id),
                         getTenantIncidents(currentUser.id),
-                        getTenantDocuments(currentUser.id)
+                        getTenantDocuments()
                     ])
                     setPayments(pts)
                     setIncidents(incs)
@@ -83,7 +83,7 @@ export default function TenantDashboard() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Loader className="h-12 w-12 animate-spin text-[#3153A1]" />
+                <Loader className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-slate-500 font-medium">Chargement de votre tableau de bord...</p>
             </div>
         )
@@ -94,12 +94,12 @@ export default function TenantDashboard() {
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
                 <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                     <Home className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-[#12182C] mb-2">Pas de bail actif</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Pas de bail actif</h3>
                     <p className="text-slate-500 max-w-md mx-auto mb-6">
                         Vous n&apos;avez pas encore de bail actif enregistré.
                         Contactez votre propriétaire ou agence si vous pensez qu&apos;il s&apos;agit d&apos;une erreur.
                     </p>
-                    <Button asChild className="bg-[#3153A1] hover:bg-[#25468d]">
+                    <Button asChild className="bg-primary hover:bg-primary/90">
                         <Link href="/dashboard/tenant/search">Rechercher un bien</Link>
                     </Button>
                 </div>
@@ -122,7 +122,7 @@ export default function TenantDashboard() {
                     trend="Charges incluses"
                     trendUp={true}
                     icon={Home}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Prochain Prélèvement"
@@ -130,7 +130,7 @@ export default function TenantDashboard() {
                     trend={`Le ${lease.payment_day} du mois`}
                     trendUp={false}
                     icon={Clock}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                     trendLabel="avant échéance"
                 />
                 <StatCard
@@ -139,7 +139,7 @@ export default function TenantDashboard() {
                     trend="À jour"
                     trendUp={true}
                     icon={FileText}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Incidents"
@@ -147,7 +147,7 @@ export default function TenantDashboard() {
                     trend={activeIncidentsCount > 0 ? "Priorité" : "Tout va bien"}
                     trendUp={activeIncidentsCount === 0}
                     icon={FireExtinguisher}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
             </div>
 
@@ -157,10 +157,10 @@ export default function TenantDashboard() {
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <Home className="h-5 w-5 text-[#3153A1]" />
+                                <Home className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mon logement</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mon logement</CardTitle>
                                 <p className="text-sm text-slate-500">Informations sur votre location actuelle</p>
                             </div>
                         </div>
@@ -176,34 +176,34 @@ export default function TenantDashboard() {
                                 className="object-cover"
                             />
                         </div>
-                        <h3 className="text-lg font-bold text-[#12182C] mb-1">{lease.property?.property_type || "Bien"} - {lease.property?.city}</h3>
+                        <h3 className="text-lg font-bold text-foreground mb-1">{lease.property?.property_type || "Bien"} - {lease.property?.city}</h3>
                         <p className="text-slate-500 text-sm mb-4">{lease.property?.address}, {lease.property?.postal_code || ""} {lease.property?.city}</p>
 
                         <div className="grid grid-cols-3 gap-2 mb-6">
                             <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
                                 <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <ArrowUpRight className="h-12 w-12 text-[#12182C]" />
+                                    <ArrowUpRight className="h-12 w-12 text-foreground" />
                                 </div>
                                 <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Surface</span>
-                                <span className="block text-sm font-bold text-[#12182C] relative z-10">{lease.property?.surface_m2} m²</span>
+                                <span className="block text-sm font-bold text-foreground relative z-10">{lease.property?.surface_m2} m²</span>
                             </div>
                             <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
                                 <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <Home className="h-12 w-12 text-[#12182C]" />
+                                    <Home className="h-12 w-12 text-foreground" />
                                 </div>
                                 <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Pièces</span>
-                                <span className="block text-sm font-bold text-[#12182C]">{lease.property?.rooms || '-'} Pièces</span>
+                                <span className="block text-sm font-bold text-foreground">{lease.property?.rooms || '-'} Pièces</span>
                             </div>
                             <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 relative overflow-hidden group">
                                 <div className="absolute right-0 top-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-1/4 -translate-y-1/4">
-                                    <Download className="h-12 w-12 text-[#12182C]" />
+                                    <Download className="h-12 w-12 text-foreground" />
                                 </div>
                                 <span className="block text-xs text-slate-500 font-medium uppercase relative z-10">Loyer</span>
-                                <span className="block text-sm font-bold text-[#12182C]">{totalMonthly} €</span>
+                                <span className="block text-sm font-bold text-foreground">{totalMonthly} €</span>
                             </div>
                         </div>
 
-                        <Button asChild className="w-full mt-auto bg-[#3153A1] hover:bg-[#25468d] text-white">
+                        <Button asChild className="w-full mt-auto bg-primary hover:bg-primary/90 text-white">
                             <Link href="/dashboard/tenant/property">Voir les détails</Link>
                         </Button>
                     </CardContent>
@@ -214,10 +214,10 @@ export default function TenantDashboard() {
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-[#3153A1]" />
+                                <FileText className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Etat des paiements</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Etat des paiements</CardTitle>
                                 <p className="text-sm text-slate-500">Suivi de vos paiements de loyer</p>
                             </div>
                         </div>
@@ -239,7 +239,7 @@ export default function TenantDashboard() {
                                             {payment.status === 'paid' ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-[#12182C] capitalize">
+                                            <p className="font-bold text-foreground capitalize">
                                                 {format(new Date(payment.period_start), "MMMM yyyy", { locale: fr })}
                                             </p>
                                             <p className="text-xs text-slate-500">
@@ -250,7 +250,7 @@ export default function TenantDashboard() {
                                         </div>
                                     </div>
                                     <Badge variant="outline" className={cn(
-                                        "text-[#12182C] border-slate-200",
+                                        "text-foreground border-slate-200",
                                         payment.status === 'late' ? "bg-red-50 text-red-600 border-red-100" : "bg-slate-50"
                                     )}>
                                         {payment.amount_due} €
@@ -261,7 +261,7 @@ export default function TenantDashboard() {
 
                         <div className="mt-auto pt-6">
                             <div className="flex justify-between items-center mb-2 text-sm">
-                                <span className="font-medium text-[#12182C]">Paiements à jour</span>
+                                <span className="font-medium text-foreground">Paiements à jour</span>
                                 <span className="text-slate-500">
                                     {payments.filter(p => p.status === 'paid').length}/{payments.length}
                                 </span>
@@ -269,7 +269,7 @@ export default function TenantDashboard() {
                             <Progress
                                 value={payments.length > 0 ? (payments.filter(p => p.status === 'paid').length / payments.length) * 100 : 0}
                                 className="h-2 bg-slate-100"
-                                indicatorClassName="bg-[#3153A1]"
+                                indicatorClassName="bg-primary"
                             />
                         </div>
                     </CardContent>
@@ -282,14 +282,14 @@ export default function TenantDashboard() {
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FireExtinguisher className="h-5 w-5 text-[#3153A1]" />
+                                <FireExtinguisher className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mes incidents</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mes incidents</CardTitle>
                                 <p className="text-sm text-slate-500">Suivi de vos déclarations</p>
                             </div>
                         </div>
-                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                        <Button asChild variant="secondary" size="sm" className="bg-primary text-white hover:bg-primary/90">
                             <Link href="/dashboard/tenant/incidents">Voir tout</Link>
                         </Button>
                     </CardHeader>
@@ -305,7 +305,7 @@ export default function TenantDashboard() {
                                 const isOpen = incident.status === 'open';
 
                                 return (
-                                    <div key={incident.id} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-[#3153A1]/30 transition-colors cursor-pointer group">
+                                    <div key={incident.id} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-primary/30 transition-colors cursor-pointer group">
                                         <div className="flex items-start justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <div className={cn(
@@ -319,7 +319,7 @@ export default function TenantDashboard() {
                                                             <Clock className="h-4 w-4" />}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-[#12182C] line-clamp-1">{incident.description}</h4>
+                                                    <h4 className="font-bold text-foreground line-clamp-1">{incident.description}</h4>
                                                     <p className="text-xs text-slate-400">Déclaré le {format(new Date(incident.created_at), "dd MMM")}</p>
                                                 </div>
                                             </div>
@@ -343,7 +343,7 @@ export default function TenantDashboard() {
                             })
                         )}
 
-                        <Button asChild className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white mt-2">
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white mt-2">
                             <Link href="/dashboard/tenant/incidents">
                                 <FireExtinguisher className="mr-2 h-4 w-4" /> Déclarer un incident
                             </Link>
@@ -356,14 +356,14 @@ export default function TenantDashboard() {
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-slate-100 rounded-lg">
-                                <FileText className="h-5 w-5 text-[#3153A1]" />
+                                <FileText className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Mes documents</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Mes documents</CardTitle>
                                 <p className="text-sm text-slate-500">Accès rapide à vos documents</p>
                             </div>
                         </div>
-                        <Button asChild variant="secondary" size="sm" className="bg-[#3153A1] text-white hover:bg-[#25468d]">
+                        <Button asChild variant="secondary" size="sm" className="bg-primary text-white hover:bg-primary/90">
                             <Link href="/dashboard/tenant/documents">Voir tout</Link>
                         </Button>
                     </CardHeader>
@@ -390,39 +390,6 @@ export default function TenantDashboard() {
 }
 
 
-interface StatCardProps {
-    title: string
-    value: string
-    trend: string
-    trendUp: boolean
-    icon: LucideIcon
-    color: string
-    trendLabel?: string
-}
-
-function StatCard({ title, value, trend, trendUp, icon: Icon, color, trendLabel }: StatCardProps) {
-    return (
-        <Card className="border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-medium text-slate-500">{title}</p>
-                    <div className={cn("p-2 rounded-lg text-white", color)}>
-                        <Icon className="h-4 w-4" />
-                    </div>
-                </div>
-                <div>
-                    <span className="text-2xl font-bold text-[#12182C] block mb-1">{value}</span>
-                    <div className="flex items-center gap-1 text-xs">
-                        <span className={cn("font-medium", trendUp === true ? "text-green-600" : trendUp === false ? "text-amber-600" : "text-slate-500")}>
-                            {trend}
-                        </span>
-                        <span className="text-slate-400">{trendLabel || ""}</span>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
 
 interface DocumentRowProps {
     title: string
@@ -434,18 +401,18 @@ function DocumentRow({ title, date, onDownload }: DocumentRowProps) {
     return (
         <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors group">
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:text-[#3153A1] group-hover:bg-blue-50 transition-colors">
+                <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:text-primary group-hover:bg-blue-50 transition-colors">
                     <FileText className="h-4 w-4" />
                 </div>
                 <div>
-                    <p className="text-sm font-semibold text-[#12182C]">{title}</p>
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
                     <p className="text-xs text-slate-500">{date}</p>
                 </div>
             </div>
             <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-2 hover:border-[#3153A1] hover:text-[#3153A1] max-w-[100px]"
+                className="h-8 gap-2 hover:border-primary hover:text-primary max-w-[100px]"
                 onClick={(e) => {
                     e.preventDefault();
                     onDownload();

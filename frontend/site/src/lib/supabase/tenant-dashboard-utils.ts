@@ -3,25 +3,22 @@ import { Lease, RentPayment } from '../types/lease'
 import { Incident } from '../types/incident'
 import { Document } from '../types/document'
 
-const supabase = createClient()
-
 export async function getTenantActiveLease(tileId: string): Promise<Lease | null> {
+    const supabase = createClient()
     const { data: leaseTenants, error: ltError } = await supabase
         .from('lease_tenants')
         .select('lease_id')
         .eq('tenant_id', tileId)
 
     if (ltError) {
-        console.error("Error fetching lease_tenants:", ltError.code, ltError.message)
         return null
     }
 
     if (!leaseTenants || leaseTenants.length === 0) {
-        console.warn("No lease_tenants found for user:", tileId)
         return null
     }
 
-    const leaseIds = leaseTenants.map(lt => lt.lease_id)
+    const leaseIds = leaseTenants.map((lt: { lease_id: string }) => lt.lease_id)
 
     const { data: lease, error: lError } = await supabase
         .from('leases')
@@ -43,12 +40,10 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
         .maybeSingle()
 
     if (lError) {
-        console.error("Error fetching leases - Code:", lError.code, "Message:", lError.message)
         return null
     }
 
     if (!lease) {
-        console.warn("No active lease found in 'leases' table for IDs:", leaseIds)
         return null
     }
 
@@ -56,6 +51,7 @@ export async function getTenantActiveLease(tileId: string): Promise<Lease | null
 }
 
 export async function getTenantPayments(leaseId: string): Promise<RentPayment[]> {
+    const supabase = createClient()
     const { data, error } = await supabase
         .from('rent_payments')
         .select('*')
@@ -64,7 +60,6 @@ export async function getTenantPayments(leaseId: string): Promise<RentPayment[]>
         .limit(10)
 
     if (error) {
-        console.error("Error fetching payments:", error)
         return []
     }
 
@@ -72,6 +67,7 @@ export async function getTenantPayments(leaseId: string): Promise<RentPayment[]>
 }
 
 export async function getTenantIncidents(userId: string): Promise<Incident[]> {
+    const supabase = createClient()
     const { data, error } = await supabase
         .from('incidents')
         .select('*, property:properties(address, city)')
@@ -80,14 +76,14 @@ export async function getTenantIncidents(userId: string): Promise<Incident[]> {
         .limit(5)
 
     if (error) {
-        console.error("Error fetching incidents:", error)
         return []
     }
 
     return data as unknown as Incident[]
 }
 
-export async function getTenantDocuments(_userId: string): Promise<Document[]> {
+export async function getTenantDocuments(): Promise<Document[]> {
+    const supabase = createClient()
     const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -95,11 +91,10 @@ export async function getTenantDocuments(_userId: string): Promise<Document[]> {
         .limit(5)
 
     if (error) {
-        console.error("Error fetching documents:", error)
         return []
     }
 
-    return (data || []).map(doc => ({
+    return (data || []).map((doc: { id: string; title: string; created_at: string; document_type: string; storage_path: string }) => ({
         id: doc.id,
         title: doc.title || 'Document sans titre',
         date: new Date(doc.created_at).toLocaleDateString('fr-FR'),

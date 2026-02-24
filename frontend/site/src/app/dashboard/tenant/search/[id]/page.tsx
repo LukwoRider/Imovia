@@ -39,7 +39,6 @@ export default function PropertyDetailsPage() {
                 .single()
 
             if (error || !data) {
-                console.error("Error fetching property:", error)
                 setProperty(null)
             } else {
                 setProperty(data)
@@ -55,7 +54,7 @@ export default function PropertyDetailsPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Loader2 className="h-12 w-12 animate-spin text-[#3153A1]" />
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-slate-500 font-medium">Chargement du bien...</p>
             </div>
         )
@@ -88,7 +87,7 @@ export default function PropertyDetailsPage() {
             <div className="flex items-center gap-4">
                 <Link
                     href={user?.id === property.owner_id ? "/dashboard/owner/properties" : "/dashboard/tenant/search"}
-                    className="flex items-center gap-2 text-slate-500 hover:text-[#3153A1] transition-colors"
+                    className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors"
                 >
                     <div className="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
                         <ChevronLeft className="h-4 w-4" />
@@ -96,13 +95,13 @@ export default function PropertyDetailsPage() {
                     <span className="font-medium">Retour</span>
                 </Link>
                 <div className="h-4 w-px bg-slate-200" />
-                <h1 className="text-lg font-semibold text-[#12182C] truncate max-w-md">{property.address}</h1>
+                <h1 className="text-lg font-semibold text-foreground truncate max-w-md">{property.address}</h1>
                 {user?.id === property.owner_id && (
                     <Button
                         onClick={() => window.location.href = `/dashboard/owner/properties/${property.id}/edit`}
                         variant="outline"
                         size="sm"
-                        className="ml-auto border-blue-200 text-[#3153A1] hover:bg-blue-50 rounded-lg font-bold gap-2"
+                        className="ml-auto border-blue-200 text-primary hover:bg-blue-50 rounded-lg font-bold gap-2"
                     >
                         <Pencil className="h-4 w-4" />
                         Modifier mon bien
@@ -202,7 +201,7 @@ export default function PropertyDetailsPage() {
                 <div className="lg:col-span-2 space-y-8">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="px-3 py-1 bg-blue-50 text-[#3153A1] text-xs font-bold rounded-full uppercase tracking-wider">
+                            <span className="px-3 py-1 bg-blue-50 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
                                 {property.property_type || 'Bien'}
                             </span>
                             {property.is_furnished && (
@@ -211,7 +210,7 @@ export default function PropertyDetailsPage() {
                                 </span>
                             )}
                         </div>
-                        <h2 className="text-3xl font-bold text-[#12182C] mb-2">{property.address}</h2>
+                        <h2 className="text-3xl font-bold text-foreground mb-2">{property.address}</h2>
                         <div className="flex items-center gap-2 text-slate-500">
                             <MapPin className="h-4 w-4" />
                             <span>{property.postal_code} {property.city}</span>
@@ -220,32 +219,32 @@ export default function PropertyDetailsPage() {
 
                     <div className="flex flex-wrap gap-4 py-6 border-y border-slate-100">
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg text-slate-700 font-medium">
-                            <Bed className="h-5 w-5 text-[#3153A1]" />
+                            <Bed className="h-5 w-5 text-primary" />
                             <span>{property.rooms || 0} Pièces</span>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg text-slate-700 font-medium">
-                            <Bath className="h-5 w-5 text-[#3153A1]" />
+                            <Bath className="h-5 w-5 text-primary" />
                             <span>{property.bathrooms || 0} SDB</span>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg text-slate-700 font-medium">
-                            <Ruler className="h-5 w-5 text-[#3153A1]" />
+                            <Ruler className="h-5 w-5 text-primary" />
                             <span>{property.surface_m2} m²</span>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg text-slate-700 font-medium">
-                            <Home className="h-5 w-5 text-[#3153A1]" />
+                            <Home className="h-5 w-5 text-primary" />
                             <span>Étage {property.floor_number ?? 'RDC'}</span>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-[#12182C]">Description</h3>
+                        <h3 className="text-xl font-bold text-foreground">Description</h3>
                         <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
                             {property.description}
                         </p>
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-[#12182C]">Caractéristiques</h3>
+                        <h3 className="text-xl font-bold text-foreground">Caractéristiques</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-center gap-3 p-4 border border-slate-100 rounded-xl">
                                 <div className={`h-10 w-10 rounded-lg flex items-center justify-center font-bold ${['A', 'B'].includes(property.energy_class || '') ? 'bg-green-50 text-green-600' :
@@ -257,7 +256,7 @@ export default function PropertyDetailsPage() {
                                 <span className="font-medium text-slate-700">Classe Énergétique (DPE)</span>
                             </div>
                             <div className="flex items-center gap-3 p-4 border border-slate-100 rounded-xl">
-                                <div className="h-10 w-10 bg-blue-50 text-[#3153A1] rounded-lg flex items-center justify-center">
+                                <div className="h-10 w-10 bg-blue-50 text-primary rounded-lg flex items-center justify-center">
                                     <Calendar className="h-5 w-5" />
                                 </div>
                                 <div className="flex flex-col">
@@ -283,12 +282,12 @@ export default function PropertyDetailsPage() {
                 <div className="space-y-6">
                     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm sticky top-24">
                         <div className="mb-6">
-                            <span className="text-3xl font-bold text-[#3153A1]">{property.monthly_rent}€</span>
+                            <span className="text-3xl font-bold text-primary">{property.monthly_rent}€</span>
                             <span className="text-slate-500"> / mois</span>
                         </div>
 
                         <div className="space-y-3">
-                            <Button className="w-full h-12 text-base bg-[#3153A1] hover:bg-[#25468d] shadow-lg shadow-blue-900/20">
+                            <Button className="w-full h-12 text-base bg-primary hover:bg-primary/90 shadow-lg shadow-blue-900/20">
                                 <Phone className="h-4 w-4 mr-2" />
                                 Contacter le propriétaire
                             </Button>

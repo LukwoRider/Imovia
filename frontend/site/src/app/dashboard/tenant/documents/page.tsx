@@ -12,14 +12,13 @@ import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import JSZip from "jszip"
 
-const supabase = createClient()
-
 export default function DocumentsPage() {
     const [filter, setFilter] = useState<DocumentType | "ALL">("ALL")
     const [searchQuery, setSearchQuery] = useState("")
     const [documents, setDocuments] = useState<DocumentMock[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
+    const supabase = createClient()
 
     const fetchDocuments = useCallback(async () => {
         try {
@@ -45,7 +44,6 @@ export default function DocumentsPage() {
 
             setDocuments(formattedDocs)
         } catch (error: unknown) {
-            console.error("Error fetching tenant documents:", error)
         } finally {
             setIsLoading(false)
         }
@@ -77,7 +75,6 @@ export default function DocumentsPage() {
                         .download(doc.storagePath)
 
                     if (error) {
-                        console.error(`Erreur pour ${doc.title}:`, error)
                         continue
                     }
 
@@ -106,7 +103,6 @@ export default function DocumentsPage() {
                     // Add to ZIP
                     zip.file(finalFileName, data)
                 } catch (err) {
-                    console.error(`Download loop error for ${doc.title}:`, err)
                 }
             }
 
@@ -126,7 +122,6 @@ export default function DocumentsPage() {
 
             toast.success("Archive ZIP créée et téléchargée avec succès")
         } catch (error: unknown) {
-            console.error("Download all error:", error)
             toast.error("Erreur lors du téléchargement groupé : " + (error instanceof Error ? error.message : "Erreur inconnue"))
         } finally {
             setIsDownloadingAll(false)
@@ -143,7 +138,7 @@ export default function DocumentsPage() {
         <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#12182C]">Mes Documents</h1>
+                <h1 className="text-2xl font-bold text-foreground">Mes Documents</h1>
                 <p className="text-slate-500">Accédez à tous vos documents de location</p>
             </div>
 
@@ -157,7 +152,7 @@ export default function DocumentsPage() {
                     />
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-slate-100">
-                            <Loader2 className="h-8 w-8 text-[#3153A1] animate-spin" />
+                            <Loader2 className="h-8 w-8 text-primary animate-spin" />
                             <p className="text-slate-500 font-medium">Chargement de vos documents...</p>
                         </div>
                     ) : (

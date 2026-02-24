@@ -3,7 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 import { Button } from "@/components/ui/button"
-import { Users, AlertCircle, Building2, Wallet, ArrowUpRight, LucideIcon } from "lucide-react"
+import { Users, AlertCircle, Building2, Wallet, ArrowUpRight } from "lucide-react"
+import { StatCard } from "@/components/dashboard/shared/stat-card"
 import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts"
 import Link from "next/link"
 
@@ -28,7 +29,7 @@ export default function OwnerDashboard() {
                     trend="+12.5%"
                     trendUp={true}
                     icon={Wallet}
-                    color="bg-[#3153A1]"
+                    color="bg-primary"
                 />
                 <StatCard
                     title="Taux d'Occup."
@@ -36,7 +37,7 @@ export default function OwnerDashboard() {
                     trend="+2%"
                     trendUp={true}
                     icon={Users}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Biens Gérés"
@@ -44,7 +45,7 @@ export default function OwnerDashboard() {
                     trend="2 Vacants"
                     trendUp={false}
                     icon={Building2}
-                    color="bg-[#12182C]"
+                    color="bg-foreground"
                 />
                 <StatCard
                     title="Impayés"
@@ -62,7 +63,7 @@ export default function OwnerDashboard() {
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg font-bold text-[#12182C]">Evolution des revenus</CardTitle>
+                                <CardTitle className="text-lg font-bold text-foreground">Evolution des revenus</CardTitle>
                                 <CardDescription>Revenus nets sur les 6 derniers mois</CardDescription>
                             </div>
                             <Button asChild variant="outline" size="sm" className="hidden sm:flex">
@@ -110,7 +111,7 @@ export default function OwnerDashboard() {
                 {/* Properties List (Mini) */}
                 <Card className="border-slate-100 shadow-sm flex flex-col h-full">
                     <CardHeader>
-                        <CardTitle className="text-lg font-bold text-[#12182C]">Vos Biens</CardTitle>
+                        <CardTitle className="text-lg font-bold text-foreground">Vos Biens</CardTitle>
                         <CardDescription>État des lieux de votre parc</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 overflow-auto">
@@ -141,7 +142,7 @@ export default function OwnerDashboard() {
                                 price="1 400 €"
                             />
                         </div>
-                        <Button asChild className="w-full mt-6 bg-[#12182C] text-white hover:bg-[#25468d]">
+                        <Button asChild className="w-full mt-6 bg-foreground text-white hover:bg-primary/90">
                             <Link href="/dashboard/owner/properties">Voir tout le parc</Link>
                         </Button>
                     </CardContent>
@@ -152,38 +153,7 @@ export default function OwnerDashboard() {
 }
 
 
-interface StatCardProps {
-    title: string
-    value: string
-    trend: string
-    trendUp: boolean
-    icon: LucideIcon
-    color: string
-}
 
-function StatCard({ title, value, trend, trendUp, icon: Icon, color }: StatCardProps) {
-    return (
-        <Card className="border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-medium text-slate-500">{title}</p>
-                    <div className={`p-2 rounded-lg text-white ${color}`}>
-                        <Icon className="h-4 w-4" />
-                    </div>
-                </div>
-                <div>
-                    <span className="text-2xl font-bold text-[#12182C] block mb-1">{value}</span>
-                    <div className="flex items-center gap-1 text-xs">
-                        <span className={`font-medium ${trendUp ? "text-green-600" : "text-amber-600"}`}>
-                            {trend}
-                        </span>
-                        <span className="text-slate-400">vs mois dernier</span>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
 
 interface PropertyRowProps {
     name: string
@@ -195,16 +165,16 @@ interface PropertyRowProps {
 
 function PropertyRow({ name, location, status, price, isVacant }: PropertyRowProps) {
     return (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-[#3153A1]/30 transition-colors">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 transition-colors">
             <div className="flex items-center gap-3">
                 <div className={`h-2 w-2 rounded-full ${isVacant ? 'bg-amber-500' : 'bg-green-500'}`} />
                 <div>
-                    <p className="text-sm font-bold text-[#12182C]">{name}</p>
+                    <p className="text-sm font-bold text-foreground">{name}</p>
                     <p className="text-xs text-slate-500">{location}</p>
                 </div>
             </div>
             <div className="text-right">
-                <p className="text-sm font-bold text-[#12182C]">{price}</p>
+                <p className="text-sm font-bold text-foreground">{price}</p>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isVacant ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
                     {status}
                 </span>

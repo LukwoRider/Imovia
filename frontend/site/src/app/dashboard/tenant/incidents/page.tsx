@@ -59,7 +59,7 @@ export default function IncidentsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#12182C]">Mes Incidents</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Mes Incidents</h1>
                     <p className="text-slate-500">Suivez et gérez tous les incidents signalés dans votre logement.</p>
                 </div>
                 <CreateIncidentDialog />
@@ -76,7 +76,7 @@ export default function IncidentsPage() {
 
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                            <Loader2 className="h-8 w-8 animate-spin text-[#3153A1] mb-4" />
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                             <p className="text-slate-500 font-medium">Chargement de vos incidents...</p>
                         </div>
                     ) : (

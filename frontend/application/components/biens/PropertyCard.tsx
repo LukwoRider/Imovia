@@ -1,8 +1,11 @@
 import { Text } from "@/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Pressable, View } from "react-native";
+import { useRef, useState } from "react";
+import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, View } from "react-native";
 import type { Property } from "./types";
+
+const CARD_IMAGE_HEIGHT = 160;
 
 type PropertyCardProps = {
   item: Property;
@@ -10,6 +13,17 @@ type PropertyCardProps = {
 };
 
 export default function PropertyCard({ item, onPress }: PropertyCardProps) {
+  const images = item.images && item.images.length > 0 ? item.images : (item.thumbnail ? [item.thumbnail] : []);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const cardWidth = Dimensions.get("window").width - 32;
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / cardWidth);
+    if (index !== activeIndex) setActiveIndex(index);
+  };
+
   return (
     <Pressable
       onPress={onPress}
@@ -30,36 +44,56 @@ export default function PropertyCard({ item, onPress }: PropertyCardProps) {
       <View
         style={{
           width: "100%",
-          height: 160,
+          height: CARD_IMAGE_HEIGHT,
           backgroundColor: "#c7cdd6",
-          justifyContent: "flex-end",
         }}
       >
-        {item.thumbnail && (
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-            contentFit="cover"
-          />
+        {images.length > 0 ? (
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            style={{ width: cardWidth, height: CARD_IMAGE_HEIGHT }}
+          >
+            {images.map((uri, i) => (
+              <Image
+                key={i}
+                source={{ uri }}
+                style={{ width: cardWidth, height: CARD_IMAGE_HEIGHT }}
+                contentFit="cover"
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="image-outline" size={40} color="#9ca3af" />
+            <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, fontFamily: "Montserrat_400Regular" }}>Aucune photo</Text>
+          </View>
         )}
 
-        {item.imagesCount > 0 && (
+        {images.length > 1 && (
           <View
             style={{
+              position: "absolute",
+              bottom: 8,
+              left: 0,
+              right: 0,
               flexDirection: "row",
               justifyContent: "center",
-              paddingBottom: 10,
               gap: 5,
             }}
           >
-            {Array.from({ length: Math.min(item.imagesCount, 5) }).map((_, i) => (
+            {images.map((_, i) => (
               <View
                 key={i}
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: i === 0 ? "#3153A1" : "rgba(255,255,255,0.5)",
+                  backgroundColor: i === activeIndex ? "#3153A1" : "rgba(255,255,255,0.6)",
                 }}
               />
             ))}

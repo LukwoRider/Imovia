@@ -40,7 +40,8 @@
         }
       ],
       "expo-font",
-      "expo-mail-composer"
+      "expo-mail-composer",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

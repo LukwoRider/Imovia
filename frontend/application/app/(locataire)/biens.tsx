@@ -18,8 +18,8 @@ import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
     Alert,
     Platform,
@@ -58,43 +58,45 @@ export default function BiensPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
-    useEffect(() => {
-        const initialize = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                const user = session?.user;
+    useFocusEffect(
+        useCallback(() => {
+            const initialize = async () => {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const user = session?.user;
 
-                if (user) {
-                    setUserId(user.id);
+                    if (user) {
+                        setUserId(user.id);
 
-                    let role = user.user_metadata?.role || "tenant";
-                    console.log("[Biens] Initial role from metadata:", role);
+                        let role = user.user_metadata?.role || "tenant";
+                        console.log("[Biens] Initial role from metadata:", role);
 
-                    const { data: profile } = await supabase
-                        .from("profiles")
-                        .select("role")
-                        .eq("id", user.id)
-                        .maybeSingle();
+                        const { data: profile } = await supabase
+                            .from("profiles")
+                            .select("role")
+                            .eq("id", user.id)
+                            .maybeSingle();
 
-                    if (profile?.role) {
-                        role = profile.role;
-                        console.log("[Biens] Role confirmed from profile:", role);
+                        if (profile?.role) {
+                            role = profile.role;
+                            console.log("[Biens] Role confirmed from profile:", role);
+                        }
+
+                        setUserRole(role);
+                        fetchBiens(role, user.id);
+                    } else {
+                        setUserRole("tenant");
+                        fetchBiens("tenant");
                     }
-
-                    setUserRole(role);
-                    fetchBiens(role, user.id);
-                } else {
+                } catch (err) {
+                    console.error("[Biens] Initialization error:", err);
                     setUserRole("tenant");
                     fetchBiens("tenant");
                 }
-            } catch (err) {
-                console.error("[Biens] Initialization error:", err);
-                setUserRole("tenant");
-                fetchBiens("tenant");
-            }
-        };
-        initialize();
-    }, []);
+            };
+            initialize();
+        }, [])
+    );
 
     async function fetchBiens(role: string, uid?: string) {
         setLoading(true);
@@ -109,7 +111,7 @@ export default function BiensPage() {
                     surface_m2,
                     property_type,
                     property_images (
-                        count
+                        storage_path
                     )
                 `);
 
@@ -132,15 +134,27 @@ export default function BiensPage() {
 
             if (error) throw error;
 
-            const mapped: Property[] = (data || []).map(p => ({
-                id: p.id,
-                adresse: p.address || "Adresse non renseignée",
-                ville: p.city || "Ville non renseignée",
-                prix: Number(p.monthly_rent) || 0,
-                surface: Number(p.surface_m2) || 0,
-                type: p.property_type || "",
-                imagesCount: (p.property_images as any)?.[0]?.count || 0
-            }));
+            const mapped: Property[] = (data || []).map(p => {
+                const rawImages = (p.property_images as any[] || []);
+                const imagesCount = rawImages.length;
+                const allImageUrls = rawImages
+                    .filter((img: any) => img?.storage_path)
+                    .map((img: any) => {
+                        const { data: urlData } = supabase.storage.from('property-images').getPublicUrl(img.storage_path);
+                        return urlData.publicUrl;
+                    });
+                return {
+                    id: p.id,
+                    adresse: p.address || "Adresse non renseignée",
+                    ville: p.city || "Ville non renseignée",
+                    prix: Number(p.monthly_rent) || 0,
+                    surface: Number(p.surface_m2) || 0,
+                    type: p.property_type || "",
+                    imagesCount,
+                    thumbnail: allImageUrls[0],
+                    images: allImageUrls,
+                };
+            });
 
             setBiens(mapped);
         } catch (error: any) {
@@ -179,9 +193,7 @@ export default function BiensPage() {
         setCurrentPage(p);
     };
 
-    const handleFilter = () => {
-        setCurrentPage(1);
-    };
+
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -218,23 +230,7 @@ export default function BiensPage() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            {isOwnerOrAgencyRole(userRole) && (
-                                <Pressable
-                                    onPress={() => setIsAddModalVisible(true)}
-                                    style={{
-                                        backgroundColor: '#fff',
-                                        paddingHorizontal: 12,
-                                        paddingVertical: 6,
-                                        borderRadius: 8,
-                                        marginRight: 4
-                                    }}
-                                >
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                        <Ionicons name="add-circle" size={18} color="#3153A1" />
-                                        <Text style={{ color: '#3153A1', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
-                                    </View>
-                                </Pressable>
-                            )}
+
                             <NotificationBellButton />
                             <ProfileHeaderButton />
                         </View>
@@ -333,6 +329,7 @@ export default function BiensPage() {
                             onRangeChange={(min, max) => {
                                 setSurfaceMin(min);
                                 setSurfaceMax(max);
+                                setCurrentPage(1);
                             }}
                             formatRange={(min, max) => `${min} - ${max} m²${max >= SURFACE_MAX ? " et +" : ""}`}
                         />
@@ -346,25 +343,12 @@ export default function BiensPage() {
                             onRangeChange={(min, max) => {
                                 setLoyerMin(min);
                                 setLoyerMax(max);
+                                setCurrentPage(1);
                             }}
                             formatRange={(min, max) => `${min}€ - ${max}€${max >= LOYER_MAX ? " et +" : ""}`}
                         />
 
-                        <Pressable
-                            onPress={handleFilter}
-                            style={{
-                                backgroundColor: "#3153A1",
-                                borderRadius: 10,
-                                paddingVertical: 12,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginTop: 4,
-                            }}
-                        >
-                            <Ionicons name="options-outline" size={16} color="#fff" style={{ marginRight: 8 }} />
-                            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Filtrer</Text>
-                        </Pressable>
+
                     </View>
 
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>

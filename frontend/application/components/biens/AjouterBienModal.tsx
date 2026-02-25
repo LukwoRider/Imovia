@@ -109,7 +109,17 @@ export default function AjouterBienModal({
             setHasElevator(editProperty.has_elevator);
             setEnergyClass(editProperty.energy_class || "");
             setDescription(editProperty.description || "");
-            setAvailableFrom(editProperty.available_from || "");
+            if (editProperty.available_from) {
+                const datePart = editProperty.available_from.split('T')[0];
+                const parts = datePart.split('-');
+                if (parts.length === 3) {
+                    setAvailableFrom(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                } else {
+                    setAvailableFrom("");
+                }
+            } else {
+                setAvailableFrom("");
+            }
             setSelectedImages(editProperty.images || []);
             setInitialRemoteImages(editProperty.images || []);
         }
@@ -138,6 +148,14 @@ export default function AjouterBienModal({
 
         setSubmitting(true);
         try {
+            let isoDate: string | null = null;
+            if (availableFrom && availableFrom.length === 10) {
+                const parts = availableFrom.split('/');
+                if (parts.length === 3) {
+                    isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+            }
+
             const propertyData = {
                 owner_id: ownerId,
                 description,
@@ -154,7 +172,7 @@ export default function AjouterBienModal({
                 is_furnished: isFurnished === true,
                 has_elevator: hasElevator === true,
                 energy_class: energyClass || 'B',
-                available_from: availableFrom || null
+                available_from: isoDate
             };
 
             let property: any;
@@ -448,26 +466,64 @@ export default function AjouterBienModal({
                             </View>
                             <View style={[styles.field, { flex: 2 }]}>
                                 <Text style={styles.label} numberOfLines={1}>Disponible à partir du :</Text>
-                                <Pressable
-                                    style={styles.inputSmall}
-                                    onPress={() => setShowDatePicker(true)}
-                                >
-                                    <Text style={{ fontSize: 14, color: availableFrom ? "#1e293b" : "#94a3b8", fontFamily: "Montserrat_400Regular" }}>
-                                        {availableFrom || "JJ/MM/AAAA"}
-                                    </Text>
-                                </Pressable>
+                                <View style={{ position: 'relative' }}>
+                                    <TextInput
+                                        style={[styles.inputSmall, { textAlign: 'center', paddingRight: 40 }]}
+                                        placeholder="JJ/MM/AAAA"
+                                        value={availableFrom}
+                                        onChangeText={(text) => {
+                                            // Format as DD/MM/YYYY
+                                            let cleaned = text.replace(/\D/g, '');
+                                            let formatted = cleaned;
+                                            if (cleaned.length > 2) {
+                                                formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2);
+                                            }
+                                            if (cleaned.length > 4) {
+                                                formatted = formatted.slice(0, 5) + '/' + cleaned.slice(4, 8);
+                                            }
+                                            setAvailableFrom(formatted.slice(0, 10));
+                                        }}
+                                        keyboardType="numeric"
+                                        maxLength={10}
+                                    />
+                                    <Pressable
+                                        onPress={() => setShowDatePicker(true)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 8,
+                                            top: 8,
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: 6,
+                                            backgroundColor: '#f8fafc',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderWidth: 1,
+                                            borderColor: '#e2e8f0'
+                                        }}
+                                    >
+                                        <Ionicons name="calendar-outline" size={16} color="#3153A1" />
+                                    </Pressable>
+                                </View>
                                 {showDatePicker && (
                                     <DateTimePicker
-                                        value={availableFrom ? new Date(availableFrom.split('/').reverse().join('-')) : new Date()}
+                                        value={(() => {
+                                            if (availableFrom && availableFrom.length === 10) {
+                                                const parts = availableFrom.split('/');
+                                                const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                                                if (!isNaN(d.getTime())) return d;
+                                            }
+                                            return new Date();
+                                        })()}
                                         mode="date"
                                         display={Platform.OS === "ios" ? "spinner" : "calendar"}
                                         onChange={(event: any, selectedDate?: Date) => {
                                             setShowDatePicker(Platform.OS === "ios");
                                             if (selectedDate) {
-                                                const day = String(selectedDate.getDate()).padStart(2, '0');
-                                                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-                                                const year = selectedDate.getFullYear();
-                                                setAvailableFrom(`${day}/${month}/${year}`);
+                                                const y = selectedDate.getFullYear();
+                                                const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                                                const d = String(selectedDate.getDate()).padStart(2, '0');
+                                                setAvailableFrom(`${d}/${m}/${y}`);
                                             }
                                         }}
                                     />

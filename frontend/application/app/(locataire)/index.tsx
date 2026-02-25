@@ -488,13 +488,6 @@ export default function DashboardLocataire() {
                                 <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic", marginBottom: 10 }}>Aucun incident signalé.</Text>
                             )}
 
-                            <Button
-                                onPress={() => router.push("/(locataire)/incidents")}
-                                style={{ marginTop: 14 }}
-                            >
-                                <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                                <Text>Déclarer un incident</Text>
-                            </Button>
                         </View>
 
                         <View

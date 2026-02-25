@@ -7,6 +7,7 @@ export type Property = {
   type: string;
   imagesCount: number;
   thumbnail?: string;
+  images?: string[];
 };
 
 export const ITEMS_PER_PAGE = 4;

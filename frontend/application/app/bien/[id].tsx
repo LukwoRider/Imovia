@@ -1,3 +1,4 @@
+import AjouterBienModal from "@/components/biens/AjouterBienModal";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
@@ -65,6 +66,9 @@ export default function BienDetailPage() {
     const [bien, setBien] = useState<BienDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [rawPropertyData, setRawPropertyData] = useState<any>(null);
 
     useEffect(() => {
         const checkRole = async () => {
@@ -72,6 +76,7 @@ export default function BienDetailPage() {
             if (session?.user) {
                 const role = session.user.user_metadata?.role || "tenant";
                 setUserRole(role);
+                setUserId(session.user.id);
             }
         };
         checkRole();
@@ -113,6 +118,29 @@ export default function BienDetailPage() {
                     return publicUrl;
                 })
             };
+
+            // Store raw data for edit mode
+            setRawPropertyData({
+                id: data.id,
+                address: data.address || "",
+                city: data.city || "",
+                postal_code: data.postal_code || "",
+                property_type: data.property_type || "",
+                rooms: data.rooms || 0,
+                bathrooms: data.bathrooms || 0,
+                surface_m2: data.surface_m2 || 0,
+                monthly_rent: data.monthly_rent || 0,
+                floor_number: data.floor_number || 0,
+                is_furnished: data.is_furnished || false,
+                has_elevator: data.has_elevator || false,
+                energy_class: data.energy_class || "",
+                description: data.description || "",
+                available_from: data.available_from || null,
+                images: (data.property_images || []).map((img: any) => {
+                    const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(img.storage_path);
+                    return publicUrl;
+                }),
+            });
 
             setBien(mapped);
         } catch (error: any) {
@@ -362,6 +390,28 @@ export default function BienDetailPage() {
                             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Contacter</Text>
                         </Pressable>
 
+                        {(userRole === 'owner' || userRole === 'agency') && (
+                            <Pressable
+                                onPress={() => setIsEditModalVisible(true)}
+                                style={{
+                                    backgroundColor: "#f0f4ff",
+                                    borderRadius: 12,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 32,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    marginBottom: 10,
+                                    borderWidth: 1,
+                                    borderColor: "#3153A1",
+                                }}
+                            >
+                                <Ionicons name="create-outline" size={18} color="#3153A1" style={{ marginRight: 8 }} />
+                                <Text style={{ color: "#3153A1", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Modifier le logement</Text>
+                            </Pressable>
+                        )}
+
                         <Text style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", fontFamily: "Montserrat_400Regular" }}>
                             {bien.type ? `${bien.type} · ` : ""}{bien.surface} m² · {bien.ville}
                         </Text>
@@ -400,6 +450,19 @@ export default function BienDetailPage() {
                     </View>
                 </View>
             </ScrollView>
+
+            {userId && (
+                <AjouterBienModal
+                    visible={isEditModalVisible}
+                    onClose={() => setIsEditModalVisible(false)}
+                    onSuccess={() => {
+                        setIsEditModalVisible(false);
+                        fetchBienDetail();
+                    }}
+                    ownerId={userId}
+                    editProperty={rawPropertyData}
+                />
+            )}
         </View>
     );
 }

@@ -109,7 +109,7 @@ export default function BiensPage() {
                     surface_m2,
                     property_type,
                     property_images (
-                        count
+                        storage_path
                     )
                 `);
 
@@ -132,15 +132,27 @@ export default function BiensPage() {
 
             if (error) throw error;
 
-            const mapped: Property[] = (data || []).map(p => ({
-                id: p.id,
-                adresse: p.address || "Adresse non renseignée",
-                ville: p.city || "Ville non renseignée",
-                prix: Number(p.monthly_rent) || 0,
-                surface: Number(p.surface_m2) || 0,
-                type: p.property_type || "",
-                imagesCount: (p.property_images as any)?.[0]?.count || 0
-            }));
+            const mapped: Property[] = (data || []).map(p => {
+                const rawImages = (p.property_images as any[] || []);
+                const imagesCount = rawImages.length;
+                const allImageUrls = rawImages
+                    .filter((img: any) => img?.storage_path)
+                    .map((img: any) => {
+                        const { data: urlData } = supabase.storage.from('property-images').getPublicUrl(img.storage_path);
+                        return urlData.publicUrl;
+                    });
+                return {
+                    id: p.id,
+                    adresse: p.address || "Adresse non renseignée",
+                    ville: p.city || "Ville non renseignée",
+                    prix: Number(p.monthly_rent) || 0,
+                    surface: Number(p.surface_m2) || 0,
+                    type: p.property_type || "",
+                    imagesCount,
+                    thumbnail: allImageUrls[0],
+                    images: allImageUrls,
+                };
+            });
 
             setBiens(mapped);
         } catch (error: any) {

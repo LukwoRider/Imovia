@@ -21,6 +21,11 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [agencyName, setAgencyName] = useState("");
+  const [siret, setSiret] = useState("");
+
+  const isAgency = userRole === "agency";
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -54,10 +59,27 @@ export default function ProfilePage() {
       if (error) throw error;
 
       if (profile) {
-        const names = (profile.full_name || "").split(" ");
-        setFirstName(names[0] || "");
-        setLastName(names.slice(1).join(" ") || "");
+        const role = profile.role || user.user_metadata?.role || "tenant";
+        setUserRole(role);
         setPhone(profile.phone || "");
+
+        if (role === "agency") {
+          // For agencies, full_name = agency name
+          setAgencyName(profile.full_name || "");
+          // Fetch SIRET from agency_profiles
+          const { data: agencyData } = await supabase
+            .from("agency_profiles")
+            .select("siret")
+            .eq("profile_id", user.id)
+            .maybeSingle();
+          if (agencyData) {
+            setSiret(agencyData.siret || "");
+          }
+        } else {
+          const names = (profile.full_name || "").split(" ");
+          setFirstName(names[0] || "");
+          setLastName(names.slice(1).join(" ") || "");
+        }
       }
     } catch (error: any) {
       console.error("[Profile] Error fetching profile:", error);
@@ -127,10 +149,16 @@ export default function ProfilePage() {
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: `${firstName} ${lastName}`.trim(),
+          full_name: isAgency ? agencyName.trim() : `${firstName} ${lastName}`.trim(),
           phone,
         })
         .eq("id", user.id);
+
+      if (isAgency && siret) {
+        await supabase
+          .from("agency_profiles")
+          .upsert({ profile_id: user.id, agency_name: agencyName.trim(), siret }, { onConflict: "profile_id" });
+      }
 
       if (error) throw error;
 
@@ -169,22 +197,31 @@ export default function ProfilePage() {
               />
             </View>
 
-            <View className="flex-row gap-3">
+            {isAgency ? (
               <ProfileInfoField
-                icon="user"
-                split
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Prenom"
+                icon="home"
+                value={agencyName}
+                onChangeText={setAgencyName}
+                placeholder="Nom de l'agence"
               />
-              <ProfileInfoField
-                icon="user"
-                split
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Nom"
-              />
-            </View>
+            ) : (
+              <View className="flex-row gap-3">
+                <ProfileInfoField
+                  icon="user"
+                  split
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Prenom"
+                />
+                <ProfileInfoField
+                  icon="user"
+                  split
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Nom"
+                />
+              </View>
+            )}
 
             <ProfileInfoField
               icon="mail"
@@ -192,6 +229,14 @@ export default function ProfilePage() {
               onChangeText={setEmail}
               placeholder="Email"
             />
+            {isAgency && (
+              <ProfileInfoField
+                icon="hash"
+                value={siret}
+                onChangeText={setSiret}
+                placeholder="SIRET"
+              />
+            )}
             <ProfileInfoField
               icon="phone"
               value={phone}

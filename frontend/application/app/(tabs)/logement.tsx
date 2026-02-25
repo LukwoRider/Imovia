@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
 
 type LogementData = {
     titre: string;
@@ -583,6 +583,13 @@ export default function LogementPage() {
                             {proprietaire.email !== "Non renseignée" && <ContactRow icon="mail-outline" text={proprietaire.email} />}
 
                             <Pressable
+                                onPress={() => {
+                                    if (proprietaire?.tel && proprietaire.tel !== "Non renseigné") {
+                                        Linking.openURL(`tel:${proprietaire.tel}`);
+                                    } else {
+                                        Alert.alert("Information", "Aucun numéro de téléphone renseigné.");
+                                    }
+                                }}
                                 style={{
                                     backgroundColor: "#3153A1",
                                     borderRadius: 12,

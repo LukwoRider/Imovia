@@ -41,7 +41,7 @@ export default function ProfileHeaderButton() {
                 runPressAnimation();
                 if (!focused) {
                     setTimeout(() => {
-                        router.push("/(locataire)/profile");
+                        router.push("/(tabs)/profile");
                     }, 120);
                 }
             }}

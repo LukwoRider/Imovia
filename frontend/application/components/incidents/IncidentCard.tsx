@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/text";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, Modal, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import type { Incident } from "./types";
 
 const PROBLEM_CONFIG: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
@@ -239,6 +239,13 @@ export default function IncidentCard({
                     </Text>
                 </View>
                 <Pressable
+                    onPress={() => {
+                        if (incident.gestionnaireTel && incident.gestionnaireTel !== "Non renseigné") {
+                            Linking.openURL(`tel:${incident.gestionnaireTel}`);
+                        } else {
+                            Alert.alert("Information", "Aucun numéro de téléphone renseigné.");
+                        }
+                    }}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",

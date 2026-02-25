@@ -570,12 +570,12 @@ export default function DocumentsPage() {
                                 subtitle="Telecharger tous vos documents"
                                 onPress={handleDownloadAll}
                             />
-                            <DocumentsQuickActionCard
+                            {/* <DocumentsQuickActionCard
                                 icon="mail-outline"
                                 title={isZipping ? "Compression..." : "Envoyer par e-mail"}
                                 subtitle="Envoyer vos documents par mail"
                                 onPress={handleEmailAll}
-                            />
+                            /> */}
                         </View>
                     </View>
                 </View>

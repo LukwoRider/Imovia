@@ -46,15 +46,22 @@ export async function terminateLease(leaseId: string, propertyId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Veuillez vous reconnecter pour effectuer cette action.");
 
-    const { error: leaseError } = await supabase
+    const { data: updatedLease, error: leaseError } = await supabase
         .from('leases')
-        .update({ status: 'terminated' })
+        .update({ status: 'ended' })
         .eq('id', leaseId)
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id)
+        .select('id, status')
+        .maybeSingle();
 
     if (leaseError) {
         console.error("[terminateLease] Error updating lease status:", leaseError);
         throw new Error(`Erreur lors de la résiliation du bail: ${leaseError.message}`);
+    }
+
+    if (!updatedLease) {
+        console.error("[terminateLease] No lease row updated", { leaseId, ownerId: user.id });
+        throw new Error("Impossible de terminer ce bail (introuvable ou droits insuffisants).");
     }
 
     const { error: propError } = await supabase

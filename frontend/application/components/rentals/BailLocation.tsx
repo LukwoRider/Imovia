@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/text";
 import { terminateLease, updateLease } from "@/lib/supabase/owner-actions";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, Dimensions, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 interface BailLocationProps {
     lease: {
@@ -82,29 +82,42 @@ export function BailLocation({ lease, onRefresh }: BailLocationProps) {
     const handleTerminate = () => {
         setMenuVisible(false);
 
+        const confirmMessage = "Êtes-vous sûr de vouloir retirer ce locataire ? Le bail sera marqué comme terminé et le bien redeviendra disponible.";
+        const runTermination = async () => {
+            try {
+                setIsTerminating(true);
+                console.log(`[BailLocation] Terminating lease: ${lease.id}`);
+                await terminateLease(lease.id, lease.property_id);
+                setIsTerminating(false);
+                onRefresh?.();
+
+                Alert.alert("Succès", "Le locataire a été retiré et le bail est terminé.", [
+                    { text: "OK" }
+                ]);
+            } catch (error: any) {
+                console.error("[BailLocation] Termination error:", error);
+                Alert.alert("Erreur", error.message || "Une erreur est survenue lors de la suppression.");
+                setIsTerminating(false);
+            }
+        };
+
+        if (Platform.OS === "web") {
+            const confirmed = typeof window !== "undefined" ? window.confirm(confirmMessage) : true;
+            if (confirmed) {
+                void runTermination();
+            }
+            return;
+        }
+
         Alert.alert(
             "Retirer locataire",
-            "Êtes-vous sûr de vouloir retirer ce locataire ? Le bail sera marqué comme terminé et le bien redeviendra disponible.",
+            confirmMessage,
             [
                 { text: "Annuler", style: "cancel" },
                 {
                     text: "Retirer locataire",
                     style: "destructive",
-                    onPress: async () => {
-                        try {
-                            setIsTerminating(true);
-                            console.log(`[BailLocation] Terminating lease: ${lease.id}`);
-                            await terminateLease(lease.id, lease.property_id);
-
-                            Alert.alert("Succès", "Le locataire a été retiré et le bail est terminé.", [
-                                { text: "OK", onPress: () => onRefresh?.() }
-                            ]);
-                        } catch (error: any) {
-                            console.error("[BailLocation] Termination error:", error);
-                            Alert.alert("Erreur", error.message || "Une erreur est survenue lors de la suppression.");
-                            setIsTerminating(false);
-                        }
-                    }
+                    onPress: () => { void runTermination(); }
                 }
             ]
         );
@@ -195,10 +208,11 @@ export function BailLocation({ lease, onRefresh }: BailLocationProps) {
                 animationType="none"
                 onRequestClose={() => setMenuVisible(false)}
             >
-                <Pressable
-                    style={StyleSheet.absoluteFill}
-                    onPress={() => setMenuVisible(false)}
-                >
+                <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                    <Pressable
+                        style={StyleSheet.absoluteFill}
+                        onPress={() => setMenuVisible(false)}
+                    />
                     <View style={[
                         styles.inlineMenu,
                         {
@@ -243,7 +257,7 @@ export function BailLocation({ lease, onRefresh }: BailLocationProps) {
                             <Text style={[styles.menuItemText, { color: "#f87171" }]}>Retirer locataire</Text>
                         </TouchableOpacity>
                     </View>
-                </Pressable>
+                </View>
             </Modal>
 
             <Modal visible={profileVisible} animationType="slide" onRequestClose={() => setProfileVisible(false)}>

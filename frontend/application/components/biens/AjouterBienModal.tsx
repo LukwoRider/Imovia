@@ -85,6 +85,7 @@ export default function AjouterBienModal({
 
 
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [initialRemoteImages, setInitialRemoteImages] = useState<string[]>([]);
 
     const isFormValid = address.trim() !== "" && city.trim() !== "" && rent.trim() !== "" && surface.trim() !== "" && rooms.trim() !== "";
 
@@ -110,6 +111,7 @@ export default function AjouterBienModal({
             setDescription(editProperty.description || "");
             setAvailableFrom(editProperty.available_from || "");
             setSelectedImages(editProperty.images || []);
+            setInitialRemoteImages(editProperty.images || []);
         }
     }, [editProperty, visible]);
 
@@ -176,6 +178,31 @@ export default function AjouterBienModal({
                     .single();
                 if (error) throw error;
                 property = data;
+            }
+
+            // Delete removed images (images that were in initial set but no longer in selectedImages)
+            if (editProperty && property) {
+                const removedImages = initialRemoteImages.filter(url => !selectedImages.includes(url));
+                for (const removedUrl of removedImages) {
+                    try {
+                        // Extract storage_path from the public URL
+                        const pathMatch = removedUrl.split('/property-images/')[1];
+                        if (pathMatch) {
+                            const storagePath = decodeURIComponent(pathMatch);
+                            console.log('[Delete] Removing image:', storagePath);
+                            // Delete from DB
+                            await supabase.from('property_images')
+                                .delete()
+                                .eq('property_id', property.id)
+                                .eq('storage_path', storagePath);
+                            // Delete from Storage
+                            await supabase.storage.from('property-images').remove([storagePath]);
+                            console.log('[Delete] Removed:', storagePath);
+                        }
+                    } catch (delErr: any) {
+                        console.error('[Delete] Error:', delErr.message);
+                    }
+                }
             }
 
             // Upload images (only new local images, not existing remote URLs)

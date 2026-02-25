@@ -385,7 +385,7 @@ export default function DashboardLocataire() {
                                 <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>Aucun bail actif trouvé.</Text>
                             )}
 
-                            <Button onPress={() => router.push("/(locataire)/logement")}>
+                            <Button onPress={() => router.push("/(tabs)/logement")}>
                                 <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                                 <Text>Voir les détails</Text>
                             </Button>
@@ -446,7 +446,7 @@ export default function DashboardLocataire() {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                                 <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
                                 <Pressable
-                                    onPress={() => router.push("/(locataire)/incidents")}
+                                    onPress={() => router.push("/(tabs)/incidents")}
                                     style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
                                 >
                                     <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
@@ -488,13 +488,6 @@ export default function DashboardLocataire() {
                                 <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic", marginBottom: 10 }}>Aucun incident signalé.</Text>
                             )}
 
-                            <Button
-                                onPress={() => router.push("/(locataire)/incidents")}
-                                style={{ marginTop: 14 }}
-                            >
-                                <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                                <Text>Déclarer un incident</Text>
-                            </Button>
                         </View>
 
                         <View
@@ -511,7 +504,7 @@ export default function DashboardLocataire() {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                                 <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
                                 <Pressable
-                                    onPress={() => router.push("/(locataire)/documents")}
+                                    onPress={() => router.push("/(tabs)/documents")}
                                     style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
                                 >
                                     <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>

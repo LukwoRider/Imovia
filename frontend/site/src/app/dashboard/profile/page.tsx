@@ -10,16 +10,8 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#12182C]">Profile</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Profile</h1>
                     <p className="text-slate-500">Gérez vos informations personnelles et les paramètres de votre compte</p>
-                </div>
-                <div className="flex items-center gap-4">
-                    {/* Notification bell could go here if global header doesn't have it, but usually it's in topbar. 
-                         Mockup shows it top right relative to content or in topbar? 
-                         Mockup has a specific header row "Profile ... icons". 
-                         Assuming the main DashboardLayout handles the topbar icons/avatar. 
-                         I will stick to the page content title.
-                     */}
                 </div>
             </div>
 

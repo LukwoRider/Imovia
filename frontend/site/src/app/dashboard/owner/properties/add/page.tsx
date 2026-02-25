@@ -8,12 +8,12 @@ export default function AddPropertyPage() {
             <div className="flex items-center gap-4">
                 <Link
                     href="/dashboard/owner/properties"
-                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-500 hover:text-[#3153A1] border border-slate-100 shadow-sm"
+                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-500 hover:text-primary border border-slate-100 shadow-sm"
                 >
                     <ChevronLeft className="h-6 w-6" />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-extrabold text-[#12182C]">Ajouter un bien</h1>
+                    <h1 className="text-3xl font-extrabold text-foreground">Ajouter un bien</h1>
                     <p className="text-slate-500">Remplissez les informations pour publier votre annonce</p>
                 </div>
             </div>

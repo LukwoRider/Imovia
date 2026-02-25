@@ -55,8 +55,6 @@ export function SecurityForm() {
                 toast.error("Le nouveau mot de passe doit être différent de l'ancien.")
                 return
             }
-
-            console.error("Error updating password:", error)
             toast.error(error.message || "Erreur lors de la modification du mot de passe.")
         } finally {
             setIsLoading(false)
@@ -64,13 +62,13 @@ export function SecurityForm() {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
+        <div className="bg-white/50 backdrop-blur-sm rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8">
             <div className="flex items-center gap-3 mb-8">
-                <div className="h-10 w-10 bg-blue-50 text-[#3153A1] rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-blue-50 text-primary rounded-lg flex items-center justify-center">
                     <Lock className="h-5 w-5" />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-[#12182C]">Sécurité</h2>
+                    <h2 className="text-xl font-bold text-foreground">Sécurité</h2>
                     <p className="text-slate-500 text-sm">Modifier votre mot de passe</p>
                 </div>
             </div>
@@ -148,7 +146,7 @@ export function SecurityForm() {
                 <div className="pt-4">
                     <Button
                         type="submit"
-                        className="w-full bg-[#3153A1] hover:bg-[#25468d] text-white h-11 rounded-xl text-base font-medium"
+                        className="w-full bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] h-12 rounded-xl text-base font-bold"
                         disabled={isLoading}
                     >
                         {isLoading ? "Enregistrement..." : "Enregistrer"}

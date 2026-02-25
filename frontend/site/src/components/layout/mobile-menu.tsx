@@ -42,13 +42,13 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed inset-0 z-[9999] flex flex-col justify-center items-center bg-[#12182C]"
+                    className="fixed inset-0 z-[9999] flex flex-col justify-center items-center bg-foreground"
                     style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, height: '100vh', width: '100vw' }}
                 >
                     {/* Background decoration */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute -top-[20%] -right-[20%] w-[500px] h-[500px] bg-[#3153A1] rounded-full blur-[120px] opacity-20" />
-                        <div className="absolute -bottom-[20%] -left-[20%] w-[500px] h-[500px] bg-[#3153A1] rounded-full blur-[120px] opacity-20" />
+                        <div className="absolute -top-[20%] -right-[20%] w-[500px] h-[500px] bg-primary rounded-full blur-[120px] opacity-20" />
+                        <div className="absolute -bottom-[20%] -left-[20%] w-[500px] h-[500px] bg-primary rounded-full blur-[120px] opacity-20" />
                     </div>
 
                     <button
@@ -71,7 +71,7 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                                 <Link
                                     href={item.href}
                                     onClick={onClose}
-                                    className="text-4xl font-bold text-white hover:text-[#3153A1] transition-colors block"
+                                    className="text-4xl font-bold text-white hover:text-primary transition-colors block"
                                 >
                                     {item.title}
                                 </Link>
@@ -84,7 +84,7 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                             transition={{ delay: 0.4, duration: 0.4 }}
                             className="pt-10 w-full max-w-xs flex flex-col gap-4"
                         >
-                            <Button asChild size="lg" className="w-full bg-white text-[#12182C] hover:bg-slate-100 h-14 text-lg border-0 shadow-lg">
+                            <Button asChild size="lg" className="w-full bg-white text-foreground hover:bg-slate-100 h-14 text-lg border-0 shadow-lg">
                                 <Link href="/auth/register" onClick={onClose}>
                                     Commencer gratuitement
                                 </Link>

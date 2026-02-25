@@ -30,7 +30,6 @@ export async function getAllTenants(): Promise<TenantProfile[]> {
     const { data, error } = await supabase.rpc('get_all_tenants')
 
     if (error) {
-        console.error("Fetch all tenants RPC error details:", JSON.stringify(error, null, 2))
         throw new Error(`Erreur RPC: ${error.message || 'Fonction non trouvée'}`)
     }
 
@@ -47,7 +46,6 @@ export async function searchTenantByEmail(email: string): Promise<TenantProfile 
     })
 
     if (error) {
-        console.error("Search tenant RPC error:", error)
         return null
     }
 
@@ -76,7 +74,6 @@ export async function onboardTenant(data: OnboardingData) {
         }, { onConflict: 'property_id,email' })
 
     if (contactError) {
-        console.error("Error in property_tenant_contacts:", contactError)
         throw new Error("Erreur lors de l'enregistrement du contact locataire")
     }
 
@@ -97,7 +94,6 @@ export async function onboardTenant(data: OnboardingData) {
         .maybeSingle()
 
     if (leaseError) {
-        console.error("Error creating lease - Full details:", JSON.stringify(leaseError, null, 2))
 
         // Specific handling for the unique constraint error
         if (leaseError.code === '23505' && leaseError.message?.includes('ux_one_active_lease_per_property')) {
@@ -121,7 +117,6 @@ export async function onboardTenant(data: OnboardingData) {
         })
 
     if (ltError) {
-        console.error("Error linking tenant to lease - Full details:", JSON.stringify(ltError, null, 2))
         throw new Error(`Erreur lors du lien locataire/bail: ${ltError.message || 'Erreur inconnue'}`)
     }
 
@@ -132,7 +127,6 @@ export async function onboardTenant(data: OnboardingData) {
         .eq('id', data.propertyId)
 
     if (propError) {
-        console.error("Error updating property status:", propError)
     }
 
     // 5. Notify tenant automatically
@@ -153,8 +147,7 @@ export async function onboardTenant(data: OnboardingData) {
             `Votre bail pour le logement situé au ${addressStr} a été créé. Il débute le ${formattedDate}. Bienvenue !`,
             'info'
         )
-    } catch (e) {
-        console.error("Silent error sending onboarding notification:", e)
+    } catch {
     }
 
     return lease
@@ -173,7 +166,6 @@ export async function terminateLease(leaseId: string, propertyId: string) {
         .eq('id', leaseId)
 
     if (leaseError) {
-        console.error("Error terminating lease:", leaseError)
         throw new Error("Erreur lors de la résiliation du bail")
     }
 
@@ -184,7 +176,6 @@ export async function terminateLease(leaseId: string, propertyId: string) {
         .eq('id', propertyId)
 
     if (propError) {
-        console.error("Error updating property status to available:", propError)
     }
 
     // 3. Notify tenant automatically
@@ -209,8 +200,7 @@ export async function terminateLease(leaseId: string, propertyId: string) {
                 'warning'
             )
         }
-    } catch (e) {
-        console.error("Silent error sending termination notification:", e)
+    } catch {
     }
 
     return true
@@ -233,7 +223,6 @@ export async function getAvailableProperties() {
         .order('created_at', { ascending: false })
 
     if (error) {
-        console.error("Error fetching available properties:", error)
         throw new Error("Erreur lors de la récupération des biens disponibles")
     }
 
@@ -265,7 +254,6 @@ export async function updateLease(leaseId: string, updates: {
         .maybeSingle()
 
     if (error) {
-        console.error("Error updating lease:", error)
         throw new Error(`Erreur lors de la mise à jour du bail: ${error.message}`)
     }
 

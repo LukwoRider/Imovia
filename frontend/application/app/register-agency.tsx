@@ -2,6 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import {
+    isValidSignupEmail,
+    isValidSignupPhone,
+    sanitizeSignupEmailInput,
+    sanitizeSignupPhoneInput,
+    SIGNUP_EMAIL_ERROR_MESSAGE,
+    SIGNUP_PHONE_ERROR_MESSAGE,
+} from "@/lib/phone-validation";
 import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -22,18 +30,42 @@ export default function RegisterAgencyPage() {
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [emailError, setEmailError] = useState("");
+    const [phoneError, setPhoneError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    function showError(message: string) {
+        if (Platform.OS === "web" && typeof window !== "undefined") {
+            window.alert(message);
+            return;
+        }
+        Alert.alert("Erreur", message);
+    }
 
     async function handleAgencySignUp() {
         if (!email || !password || !agencyName || !siret) {
-            Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires.");
+            showError("Veuillez remplir tous les champs obligatoires.");
             return;
         }
 
-        if (password !== confirmPassword) {
-            Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+        if (!isValidSignupEmail(email)) {
+            setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+            showError(SIGNUP_EMAIL_ERROR_MESSAGE);
             return;
         }
+        setEmailError("");
+
+        if (password !== confirmPassword) {
+            showError("Les mots de passe ne correspondent pas.");
+            return;
+        }
+
+        if (!isValidSignupPhone(phone)) {
+            setPhoneError(SIGNUP_PHONE_ERROR_MESSAGE);
+            showError(SIGNUP_PHONE_ERROR_MESSAGE);
+            return;
+        }
+        setPhoneError("");
 
         setLoading(true);
 
@@ -88,11 +120,10 @@ export default function RegisterAgencyPage() {
                     "Compte créé mais erreur lors de l'enregistrement des détails de l'agence. Contactez le support."
                 );
             } else {
-                Alert.alert(
-                    "Compte créé",
-                    "Votre compte agence a été créé avec succès. Veuillez vérifier vos emails.",
-                    [{ text: "OK", onPress: () => router.replace("/(locataire)/" as any) }]
-                );
+                router.replace({
+                    pathname: "/login",
+                    params: { signupSuccess: "1" },
+                });
             }
         }
 
@@ -160,11 +191,24 @@ export default function RegisterAgencyPage() {
                         <Input
                             placeholder="nom@exemple.com"
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(value) => {
+                                setEmail(sanitizeSignupEmailInput(value));
+                                if (emailError) setEmailError("");
+                            }}
+                            onBlur={() => {
+                                if (email && !isValidSignupEmail(email)) {
+                                    setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+                                }
+                            }}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoComplete="email"
                         />
+                        {emailError ? (
+                            <Text className="text-xs text-red-500 mt-1">
+                                {emailError}
+                            </Text>
+                        ) : null}
                     </View>
 
                     <View style={{ marginBottom: 10 }}>
@@ -174,10 +218,23 @@ export default function RegisterAgencyPage() {
                         <Input
                             placeholder="+33"
                             value={phone}
-                            onChangeText={setPhone}
+                            onChangeText={(value) => {
+                                setPhone(sanitizeSignupPhoneInput(value));
+                                if (phoneError) setPhoneError("");
+                            }}
+                            onBlur={() => {
+                                if (phone && !isValidSignupPhone(phone)) {
+                                    setPhoneError(SIGNUP_PHONE_ERROR_MESSAGE);
+                                }
+                            }}
                             keyboardType="phone-pad"
                             autoComplete="tel"
                         />
+                        {phoneError ? (
+                            <Text className="text-xs text-red-500 mt-1">
+                                {phoneError}
+                            </Text>
+                        ) : null}
                     </View>
 
                     <View style={{ marginBottom: 10 }}>

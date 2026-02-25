@@ -13,9 +13,9 @@ export function Hero() {
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
                     {/* Left Content */}
                     <FadeInUp className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-6xl text-[#12182C]">
+                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-6xl text-foreground">
                             Gérez vos biens immobiliers avec{" "}
-                            <span className="text-[#3153A1] flex justify-center lg:justify-start items-center">
+                            <span className="text-primary flex justify-center lg:justify-start items-center">
                                 <motion.span
                                     initial={{ width: 0 }}
                                     animate={{ width: "auto" }}
@@ -33,7 +33,7 @@ export function Hero() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: [0, 1, 0] }}
                                     transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                                    className="w-[4px] h-[0.7em] bg-[#3153A1] ml-1"
+                                    className="w-[4px] h-[0.7em] bg-primary ml-1"
                                 />
                             </span>
                         </h1>
@@ -44,7 +44,7 @@ export function Hero() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                            <Button size="lg" className="bg-[#25468d] hover:bg-[#1e3a75] text-white h-12 px-8 text-base shadow-lg hover:shadow-xl transition-all hover:-translate-y-1" asChild>
+                            <Button size="lg" className="bg-primary/90 hover:bg-primary text-white h-12 px-8 text-base shadow-lg hover:shadow-xl transition-all hover:-translate-y-1" asChild>
                                 <Link href="/auth/register">Commencer gratuitement</Link>
                             </Button>
                         </div>
@@ -92,7 +92,7 @@ export function Hero() {
                                 <div className="flex items-center justify-between mb-8 border-b pb-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                                            <div className="w-6 h-6 rounded-full bg-[#3153A1]" />
+                                            <div className="w-6 h-6 rounded-full bg-primary" />
                                         </div>
                                         <div>
                                             <div className="h-2.5 w-24 bg-slate-200 rounded mb-1.5" />
@@ -114,7 +114,7 @@ export function Hero() {
                                             </div>
                                             <span className="text-xs font-medium text-slate-500">Revenus mensuels</span>
                                         </div>
-                                        <div className="text-2xl font-bold text-[#12182C]">4 250 €</div>
+                                        <div className="text-2xl font-bold text-foreground">4 250 €</div>
                                         <div className="text-xs text-green-600 font-medium mt-1">+12% vs mois dernier</div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
@@ -124,7 +124,7 @@ export function Hero() {
                                             </div>
                                             <span className="text-xs font-medium text-slate-500">Locataires actifs</span>
                                         </div>
-                                        <div className="text-2xl font-bold text-[#12182C]">12</div>
+                                        <div className="text-2xl font-bold text-foreground">12</div>
                                         <div className="text-xs text-slate-400 mt-1">2 en attente</div>
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@ export function Hero() {
                                     <ShieldCheck className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-semibold text-[#12182C]">Loyer reçu !</h4>
+                                    <h4 className="text-sm font-semibold text-foreground">Loyer reçu !</h4>
                                     <p className="text-xs text-muted-foreground mt-1">Appartement 3B - 850,00 €</p>
                                     <span className="text-[10px] text-slate-400 mt-2 block">Il y a 2 min</span>
                                 </div>

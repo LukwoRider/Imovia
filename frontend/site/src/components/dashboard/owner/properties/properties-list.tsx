@@ -33,12 +33,12 @@ export function PropertiesList({
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-[#12182C]">Mes Biens</h2>
+                    <h2 className="text-2xl font-bold text-foreground">Mes Biens</h2>
                     <p className="text-slate-500">Gérez vos propriétés et leurs états</p>
                 </div>
                 <Button
                     onClick={onAddProperty}
-                    className="bg-[#3153A1] hover:bg-[#25468d] text-white gap-2 rounded-xl h-12 px-6 font-semibold shadow-lg shadow-blue-900/10 transition-all hover:scale-[1.02]"
+                    className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-xl h-12 px-6 font-semibold shadow-lg shadow-primary/10 transition-all hover:scale-[1.02]"
                 >
                     <Plus className="h-5 w-5" />
                     Ajouter un bien
@@ -68,7 +68,7 @@ export function PropertiesList({
                                 <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-md ${property.status === 'rented'
                                     ? 'bg-green-500/90 text-white'
                                     : property.status === 'available'
-                                        ? 'bg-[#3153A1]/90 text-white'
+                                        ? 'bg-primary/90 text-white'
                                         : 'bg-amber-500/90 text-white'
                                     }`}>
                                     {property.status === 'rented' ? 'Occupé' : property.status === 'available' ? 'Disponible' : 'Maintenance'}
@@ -82,7 +82,7 @@ export function PropertiesList({
                                         e.stopPropagation()
                                         window.location.href = `/dashboard/owner/properties/${property.id}/edit`
                                     }}
-                                    className="bg-white/95 hover:bg-white text-[#12182C] h-10 px-4 rounded-xl font-bold shadow-xl border border-slate-100 flex items-center gap-2"
+                                    className="bg-white/95 hover:bg-white text-foreground h-10 px-4 rounded-xl font-bold shadow-xl border border-slate-100 flex items-center gap-2"
                                 >
                                     <Pencil className="h-4 w-4" />
                                     Modifier
@@ -100,7 +100,7 @@ export function PropertiesList({
                                     </AlertDialogTrigger>
                                     <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle className="text-xl font-bold text-[#12182C]">Supprimer ce bien ?</AlertDialogTitle>
+                                            <AlertDialogTitle className="text-xl font-bold text-foreground">Supprimer ce bien ?</AlertDialogTitle>
                                             <AlertDialogDescription className="text-slate-500">
                                                 Cette action est irréversible. Toutes les données associées (baux, documents, images) seront définitivement supprimées de nos serveurs.
                                             </AlertDialogDescription>

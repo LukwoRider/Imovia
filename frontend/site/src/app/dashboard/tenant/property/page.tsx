@@ -26,8 +26,7 @@ export default function TenantPropertyPage() {
 
                 const activeLease = await getTenantActiveLease(user.id)
                 setLease(activeLease)
-            } catch (err) {
-                console.error("Error fetching property details:", err)
+            } catch {
             } finally {
                 setLoading(false)
             }
@@ -39,7 +38,7 @@ export default function TenantPropertyPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="h-10 w-10 animate-spin text-[#3153A1] mb-4" />
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
                 <p className="text-slate-500 font-medium">Récupération des informations de votre logement...</p>
             </div>
         )
@@ -49,7 +48,7 @@ export default function TenantPropertyPage() {
         return (
             <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200 mx-auto max-w-2xl">
                 <Home className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[#12182C] mb-2">Aucun logement trouvé</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Aucun logement trouvé</h3>
                 <p className="text-slate-500">Nous n&apos;avons pas pu trouver de bail actif associé à votre compte.</p>
             </div>
         )
@@ -60,7 +59,7 @@ export default function TenantPropertyPage() {
     return (
         <div className="max-w-7xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#12182C]">Mon Logement</h1>
+                <h1 className="text-2xl font-bold text-foreground">Mon Logement</h1>
                 <p className="text-slate-500">Accédez à tous vos documents de location</p>
             </div>
 
@@ -71,10 +70,10 @@ export default function TenantPropertyPage() {
                         <CardHeader className="pb-4">
                             <div className="flex items-start gap-4">
                                 <div className="p-3 bg-slate-100 rounded-xl">
-                                    <Home className="h-6 w-6 text-[#3153A1]" />
+                                    <Home className="h-6 w-6 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xl font-bold text-[#12182C]">
+                                    <CardTitle className="text-xl font-bold text-foreground">
                                         {property?.property_type || "Appartement"} - {property?.city || "Ville inconnu"}
                                     </CardTitle>
                                     <p className="text-slate-500">
@@ -98,25 +97,25 @@ export default function TenantPropertyPage() {
 
                             <div className="grid grid-cols-4 gap-4 mb-8">
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
-                                    <Box className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">{property?.surface_m2} m²</span>
+                                    <Box className="h-5 w-5 text-primary" />
+                                    <span className="font-bold text-foreground">{property?.surface_m2} m²</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
-                                    <Home className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">{property?.rooms || '-'} Pièces</span>
+                                    <Home className="h-5 w-5 text-primary" />
+                                    <span className="font-bold text-foreground">{property?.rooms || '-'} Pièces</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
-                                    <Sofa className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">{property?.is_furnished ? "Meublé" : "Non meublé"}</span>
+                                    <Sofa className="h-5 w-5 text-primary" />
+                                    <span className="font-bold text-foreground">{property?.is_furnished ? "Meublé" : "Non meublé"}</span>
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-slate-50/50">
-                                    <DollarSign className="h-5 w-5 text-[#3153A1]" />
-                                    <span className="font-bold text-[#12182C]">{property?.monthly_rent ?? lease.rent_amount} €</span>
+                                    <DollarSign className="h-5 w-5 text-primary" />
+                                    <span className="font-bold text-foreground">{property?.monthly_rent ?? lease.rent_amount} €</span>
                                 </div>
                             </div>
 
                             <div>
-                                <h3 className="text-lg font-bold text-[#12182C] mb-3">Description</h3>
+                                <h3 className="text-lg font-bold text-foreground mb-3">Description</h3>
                                 <div className="prose prose-slate max-w-none text-slate-500 text-sm leading-relaxed">
                                     <p className="mb-4">
                                         {property?.description || "Aucune description disponible pour ce bien."}
@@ -134,10 +133,10 @@ export default function TenantPropertyPage() {
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-slate-100 rounded-lg">
-                                    <FileText className="h-5 w-5 text-[#3153A1]" />
+                                    <FileText className="h-5 w-5 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-base font-bold text-[#12182C]">Contrat de location</CardTitle>
+                                    <CardTitle className="text-base font-bold text-foreground">Contrat de location</CardTitle>
                                     <p className="text-xs text-slate-500">Informations de contacts</p>
                                 </div>
                             </div>
@@ -146,41 +145,41 @@ export default function TenantPropertyPage() {
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <Calendar className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-[#12182C]">Début</span>
+                                    <span className="text-sm font-medium text-foreground">Début</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">{format(new Date(lease.start_date), "dd/MM/yyyy")}</span>
+                                <span className="text-sm font-bold text-foreground">{format(new Date(lease.start_date), "dd/MM/yyyy")}</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <Calendar className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-[#12182C]">Échéance</span>
+                                    <span className="text-sm font-medium text-foreground">Échéance</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">Le {lease.payment_day} du mois</span>
+                                <span className="text-sm font-bold text-foreground">Le {lease.payment_day} du mois</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <Home className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-[#12182C]">Charges</span>
+                                    <span className="text-sm font-medium text-foreground">Charges</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">{lease.charges_amount}€</span>
+                                <span className="text-sm font-bold text-foreground">{lease.charges_amount}€</span>
                             </div>
 
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
-                                    <DollarSign className="h-4 w-4 text-[#3153A1]" />
-                                    <span className="text-sm font-bold text-[#12182C]">Loyer de base</span>
+                                    <DollarSign className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-bold text-foreground">Loyer de base</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">{property?.monthly_rent ?? lease.rent_amount}€</span>
+                                <span className="text-sm font-bold text-foreground">{property?.monthly_rent ?? lease.rent_amount}€</span>
                             </div>
 
                             <Separator className="my-2" />
 
                             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex items-center gap-3">
-                                    <DollarSign className="h-4 w-4 text-[#3153A1]" />
-                                    <span className="text-sm font-bold text-[#12182C]">Total mensuel</span>
+                                    <DollarSign className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-bold text-foreground">Total mensuel</span>
                                 </div>
-                                <span className="text-sm font-bold text-[#12182C]">{(property?.monthly_rent ?? lease.rent_amount) + lease.charges_amount}€</span>
+                                <span className="text-sm font-bold text-foreground">{(property?.monthly_rent ?? lease.rent_amount) + lease.charges_amount}€</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -190,10 +189,10 @@ export default function TenantPropertyPage() {
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-slate-100 rounded-lg">
-                                    <Phone className="h-5 w-5 text-[#3153A1]" />
+                                    <Phone className="h-5 w-5 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-base font-bold text-[#12182C]">Contact Propriétaire</CardTitle>
+                                    <CardTitle className="text-base font-bold text-foreground">Contact Propriétaire</CardTitle>
                                     <p className="text-xs text-slate-500">Informations de contacts</p>
                                 </div>
                             </div>
@@ -203,7 +202,7 @@ export default function TenantPropertyPage() {
                                 <User className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nom & Prénom</span>
-                                    <span className="text-sm font-semibold text-[#12182C]">
+                                    <span className="text-sm font-semibold text-foreground">
                                         {owner?.agency_profiles?.agency_name || owner?.full_name || "Propriétaire"}
                                     </span>
                                 </div>
@@ -212,7 +211,7 @@ export default function TenantPropertyPage() {
                                 <Phone className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Téléphone</span>
-                                    <a href={`tel:${owner?.agency_profiles?.business_phone || owner?.phone || ""}`} className="text-sm font-medium text-[#12182C] hover:text-[#3153A1] transition-colors">
+                                    <a href={`tel:${owner?.agency_profiles?.business_phone || owner?.phone || ""}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                                         {owner?.agency_profiles?.business_phone || owner?.phone || "Indisponible"}
                                     </a>
                                 </div>
@@ -221,7 +220,7 @@ export default function TenantPropertyPage() {
                                 <Mail className="h-4 w-4 text-slate-400" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</span>
-                                    <a href={`mailto:${owner?.agency_profiles?.business_email || owner?.email || ""}`} className="text-sm font-medium text-[#12182C] hover:text-[#3153A1] transition-colors">
+                                    <a href={`mailto:${owner?.agency_profiles?.business_email || owner?.email || ""}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                                         {owner?.agency_profiles?.business_email || owner?.email || "Indisponible"}
                                     </a>
                                 </div>
@@ -229,7 +228,7 @@ export default function TenantPropertyPage() {
 
                             <Button
                                 asChild
-                                className="w-full mt-2 bg-[#3153A1] hover:bg-[#25468d] text-white gap-2 shadow-lg shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full mt-2 bg-primary hover:bg-primary/90 text-white gap-2 shadow-lg shadow-primary/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 <a href={`mailto:${owner?.agency_profiles?.business_email || owner?.email || ""}`}>
                                     <Mail className="h-4 w-4" />

@@ -45,7 +45,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     return (
         <Link href={`/dashboard/tenant/search/${property.id}`} className="block group">
             <div
-                className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-white/50 backdrop-blur-sm rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
@@ -102,13 +102,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 {/* Content */}
                 <div className="p-4 space-y-3">
                     <div>
-                        <h3 className="font-bold text-[#12182C] text-lg truncate">{property.title}</h3>
+                        <h3 className="font-bold text-foreground text-lg truncate">{property.title}</h3>
                         <p className="text-slate-500 text-sm truncate">{property.address}</p>
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                         <div className="flex flex-col">
-                            <span className="font-bold text-[#3153A1] text-lg">{property.price}€ <span className="text-sm font-normal text-slate-500">/ mois</span></span>
+                            <span className="font-bold text-primary text-lg">{property.price}€ <span className="text-sm font-normal text-slate-500">/ mois</span></span>
                         </div>
                         <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">
                             {property.type}

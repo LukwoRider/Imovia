@@ -59,7 +59,7 @@ export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
                         className={cn(
                             "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                             isActive
-                                ? "bg-[#3153A1] text-white shadow-lg shadow-blue-900/20"
+                                ? "bg-primary text-white shadow-lg shadow-blue-900/20"
                                 : "text-slate-400 hover:text-white hover:bg-white/5"
                         )}
                     >
@@ -84,7 +84,7 @@ export function ProfileLink({ onItemClick }: { onItemClick?: () => void }) {
             className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                 isActive
-                    ? "bg-[#3153A1] text-white shadow-lg shadow-blue-900/20"
+                    ? "bg-primary text-white shadow-lg shadow-blue-900/20"
                     : "text-slate-400 hover:text-white hover:bg-white/5"
             )}
         >

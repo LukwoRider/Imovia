@@ -32,6 +32,7 @@ function formatDateLabel(d: Date): string {
 const DOCUMENT_TYPES = [
     { key: "contract", label: "Contrats" },
     { key: "inventory", label: "État des lieux" },
+    { key: "receipt", label: "Quittances" },
     { key: "other", label: "Autres" },
 ];
 
@@ -366,34 +367,36 @@ export default function AjouterDocumentModal({ visible, onClose, onSuccess, owne
                             </View>
                         </View>
 
-                        <View style={styles.row}>
-                            <View style={styles.field}>
-                                <Text style={styles.label}>Uploader document :</Text>
-                                <Pressable style={styles.filePicker} onPress={handleFilePick}>
-                                    <Text style={[styles.pickerValue, !selectedFile && styles.placeholder]} numberOfLines={1}>
-                                        {selectedFile && !selectedFile.canceled ? selectedFile.assets[0].name : "Uploader votre fichier ici"}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                            <View style={styles.field}>
-                                <Text style={styles.label}>Date du document :</Text>
-                                <Pressable style={styles.pickerTrigger} onPress={() => setShowDatePicker(!showDatePicker)}>
-                                    <View style={styles.pickerInner}>
+                        <View style={styles.field}>
+                            <Text style={styles.label}>Uploader document :</Text>
+                            <Pressable style={styles.filePicker} onPress={handleFilePick}>
+                                <Text style={[styles.pickerValue, !selectedFile && styles.placeholder]} numberOfLines={1}>
+                                    {selectedFile && !selectedFile.canceled ? selectedFile.assets[0].name : "Uploader votre fichier ici"}
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        <View style={styles.field}>
+                            <Text style={styles.label}>Date du document :</Text>
+                            <Pressable style={styles.pickerTrigger} onPress={() => setShowDatePicker(!showDatePicker)}>
+                                <View style={styles.pickerInner}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Ionicons name="calendar-outline" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
                                         <Text style={styles.pickerValue}>
                                             {selectedDate ? formatDateLabel(selectedDate) : "Choisir une date"}
                                         </Text>
                                     </View>
-                                </Pressable>
-                                {showDatePicker && (
-                                    <View style={styles.calendarWrapper}>
-                                        <MiniCalendar
-                                            selectedDate={selectedDate}
-                                            onSelect={(d) => { setSelectedDate(d); setShowDatePicker(false); }}
-                                        />
-                                    </View>
-                                )}
-                            </View>
+                                    <Ionicons name="chevron-down" size={16} color="#94a3b8" />
+                                </View>
+                            </Pressable>
+                            {showDatePicker && (
+                                <View style={styles.calendarWrapper}>
+                                    <MiniCalendar
+                                        selectedDate={selectedDate}
+                                        onSelect={(d) => { setSelectedDate(d); setShowDatePicker(false); }}
+                                    />
+                                </View>
+                            )}
                         </View>
 
                         <Pressable
@@ -406,8 +409,6 @@ export default function AjouterDocumentModal({ visible, onClose, onSuccess, owne
                                 <Text style={styles.submitBtnText}>Valider</Text>
                             </View>
                         </Pressable>
-
-                        <Text style={styles.footerInfo}>Vos informations sont sécurisées et nous contacterons rapidement</Text>
                     </ScrollView>
                 </View>
             </View>

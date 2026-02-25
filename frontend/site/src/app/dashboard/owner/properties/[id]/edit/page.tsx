@@ -25,7 +25,6 @@ export default function EditPropertyPage() {
                 .single()
 
             if (error || !data) {
-                console.error("Error fetching property:", error)
             } else {
                 setProperty(data)
             }
@@ -40,7 +39,7 @@ export default function EditPropertyPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Loader2 className="h-12 w-12 animate-spin text-[#3153A1]" />
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-slate-500 font-medium">Chargement des données du bien...</p>
             </div>
         )
@@ -51,7 +50,7 @@ export default function EditPropertyPage() {
             <div className="max-w-4xl mx-auto py-12 text-center">
                 <h2 className="text-2xl font-bold text-slate-800">Bien non trouvé</h2>
                 <p className="text-slate-500 mt-2">Le bien que vous essayez de modifier n&apos;existe pas ou a été supprimé.</p>
-                <Link href="/dashboard/owner/properties" className="inline-block mt-6 text-[#3153A1] font-semibold hover:underline">
+                <Link href="/dashboard/owner/properties" className="inline-block mt-6 text-primary font-semibold hover:underline">
                     Retour à la liste
                 </Link>
             </div>
@@ -63,12 +62,12 @@ export default function EditPropertyPage() {
             <div className="flex items-center gap-4">
                 <Link
                     href="/dashboard/owner/properties"
-                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-500 hover:text-[#3153A1] border border-slate-100 shadow-sm"
+                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-500 hover:text-primary border border-slate-100 shadow-sm"
                 >
                     <ChevronLeft className="h-6 w-6" />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-extrabold text-[#12182C]">Modifier le bien</h1>
+                    <h1 className="text-3xl font-extrabold text-foreground">Modifier le bien</h1>
                     <p className="text-slate-500">{property.address}, {property.city}</p>
                 </div>
             </div>

@@ -12,7 +12,7 @@ export function AuthVideo() {
     }, [])
 
     return (
-        <div className="relative h-full w-full bg-[#25468d] overflow-hidden">
+        <div className="relative h-full w-full bg-primary/90 overflow-hidden">
             <video
                 ref={videoRef}
                 autoPlay
@@ -27,7 +27,7 @@ export function AuthVideo() {
                 Your browser does not support the video tag.
             </video>
 
-            <div className="absolute inset-0 bg-[#25468d]/20" />
+            <div className="absolute inset-0 bg-primary/90/20" />
         </div>
     )
 }

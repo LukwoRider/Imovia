@@ -7,7 +7,6 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
     Alert,
     Modal,
     Platform,
@@ -61,9 +60,6 @@ export default function AjouterBienModal({
     editProperty,
 }: AjouterBienModalProps) {
     const [submitting, setSubmitting] = useState(false);
-    const [loadingTenants, setLoadingTenants] = useState(false);
-    const [tenants, setTenants] = useState<Profile[]>([]);
-    const [showTenantPicker, setShowTenantPicker] = useState(false);
 
     const [postalCode, setPostalCode] = useState("");
     const [address, setAddress] = useState("");
@@ -87,33 +83,14 @@ export default function AjouterBienModal({
     const PROPERTY_TYPES = ["Maison", "Appartement", "Studio", "Loft"];
     const ENERGY_CLASSES = ["A", "B", "C", "D", "E", "F"];
 
-    const [selectedTenants, setSelectedTenants] = useState<Profile[]>([]);
+
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
     const isFormValid = address.trim() !== "" && city.trim() !== "" && rent.trim() !== "" && surface.trim() !== "" && rooms.trim() !== "";
 
-    useEffect(() => {
-        if (visible) {
-            fetchTenants();
-        }
-    }, [visible]);
 
-    async function fetchTenants() {
-        setLoadingTenants(true);
-        try {
-            const { data, error } = await supabase
-                .from("profiles")
-                .select("id, full_name, phone, avatar_url")
-                .eq("role", "tenant");
 
-            if (error) throw error;
-            setTenants(data || []);
-        } catch (error: any) {
-            console.error("Error fetching tenants:", error);
-        } finally {
-            setLoadingTenants(false);
-        }
-    }
+
 
     // Pre-fill form when editing
     useEffect(() => {
@@ -168,7 +145,7 @@ export default function AjouterBienModal({
                 monthly_rent: Number(rent),
                 surface_m2: Number(surface),
                 property_type: propertyType,
-                status: selectedTenants.length > 0 ? 'rented' : 'available',
+                status: 'available',
                 rooms: Number(rooms),
                 bathrooms: Number(bathrooms) || 0,
                 floor_number: Number(floor) || 0,
@@ -259,34 +236,7 @@ export default function AjouterBienModal({
                 }
             }
 
-            if (selectedTenants.length > 0 && property) {
-                const { error: leaseError } = await supabase
-                    .from("leases")
-                    .insert({
-                        property_id: property.id,
-                        owner_id: ownerId,
-                        start_date: new Date().toISOString().split('T')[0],
-                        rent_amount: Number(rent),
-                        status: 'active'
-                    })
-                    .select()
-                    .single();
 
-                const { data: newLease } = await supabase
-                    .from("leases")
-                    .select("id")
-                    .eq("property_id", property.id)
-                    .eq("status", 'active')
-                    .single();
-
-                if (newLease) {
-                    const tenantInserts = selectedTenants.map(t => ({
-                        lease_id: newLease.id,
-                        tenant_id: t.id
-                    }));
-                    await supabase.from("lease_tenants").insert(tenantInserts);
-                }
-            }
 
             Alert.alert("Succès", editProperty ? "Le logement a été modifié." : "Le logement a été ajouté.");
             onSuccess();
@@ -316,7 +266,7 @@ export default function AjouterBienModal({
         setIsFurnished(null);
         setHasElevator(null);
         setEnergyClass("");
-        setSelectedTenants([]);
+
         setSelectedImages([]);
     };
 
@@ -613,40 +563,7 @@ export default function AjouterBienModal({
                             </View>
                         </View>
 
-                        <View style={styles.separator} />
 
-                        <View style={styles.tenantSection}>
-                            <View style={styles.tenantHeader}>
-                                <Text style={styles.sectionTitle}>Locataire(s)</Text>
-                                <Pressable
-                                    style={styles.addButton}
-                                    onPress={() => setShowTenantPicker(true)}
-                                >
-                                    <Text style={styles.addButtonText}>Ajouter</Text>
-                                </Pressable>
-                            </View>
-
-                            {selectedTenants.length === 0 ? (
-                                <Text style={{ color: "#94a3b8", fontSize: 13, fontFamily: "Montserrat_400Regular", marginBottom: 8 }}>Aucun locataire sélectionné</Text>
-                            ) : (
-                                selectedTenants.map((tenant) => (
-                                    <View key={tenant.id} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f1f5f9" }}>
-                                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                                            <View style={styles.tenantAvatar}>
-                                                <Ionicons name="person" size={16} color="#3153A1" />
-                                            </View>
-                                            <Text style={{ fontSize: 14, fontWeight: "500", color: "#1e293b", fontFamily: "Montserrat_500Medium" }}>{tenant.full_name}</Text>
-                                        </View>
-                                        <Pressable
-                                            onPress={() => setSelectedTenants(prev => prev.filter(t => t.id !== tenant.id))}
-                                            style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, backgroundColor: "#fef2f2", borderWidth: 1, borderColor: "#fecaca" }}
-                                        >
-                                            <Text style={{ fontSize: 12, color: "#ef4444", fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Supprimer</Text>
-                                        </Pressable>
-                                    </View>
-                                ))
-                            )}
-                        </View>
 
                         <View style={styles.footer}>
                             <Button
@@ -664,49 +581,7 @@ export default function AjouterBienModal({
                 </View>
             </View>
 
-            <Modal visible={showTenantPicker} transparent animationType="fade">
-                <View style={styles.pickerOverlay}>
-                    <View style={styles.pickerContent}>
-                        <View style={styles.pickerHeader}>
-                            <Text style={styles.pickerTitle}>Sélectionner un locataire</Text>
-                            <Pressable onPress={() => setShowTenantPicker(false)}>
-                                <Ionicons name="close" size={24} color="#64748b" />
-                            </Pressable>
-                        </View>
-                        {loadingTenants ? (
-                            <ActivityIndicator size="large" color="#3153A1" style={{ padding: 20 }} />
-                        ) : (
-                            <ScrollView style={styles.tenantList}>
-                                {tenants.map(tenant => (
-                                    <Pressable
-                                        key={tenant.id}
-                                        style={[
-                                            styles.tenantItem,
-                                            selectedTenants.some(t => t.id === tenant.id) && { opacity: 0.4 }
-                                        ]}
-                                        disabled={selectedTenants.some(t => t.id === tenant.id)}
-                                        onPress={() => {
-                                            setSelectedTenants(prev => [...prev, tenant]);
-                                            setShowTenantPicker(false);
-                                        }}
-                                    >
-                                        <View style={styles.tenantAvatar}>
-                                            <Ionicons name="person" size={20} color="#3153A1" />
-                                        </View>
-                                        <View>
-                                            <Text style={styles.tenantName}>{tenant.full_name}</Text>
-                                            <Text style={styles.tenantRole}>Locataire</Text>
-                                        </View>
-                                    </Pressable>
-                                ))}
-                                {tenants.length === 0 && (
-                                    <Text style={styles.emptyText}>Aucun locataire trouvé.</Text>
-                                )}
-                            </ScrollView>
-                        )}
-                    </View>
-                </View>
-            </Modal>
+
         </Modal >
     );
 }

@@ -241,7 +241,7 @@ export default function BienDetailPage() {
 
                 <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
                     <Pressable
-                        onPress={() => router.push("/(locataire)/biens")}
+                        onPress={() => router.push("/(tabs)/biens")}
                         style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
                     >
                         <View

@@ -86,7 +86,7 @@ export default function LoginPage() {
       showError("Erreur de connexion", message);
       setLoading(false);
     } else {
-      router.replace("/(locataire)");
+      router.replace("/(tabs)");
     }
   }
 

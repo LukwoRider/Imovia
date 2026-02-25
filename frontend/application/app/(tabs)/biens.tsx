@@ -369,7 +369,7 @@ export default function BiensPage() {
                             <PropertyCard
                                 key={bien.id}
                                 item={bien}
-                                onPress={() => router.push(`/(tabs)/bien/${bien.id}` as any)}
+                                onPress={() => router.push(`/bien/${bien.id}` as any)}
                             />
                         ))
                     ) : (

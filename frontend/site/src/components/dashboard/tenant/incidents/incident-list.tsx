@@ -53,7 +53,7 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
                 const timeAgo = isNaN(createdDate.getTime()) ? "récemment" : formatDistanceToNow(createdDate, { addSuffix: true, locale: fr })
 
                 return (
-                    <Card key={incident.id} className="border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                    <Card key={incident.id} className="bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
                         <CardContent className="p-6">
                             <div className="flex flex-col md:flex-row gap-6">
                                 {/* Icon */}
@@ -155,7 +155,7 @@ export function IncidentList({ incidents, onStatusUpdate, isUpdating }: Incident
 
                                         <Button
                                             size="sm"
-                                            className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-lg"
+                                            className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-xl h-10 px-4 transition-all shadow-md shadow-primary/10 hover:scale-[1.02] active:scale-[0.98]"
                                             onClick={() => incident.tenant?.phone && (window.location.href = `tel:${incident.tenant.phone}`)}
                                         >
                                             <Phone className="h-4 w-4" />

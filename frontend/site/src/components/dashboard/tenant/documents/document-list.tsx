@@ -77,7 +77,7 @@ export function DocumentList({ documents }: DocumentListProps) {
 
     if (documents.length === 0) {
         return (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 shadow-sm">
                 <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50">
                     <File className="h-8 w-8 text-slate-300" />
                 </div>
@@ -88,7 +88,7 @@ export function DocumentList({ documents }: DocumentListProps) {
     }
 
     return (
-        <Card className="border-slate-100 shadow-sm overflow-hidden bg-white px-2">
+        <Card className="bg-white/50 backdrop-blur-sm rounded-3xl border-slate-100 shadow-sm overflow-hidden px-2">
             <div className="divide-y divide-slate-100">
                 {documents.map((doc) => {
                     const Icon = getIcon(doc.category)
@@ -117,7 +117,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                                     <Eye className="h-5 w-5" />
                                 </Button>
                                 <Button
-                                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white gap-2 shadow-sm disabled:opacity-70"
+                                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white gap-2 transition-all shadow-md shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl disabled:opacity-70 disabled:hover:scale-100"
                                     onClick={() => handleDownload(doc)}
                                     disabled={!!downloadingId}
                                 >

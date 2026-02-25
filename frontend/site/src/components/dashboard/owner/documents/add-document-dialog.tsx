@@ -181,7 +181,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-lg shadow-primary/10 gap-2">
+                <Button className="bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl h-12 px-6 gap-2 font-bold">
                     <Plus className="h-5 w-5" />
                     Ajouter un document
                 </Button>
@@ -304,7 +304,7 @@ export function AddDocumentDialog({ onSuccess }: { onSuccess?: () => void }) {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="bg-primary hover:bg-primary/90 text-white h-14 px-12 rounded-xl text-lg font-medium shadow-xl shadow-primary/10 min-w-[240px] gap-2"
+                            className="bg-primary text-white hover:bg-primary/90 transition-all shadow-xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] h-14 px-12 rounded-2xl text-lg font-bold min-w-[240px] gap-2"
                         >
                             {isLoading ? (
                                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />

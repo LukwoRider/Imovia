@@ -365,7 +365,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                         (step === 1 && !formData.propertyId) ||
                                         (step === 2 && !foundProfile)
                                     }
-                                    className="bg-foreground hover:bg-foreground/90 text-white rounded-xl h-12 px-10 font-bold group shadow-lg shadow-slate-200"
+                                    className="bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl h-12 px-10 font-bold group"
                                 >
                                     Suivant <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Button>
@@ -373,7 +373,7 @@ export function AddTenantDialog({ open, onOpenChange, onSuccess, ownerId }: AddT
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={loading}
-                                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-10 font-bold shadow-xl shadow-primary/20"
+                                    className="bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl h-12 px-10 font-bold"
                                 >
                                     {loading ? (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

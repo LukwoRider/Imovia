@@ -31,7 +31,7 @@ export function IncidentFilters({ currentFilter, onFilterChange, onSearchChange 
                 />
             </div>
 
-            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-100 shadow-sm overflow-x-auto no-scrollbar max-w-full">
+            <div className="flex items-center gap-1 bg-white/60 backdrop-blur-md p-1.5 rounded-2xl border border-slate-100/50 shadow-sm overflow-x-auto no-scrollbar max-w-full">
                 {filters.map((filter) => (
                     <Button
                         key={filter.id}

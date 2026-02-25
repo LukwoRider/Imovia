@@ -45,7 +45,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     return (
         <Link href={`/dashboard/tenant/search/${property.id}`} className="block group">
             <div
-                className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-white/50 backdrop-blur-sm rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >

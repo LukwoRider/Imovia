@@ -185,7 +185,7 @@ export default function OwnerDashboard() {
                                 </div>
                             )}
                         </div>
-                        <Button asChild className="w-full mt-6 bg-foreground text-white hover:bg-primary/90 rounded-2xl h-11 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <Button asChild className="w-full mt-6 bg-primary text-white hover:bg-primary/90 transition-all rounded-2xl h-12 shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98]">
                             <Link href="/dashboard/owner/properties">Voir tout le parc</Link>
                         </Button>
                     </CardContent>

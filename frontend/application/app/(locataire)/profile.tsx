@@ -1,49 +1,18 @@
+import ProfileHero from "@/components/profile/ProfileHero";
+import ProfileInfoField from "@/components/profile/ProfileInfoField";
+import ProfileSectionCard from "@/components/profile/ProfileSectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import NotificationBellButton from "@/components/ui/notification-bell-button";
-import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
 import { useScrollToTopOnFocus } from "@/hooks/use-scroll-to-top-on-focus";
 import { supabase } from "@/lib/supabase";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
-
-function InfoField({
-  icon,
-  value,
-  onChangeText,
-  placeholder,
-  split,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder: string;
-  split?: boolean;
-}) {
-  return (
-    <View
-      className={`h-12 rounded-xl border border-[#D7D9DE] bg-[#F7F7F8] px-3 flex-row items-center ${split ? "flex-1 min-w-0" : ""
-        }`}
-    >
-      <Feather name={icon} size={18} color="#3158B8" />
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="#7A7D85"
-        className="flex-1 ml-2 text-[15px] text-[#1C2233]"
-        style={{ minWidth: 0, flexShrink: 1 }}
-      />
-    </View>
-  );
-}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -65,17 +34,21 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
+  useScrollToTopOnFocus(scrollViewRef);
+
   async function fetchProfile() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       setEmail(user.email || "");
 
       const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (error) throw error;
@@ -92,18 +65,14 @@ export default function ProfilePage() {
       setLoadingProfile(false);
     }
   }
-  useScrollToTopOnFocus(scrollViewRef);
 
   async function handleSignOut() {
-    console.log("[Logout] Starting signOut process...");
     if (isSigningOut) return;
     setIsSigningOut(true);
 
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
-      console.log("[Logout] SignOut successful, redirecting to /login...");
       router.replace("/login");
     } catch (error: any) {
       console.error("[Logout] SignOut error:", error);
@@ -138,7 +107,10 @@ export default function ProfilePage() {
       setConfirmPassword("");
     } catch (error: any) {
       console.error("[Profile] Update password error:", error);
-      Alert.alert("Erreur", "Impossible de mettre à jour le mot de passe : " + error.message);
+      Alert.alert(
+        "Erreur",
+        "Impossible de mettre à jour le mot de passe : " + error.message
+      );
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -147,23 +119,28 @@ export default function ProfilePage() {
   async function handleUpdateProfile() {
     setIsUpdatingProfile(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Utilisateur non trouvé");
 
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           full_name: `${firstName} ${lastName}`.trim(),
-          phone: phone,
+          phone,
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) throw error;
 
       Alert.alert("Succès", "Votre profil a été mis à jour.");
     } catch (error: any) {
       console.error("[Profile] Update profile error:", error);
-      Alert.alert("Erreur", "Impossible de mettre à jour le profil : " + error.message);
+      Alert.alert(
+        "Erreur",
+        "Impossible de mettre à jour le profil : " + error.message
+      );
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -176,206 +153,114 @@ export default function ProfilePage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        <LinearGradient
-          colors={["#1e3a6d", "#3153A1"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: 56,
-            paddingBottom: 24,
-            paddingHorizontal: 20,
-            borderBottomLeftRadius: 24,
-            borderBottomRightRadius: 24,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Image
-                source={require("@/assets/images/logo-white.svg")}
-                style={{ width: 90, height: 24 }}
-                contentFit="contain"
-              />
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: 20,
-                  fontWeight: "700",
-                  marginTop: 4,
-                  fontFamily: "Montserrat_700Bold",
-                }}
-              >
-                Mon profil
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.7)",
-                  fontSize: 13,
-                  marginTop: 3,
-                  fontFamily: "Montserrat_400Regular",
-                }}
-              >
-                Gerez vos informations personnelles
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <NotificationBellButton />
-              <Pressable
-                onPress={handleSignOut}
-                disabled={isSigningOut}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: isSigningOut ? 0.6 : 1,
-                }}
-                hitSlop={6}
-              >
-                <Feather name="log-out" size={17} color="#fff" />
-              </Pressable>
-              <ProfileHeaderButton />
-            </View>
-          </View>
-        </LinearGradient>
+        <ProfileHero onSignOut={handleSignOut} isSigningOut={isSigningOut} />
 
         <View className="px-4 mt-5 gap-4">
-          <View className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
-            <View className="px-4 py-4 flex-row items-center border-b border-[#f3f4f6]">
-              <View className="h-10 w-10 rounded-xl border border-[#e5e7eb] items-center justify-center bg-[#eef2ff]">
-                <Feather name="user" size={18} color="#3158B8" />
-              </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-[#1C2233] text-[18px] leading-[22px] font-bold">
-                  Informations personnelles
-                </Text>
-                <Text className="text-[#6b7280] text-[12px] mt-1">
-                  Informations de contacts
-                </Text>
-              </View>
+          <ProfileSectionCard
+            icon="user"
+            title="Informations personnelles"
+            subtitle="Informations de contacts"
+          >
+            <View className="items-center mb-3">
+              <Image
+                source={AVATAR_SOURCE}
+                style={{ width: 104, height: 104, borderRadius: 52 }}
+                contentFit="cover"
+              />
             </View>
 
-            <View className="px-4 py-4 gap-3">
-              <View className="items-center mb-3">
-                <Image
-                  source={AVATAR_SOURCE}
-                  style={{ width: 104, height: 104, borderRadius: 52 }}
-                  contentFit="cover"
-                />
-              </View>
-
-              <View className="flex-row gap-3">
-                <InfoField
-                  icon="user"
-                  split
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  placeholder="Prenom"
-                />
-                <InfoField
-                  icon="user"
-                  split
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Nom"
-                />
-              </View>
-
-              <InfoField
-                icon="mail"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email"
+            <View className="flex-row gap-3">
+              <ProfileInfoField
+                icon="user"
+                split
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Prenom"
               />
-              <InfoField
-                icon="phone"
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Telephone"
+              <ProfileInfoField
+                icon="user"
+                split
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Nom"
               />
-
-              <Button
-                className="h-12 mt-2 rounded-xl"
-                onPress={handleUpdateProfile}
-                disabled={isUpdatingProfile}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="save" size={16} color="#FFFFFF" />
-                  <Text className="text-white text-[14px] font-semibold">
-                    {isUpdatingProfile ? "Enregistrement..." : "Enregistrer"}
-                  </Text>
-                </View>
-              </Button>
-
-              <Text className="text-center text-[#7A7D85] text-[14px]">
-                Ces informations resteront strictement confidentielles
-              </Text>
             </View>
-          </View>
 
-          <View className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
-            <View className="px-4 py-4 flex-row items-center border-b border-[#f3f4f6]">
-              <View className="h-10 w-10 rounded-xl border border-[#e5e7eb] items-center justify-center bg-[#eef2ff]">
-                <Feather name="lock" size={18} color="#3158B8" />
-              </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-[#1C2233] text-[18px] leading-[22px] font-bold">
-                  Securite du compte
-                </Text>
-                <Text className="text-[#6b7280] text-[12px] mt-1">
-                  Modifier votre mot de passe
+            <ProfileInfoField
+              icon="mail"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+            />
+            <ProfileInfoField
+              icon="phone"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="Telephone"
+            />
+
+            <Button
+              className="h-12 mt-2 rounded-xl"
+              onPress={handleUpdateProfile}
+              disabled={isUpdatingProfile}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="save" size={16} color="#FFFFFF" />
+                <Text className="text-white text-[14px] font-semibold">
+                  {isUpdatingProfile ? "Enregistrement..." : "Enregistrer"}
                 </Text>
               </View>
-            </View>
+            </Button>
 
-            <View className="px-4 py-4 gap-3">
-              <Input
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                placeholder="Votre mot de passe actuel"
-                secureTextEntry
-                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
-              />
-              <Input
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Nouveau mot de passe"
-                secureTextEntry
-                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
-              />
-              <Input
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirmer votre mot de passe"
-                secureTextEntry
-                className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
-              />
+            <Text className="text-center text-[#7A7D85] text-[14px]">
+              Ces informations resteront strictement confidentielles
+            </Text>
+          </ProfileSectionCard>
 
-              <Button
-                className="h-12 mt-2 rounded-xl"
-                onPress={handleUpdatePassword}
-                disabled={isUpdatingPassword}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="save" size={16} color="#FFFFFF" />
-                  <Text className="text-white text-[14px] font-semibold">
-                    {isUpdatingPassword ? "Mise à jour..." : "Enregistrer"}
-                  </Text>
-                </View>
-              </Button>
+          <ProfileSectionCard
+            icon="lock"
+            title="Securite du compte"
+            subtitle="Modifier votre mot de passe"
+          >
+            <Input
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholder="Votre mot de passe actuel"
+              secureTextEntry
+              className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
+            />
+            <Input
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Nouveau mot de passe"
+              secureTextEntry
+              className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
+            />
+            <Input
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Confirmer votre mot de passe"
+              secureTextEntry
+              className="h-12 rounded-xl border-[#D7D9DE] bg-[#F7F7F8] text-[15px]"
+            />
 
-              <Text className="text-center text-[#7A7D85] text-[14px]">
-                Ces informations resteront strictement confidentielles
-              </Text>
-            </View>
-          </View>
+            <Button
+              className="h-12 mt-2 rounded-xl"
+              onPress={handleUpdatePassword}
+              disabled={isUpdatingPassword}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="save" size={16} color="#FFFFFF" />
+                <Text className="text-white text-[14px] font-semibold">
+                  {isUpdatingPassword ? "Mise à jour..." : "Enregistrer"}
+                </Text>
+              </View>
+            </Button>
+
+            <Text className="text-center text-[#7A7D85] text-[14px]">
+              Ces informations resteront strictement confidentielles
+            </Text>
+          </ProfileSectionCard>
         </View>
       </ScrollView>
     </View>

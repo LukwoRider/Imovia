@@ -114,7 +114,7 @@ export function PersonalInfoForm() {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
+        <div className="bg-white/50 backdrop-blur-sm rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8">
             <div className="flex items-center gap-3 mb-8">
                 <div className="h-10 w-10 bg-blue-50 text-primary rounded-lg flex items-center justify-center">
                     <User className="h-5 w-5" />
@@ -295,7 +295,7 @@ export function PersonalInfoForm() {
                     <div className="pt-4">
                         <Button
                             type="submit"
-                            className="w-full bg-primary hover:bg-primary/90 text-white h-11 rounded-xl text-base font-medium"
+                            className="w-full bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] h-12 rounded-xl text-base font-bold"
                             disabled={isLoading}
                         >
                             {isLoading ? "Enregistrement..." : "Enregistrer"}

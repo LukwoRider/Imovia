@@ -54,7 +54,7 @@ export function FilterBar() {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sticky top-24 z-10 mx-auto max-w-7xl w-full">
+        <div className="bg-white/60 backdrop-blur-md rounded-3xl shadow-sm border border-slate-100/50 p-4 sticky top-24 z-10 mx-auto max-w-7xl w-full">
             <div className="flex flex-col lg:flex-row items-center gap-6">
 
                 {/* Search Input */}
@@ -116,7 +116,7 @@ export function FilterBar() {
                 {/* Action Button */}
                 <Button
                     onClick={applyFilters}
-                    className="w-full lg:w-auto h-11 px-8 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-lg shadow-blue-900/20 shrink-0 transition-all active:scale-95"
+                    className="w-full lg:w-auto h-12 px-8 bg-primary text-white hover:bg-primary/90 transition-all rounded-2xl shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] shrink-0 font-bold"
                 >
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                     Filtrer

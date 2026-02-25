@@ -29,10 +29,10 @@ function isOwnerOrAgencyRole(role?: string | null) {
     return (
         normalized === "owner" ||
         normalized === "agency" ||
-        normalized === "propriétaire" ||
-        normalized === "proprietaire" ||
         normalized === "propriÃ©taire" ||
-        normalized === "propriÃƒÂ©taire"
+        normalized === "proprietaire" ||
+        normalized === "propriÃƒÂ©taire" ||
+        normalized === "propriÃƒÆ’Ã‚Â©taire"
     );
 }
 export default function DocumentsPage() {
@@ -53,7 +53,7 @@ export default function DocumentsPage() {
 
     const generateZip = async () => {
         if (documents.length === 0) {
-            Alert.alert("Information", "Aucun document Ã  compresser.");
+            Alert.alert("Information", "Aucun document à compresser.");
             return null;
         }
 
@@ -92,7 +92,7 @@ export default function DocumentsPage() {
             }
         } catch (error) {
             console.error("ZIP Generation error:", error);
-            Alert.alert("Erreur", "Impossible de gÃ©nÃ©rer le fichier ZIP.");
+            Alert.alert("Erreur", "Impossible de générer le fichier ZIP.");
             return null;
         } finally {
             setIsZipping(false);
@@ -117,7 +117,7 @@ export default function DocumentsPage() {
             const uri = result as string;
             await Sharing.shareAsync(uri, {
                 mimeType: "application/zip",
-                dialogTitle: "TÃ©lÃ©charger mes documents",
+                dialogTitle: "Télécharger mes documents",
                 UTI: "com.pkware.zip-archive",
             });
         }
@@ -128,7 +128,7 @@ export default function DocumentsPage() {
         if (!result) return;
 
         if (Platform.OS === 'web') {
-            const confirmEmail = window.confirm("Sur navigateur, vous devez tÃ©lÃ©charger le fichier ZIP puis l'attacher manuellement. Voulez-vous tÃ©lÃ©charger le ZIP et ouvrir votre messagerie ?");
+            const confirmEmail = window.confirm("Sur navigateur, vous devez télécharger le fichier ZIP puis l'attacher manuellement. Voulez-vous télécharger le ZIP et ouvrir votre messagerie ?");
             if (confirmEmail) {
                 handleDownloadAll();
                 Linking.openURL("mailto:?subject=Mes Documents Imovia&body=Veuillez trouver ci-joint mes documents Imovia.");
@@ -319,7 +319,7 @@ export default function DocumentsPage() {
                                     fontFamily: "Montserrat_400Regular",
                                 }}
                             >
-                                AccÃ©dez Ã  tous vos documents de location
+                                Accédez à tous vos documents de location
                             </Text>
                         </View>
                         <View
@@ -506,7 +506,7 @@ export default function DocumentsPage() {
                                     fontFamily: "Montserrat_500Medium",
                                 }}
                             >
-                                Aucun document trouvÃ©
+                                Aucun document trouvé
                             </Text>
                         </View>
                     )}
@@ -566,8 +566,8 @@ export default function DocumentsPage() {
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <DocumentsQuickActionCard
                                 icon="download-outline"
-                                title={isZipping ? "Compression..." : "Telecharger tous Mes Documents"}
-                                subtitle="Telecharger tous vos documents"
+                                title={isZipping ? "Compression..." : "Télécharger tous mes documents"}
+                                subtitle="Télécharger tous vos documents"
                                 onPress={handleDownloadAll}
                             />
                             {/* <DocumentsQuickActionCard

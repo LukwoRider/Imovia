@@ -191,7 +191,7 @@ export default function AjouterBienModal({
                     try {
                         const ext = imageUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
                         const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-                        const fileName = `${property.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+                        const fileName = `properties/${property.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
                         console.log('[Upload] Processing:', imageUri);
 
                         // Fetch the local/blob URI to get the actual file data

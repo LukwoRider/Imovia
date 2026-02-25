@@ -18,8 +18,8 @@ import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
     Alert,
     Platform,
@@ -58,43 +58,45 @@ export default function BiensPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
-    useEffect(() => {
-        const initialize = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                const user = session?.user;
+    useFocusEffect(
+        useCallback(() => {
+            const initialize = async () => {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const user = session?.user;
 
-                if (user) {
-                    setUserId(user.id);
+                    if (user) {
+                        setUserId(user.id);
 
-                    let role = user.user_metadata?.role || "tenant";
-                    console.log("[Biens] Initial role from metadata:", role);
+                        let role = user.user_metadata?.role || "tenant";
+                        console.log("[Biens] Initial role from metadata:", role);
 
-                    const { data: profile } = await supabase
-                        .from("profiles")
-                        .select("role")
-                        .eq("id", user.id)
-                        .maybeSingle();
+                        const { data: profile } = await supabase
+                            .from("profiles")
+                            .select("role")
+                            .eq("id", user.id)
+                            .maybeSingle();
 
-                    if (profile?.role) {
-                        role = profile.role;
-                        console.log("[Biens] Role confirmed from profile:", role);
+                        if (profile?.role) {
+                            role = profile.role;
+                            console.log("[Biens] Role confirmed from profile:", role);
+                        }
+
+                        setUserRole(role);
+                        fetchBiens(role, user.id);
+                    } else {
+                        setUserRole("tenant");
+                        fetchBiens("tenant");
                     }
-
-                    setUserRole(role);
-                    fetchBiens(role, user.id);
-                } else {
+                } catch (err) {
+                    console.error("[Biens] Initialization error:", err);
                     setUserRole("tenant");
                     fetchBiens("tenant");
                 }
-            } catch (err) {
-                console.error("[Biens] Initialization error:", err);
-                setUserRole("tenant");
-                fetchBiens("tenant");
-            }
-        };
-        initialize();
-    }, []);
+            };
+            initialize();
+        }, [])
+    );
 
     async function fetchBiens(role: string, uid?: string) {
         setLoading(true);

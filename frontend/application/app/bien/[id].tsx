@@ -36,7 +36,6 @@ type BienDetail = {
 
 const screenWidth = Dimensions.get("window").width;
 
-// --- Info Row Component ---
 function InfoRow({ icon, text }: { icon: string; text: string }) {
     return (
         <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" }}>
@@ -107,10 +106,10 @@ export default function BienDetailPage() {
                 surface: Number(data.surface_m2) || 0,
                 type: data.property_type || "Bien",
                 chambres: data.rooms || 0,
-                cuisines: undefined, // Donnée non présente dans la table properties
+                cuisines: undefined,
                 toilettes: data.bathrooms || 0,
                 classeEnergie: data.energy_class || "",
-                visite: undefined, // Donnée non présente dans la table properties
+                visite: undefined,
                 meuble: data.is_furnished || false,
                 description: data.description || "Aucune description fournie.",
                 images: (data.property_images || []).map((img: any) => {
@@ -119,7 +118,6 @@ export default function BienDetailPage() {
                 })
             };
 
-            // Store raw data for edit mode
             setRawPropertyData({
                 id: data.id,
                 address: data.address || "",
@@ -163,7 +161,7 @@ export default function BienDetailPage() {
 
     if (!bien) return null;
 
-    const images = bien.images.length > 0 ? bien.images : [null]; // Fallback if no images
+    const images = bien.images.length > 0 ? bien.images : [null];
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -171,7 +169,6 @@ export default function BienDetailPage() {
                 contentContainerStyle={{ paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* === HEADER === */}
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
@@ -206,7 +203,6 @@ export default function BienDetailPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-                    {/* === BACK + ADDRESS === */}
                     <Pressable
                         onPress={() => router.push("/(locataire)/biens")}
                         style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
@@ -229,7 +225,6 @@ export default function BienDetailPage() {
                         </Text>
                     </Pressable>
 
-                    {/* === IMAGE GALLERY === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -240,7 +235,6 @@ export default function BienDetailPage() {
                             marginBottom: 16,
                         }}
                     >
-                        {/* Main image */}
                         <View
                             style={{
                                 width: "100%",
@@ -264,7 +258,6 @@ export default function BienDetailPage() {
                             )}
                         </View>
 
-                        {/* Thumbnail row */}
                         {images.length > 1 && (
                             <View style={{ flexDirection: "row", gap: 2, padding: 2 }}>
                                 {images.map((img, i) => (
@@ -293,7 +286,6 @@ export default function BienDetailPage() {
                         )}
                     </View>
 
-                    {/* === PROPERTY INFO === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -304,7 +296,6 @@ export default function BienDetailPage() {
                             marginBottom: 16,
                         }}
                     >
-                        {/* Address + type */}
                         <Text style={{ fontSize: 18, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>
                             {bien.adresse}
                         </Text>
@@ -312,7 +303,6 @@ export default function BienDetailPage() {
                             {bien.ville}
                         </Text>
 
-                        {/* Badges: chambres, cuisine, surface, toilettes */}
                         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                             {[
                                 { icon: "bed-outline", label: `${bien.chambres} Chambre${bien.chambres > 1 ? "s" : ""}`, show: true },
@@ -341,7 +331,6 @@ export default function BienDetailPage() {
                             ))}
                         </View>
 
-                        {/* Info rows */}
                         {bien.classeEnergie ? (
                             <InfoRow icon="speedometer-outline" text={`Classe ${bien.classeEnergie}`} />
                         ) : null}
@@ -354,7 +343,6 @@ export default function BienDetailPage() {
                         />
                     </View>
 
-                    {/* === PRICE + CONTACT CARD === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -417,7 +405,6 @@ export default function BienDetailPage() {
                         </Text>
                     </View>
 
-                    {/* === DESCRIPTION === */}
                     <View
                         style={{
                             backgroundColor: "#fff",

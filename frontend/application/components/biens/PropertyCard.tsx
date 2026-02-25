@@ -16,7 +16,7 @@ export default function PropertyCard({ item, onPress }: PropertyCardProps) {
   const images = item.images && item.images.length > 0 ? item.images : (item.thumbnail ? [item.thumbnail] : []);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
-  const cardWidth = Dimensions.get("window").width - 32; // account for page padding
+  const cardWidth = Dimensions.get("window").width - 32;
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
@@ -74,7 +74,6 @@ export default function PropertyCard({ item, onPress }: PropertyCardProps) {
           </View>
         )}
 
-        {/* Dot indicators */}
         {images.length > 1 && (
           <View
             style={{

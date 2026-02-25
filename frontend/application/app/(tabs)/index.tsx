@@ -166,7 +166,7 @@ export default function DashboardLocataire() {
             if (profile) setUserName(profile.full_name.split(" ")[0]);
 
             // 2. Fetch Active Lease & Property
-            const { data: leaseTenant } = await supabase
+            const { data: leaseTenants } = await supabase
                 .from("lease_tenants")
                 .select(`
                     lease_id,
@@ -176,8 +176,13 @@ export default function DashboardLocataire() {
                     )
                 `)
                 .eq("tenant_id", user.id)
-                .limit(1)
-                .single();
+                .order("lease_id", { ascending: false });
+
+            const leaseTenant = (leaseTenants || [])
+                .map((row: any) => ({ ...row, leases: Array.isArray(row.leases) ? row.leases[0] : row.leases }))
+                .find((row: any) => row?.leases?.status === "active")
+                ?? (leaseTenants || [])
+                    .map((row: any) => ({ ...row, leases: Array.isArray(row.leases) ? row.leases[0] : row.leases }))[0];
 
             if (leaseTenant?.leases) {
                 const lease = leaseTenant.leases as any;
@@ -187,14 +192,15 @@ export default function DashboardLocataire() {
 
                 // 3. Fetch Stats
                 // - Next payment
-                const { data: nextPayment } = await supabase
+                const { data: nextPayments } = await supabase
                     .from("rent_payments")
                     .select("amount_due, due_date")
                     .eq("lease_id", leaseId)
                     .in("status", ["due", "late"])
                     .order("due_date", { ascending: true })
-                    .limit(1)
-                    .single();
+                    .limit(1);
+
+                const nextPayment = nextPayments?.[0];
 
                 // - Documents count
                 const { count: docCount } = await supabase

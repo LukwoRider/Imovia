@@ -204,12 +204,6 @@ export default function LocataireLayout() {
                     href: null,
                 }}
             />
-            <Tabs.Screen
-                name="bien/[id]"
-                options={{
-                    href: null,
-                }}
-            />
         </Tabs>
     );
 }

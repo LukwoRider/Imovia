@@ -179,9 +179,7 @@ export default function BiensPage() {
         setCurrentPage(p);
     };
 
-    const handleFilter = () => {
-        setCurrentPage(1);
-    };
+
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -218,23 +216,7 @@ export default function BiensPage() {
                             </Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            {isOwnerOrAgencyRole(userRole) && (
-                                <Pressable
-                                    onPress={() => setIsAddModalVisible(true)}
-                                    style={{
-                                        backgroundColor: '#fff',
-                                        paddingHorizontal: 12,
-                                        paddingVertical: 6,
-                                        borderRadius: 8,
-                                        marginRight: 4
-                                    }}
-                                >
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                        <Ionicons name="add-circle" size={18} color="#3153A1" />
-                                        <Text style={{ color: '#3153A1', fontWeight: '700', fontSize: 12, fontFamily: 'Montserrat_700Bold' }}>Ajouter</Text>
-                                    </View>
-                                </Pressable>
-                            )}
+
                             <NotificationBellButton />
                             <ProfileHeaderButton />
                         </View>
@@ -333,6 +315,7 @@ export default function BiensPage() {
                             onRangeChange={(min, max) => {
                                 setSurfaceMin(min);
                                 setSurfaceMax(max);
+                                setCurrentPage(1);
                             }}
                             formatRange={(min, max) => `${min} - ${max} m²${max >= SURFACE_MAX ? " et +" : ""}`}
                         />
@@ -346,25 +329,12 @@ export default function BiensPage() {
                             onRangeChange={(min, max) => {
                                 setLoyerMin(min);
                                 setLoyerMax(max);
+                                setCurrentPage(1);
                             }}
                             formatRange={(min, max) => `${min}€ - ${max}€${max >= LOYER_MAX ? " et +" : ""}`}
                         />
 
-                        <Pressable
-                            onPress={handleFilter}
-                            style={{
-                                backgroundColor: "#3153A1",
-                                borderRadius: 10,
-                                paddingVertical: 12,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginTop: 4,
-                            }}
-                        >
-                            <Ionicons name="options-outline" size={16} color="#fff" style={{ marginRight: 8 }} />
-                            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Filtrer</Text>
-                        </Pressable>
+
                     </View>
 
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>

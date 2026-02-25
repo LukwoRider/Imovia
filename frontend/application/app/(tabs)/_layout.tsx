@@ -1,17 +1,48 @@
 import AnimatedTabIcon from "@/components/ui/animated-tab-icon";
+import { supabase } from "@/lib/supabase";
 import { Tabs } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LocataireLayout() {
     const insets = useSafeAreaInsets();
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isOwnerOrAgency, setIsOwnerOrAgency] = useState(false);
     const [tabPulse, setTabPulse] = useState({
         index: 0,
         biens: 0,
         logement: 0,
         documents: 0,
         incidents: 0,
+        paiements: 0,
     });
+
+    useEffect(() => {
+        const checkRole = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            let role = user.user_metadata?.role || "tenant";
+
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (profile?.role) {
+                role = profile.role;
+            }
+
+            const checkRoleStr = role.toLowerCase();
+            const management = checkRoleStr === 'owner' || checkRoleStr === 'agency' || checkRoleStr === 'propriétaire';
+
+            setUserRole(role);
+            setIsOwnerOrAgency(management);
+        };
+
+        checkRole();
+    }, []);
 
     const bumpTabPulse = (tab: keyof typeof tabPulse) => {
         setTabPulse((prev) => ({ ...prev, [tab]: prev[tab] + 1 }));
@@ -97,6 +128,7 @@ export default function LocataireLayout() {
                 name="logement"
                 options={{
                     title: "Mon logement",
+                    href: isOwnerOrAgency ? null : "/(tabs)/logement",
                     tabBarIcon: ({ color, focused }) => (
                         <AnimatedTabIcon
                             name="home-outline"
@@ -109,6 +141,25 @@ export default function LocataireLayout() {
                 }}
                 listeners={{
                     tabPress: () => bumpTabPulse("logement"),
+                }}
+            />
+            <Tabs.Screen
+                name="paiements"
+                options={{
+                    title: isOwnerOrAgency ? "Locations" : "Mes paiements",
+                    href: isOwnerOrAgency ? "/(tabs)/paiements" : null,
+                    tabBarIcon: ({ color, focused }) => (
+                        <AnimatedTabIcon
+                            name="card-outline"
+                            size={20}
+                            color={color}
+                            focused={focused}
+                            pulseKey={tabPulse.paiements}
+                        />
+                    ),
+                }}
+                listeners={{
+                    tabPress: () => bumpTabPulse("paiements"),
                 }}
             />
             <Tabs.Screen

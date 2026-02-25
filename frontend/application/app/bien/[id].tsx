@@ -12,6 +12,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Linking,
     Pressable,
     ScrollView,
     View,
@@ -68,6 +69,7 @@ export default function BienDetailPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [rawPropertyData, setRawPropertyData] = useState<any>(null);
+    const [contactPhone, setContactPhone] = useState<string | null>(null);
 
     useEffect(() => {
         const checkRole = async () => {
@@ -91,6 +93,9 @@ export default function BienDetailPage() {
                     *,
                     property_images (
                         storage_path
+                    ),
+                    profiles:owner_id (
+                        phone
                     )
                 `)
                 .eq("id", id)
@@ -141,6 +146,38 @@ export default function BienDetailPage() {
             });
 
             setBien(mapped);
+
+            // Set contact phone based on viewer role
+            const viewerRole = userRole;
+            if (viewerRole === 'owner' || viewerRole === 'agency') {
+                // Owner/agency viewing: try to get tenant phone
+                const { data: leaseData } = await supabase
+                    .from("leases")
+                    .select("id")
+                    .eq("property_id", data.id)
+                    .eq("status", "active")
+                    .maybeSingle();
+
+                if (leaseData) {
+                    const { data: tenantLink } = await supabase
+                        .from("lease_tenants")
+                        .select("tenant_id, profiles:tenant_id(phone)")
+                        .eq("lease_id", leaseData.id)
+                        .limit(1)
+                        .maybeSingle();
+
+                    const tenantProfile = tenantLink?.profiles as any;
+                    if (tenantProfile?.phone) {
+                        setContactPhone(tenantProfile.phone);
+                    }
+                }
+            } else {
+                // Tenant viewing: get owner phone
+                const ownerProfile = data.profiles as any;
+                if (ownerProfile?.phone) {
+                    setContactPhone(ownerProfile.phone);
+                }
+            }
         } catch (error: any) {
             console.error("[BienDetail] Fetch error:", error);
             Alert.alert("Erreur", "Impossible de charger les détails du bien.");
@@ -362,6 +399,13 @@ export default function BienDetailPage() {
                         </View>
 
                         <Pressable
+                            onPress={() => {
+                                if (contactPhone) {
+                                    Linking.openURL(`tel:${contactPhone}`);
+                                } else {
+                                    Alert.alert("Information", "Aucun numéro de téléphone renseigné.");
+                                }
+                            }}
                             style={{
                                 backgroundColor: "#3153A1",
                                 borderRadius: 12,

@@ -128,7 +128,7 @@ export default function LocataireLayout() {
                 name="logement"
                 options={{
                     title: "Mon logement",
-                    href: isOwnerOrAgency ? null : "/(locataire)/logement",
+                    href: isOwnerOrAgency ? null : "/(tabs)/logement",
                     tabBarIcon: ({ color, focused }) => (
                         <AnimatedTabIcon
                             name="home-outline"
@@ -147,7 +147,7 @@ export default function LocataireLayout() {
                 name="paiements"
                 options={{
                     title: isOwnerOrAgency ? "Locations" : "Mes paiements",
-                    href: isOwnerOrAgency ? "/(locataire)/paiements" : null,
+                    href: isOwnerOrAgency ? "/(tabs)/paiements" : null,
                     tabBarIcon: ({ color, focused }) => (
                         <AnimatedTabIcon
                             name="card-outline"

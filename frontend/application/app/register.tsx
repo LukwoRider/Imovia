@@ -71,7 +71,7 @@ export default function RegisterPage() {
                 <RoleCard
                     title="Propriétaire"
                     description="Je possède un ou plusieurs biens à louer"
-                    onPress={() => router.push({ pathname: "/register-form", params: { role: "owner" } })}
+                    onPress={() => router.push("/register-owner" as any)}
                 />
 
                 <RoleCard

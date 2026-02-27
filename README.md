@@ -95,17 +95,14 @@ The Imovia project is developed by a multidisciplinary team organized by technic
 ### Backend Development
 - Yoann
 - Mathis
-- Romain
 
 ### Frontend Website
 - Nassim
 
 ### Frontend Mobile Application
-- Lyam, Timothé
+- Lyam
+- Timothé
 - Yoann (dashboard propietaire / agence)
-
-### Backend :
-- Mathis, Yoann
 
 ### Poursuite du projet
 - Romain

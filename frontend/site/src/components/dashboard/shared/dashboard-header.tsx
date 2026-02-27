@@ -40,9 +40,12 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
 
         // Root Dashboard
         if (paths[0] === 'dashboard') {
-            // Keep the root link but don't redirect to bare /dashboard if user has a role,
-            // though keeping it simple is fine since middleware handles redirects.
-            items.push({ label: 'Tableau de bord', href: paths.length > 1 ? `/dashboard/${paths[1]}` : '/dashboard' })
+            // Link to the specific dashboard for the user's role (tenant/owner/agency)
+            // If we're already deeper in a role path (e.g. /dashboard/tenant/search), stay on that role
+            const targetRole = (paths.length > 1 && (paths[1] === 'tenant' || paths[1] === 'owner' || paths[1] === 'agency'))
+                ? paths[1]
+                : user.role;
+            items.push({ label: 'Tableau de bord', href: `/dashboard/${targetRole}` })
         }
 
         // Feature area
@@ -107,7 +110,7 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
                             </BreadcrumbItem>
                             {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
                             {breadcrumbs.map((item, idx) => (
-                                <React.Fragment key={item.href}>
+                                <React.Fragment key={`${item.href}-${idx}`}>
                                     <BreadcrumbItem>
                                         {idx === breadcrumbs.length - 1 ? (
                                             <BreadcrumbPage className="font-bold text-foreground">

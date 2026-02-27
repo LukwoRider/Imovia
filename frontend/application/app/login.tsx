@@ -2,10 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import {
+  isValidSignupEmail,
+  sanitizeSignupEmailInput,
+  SIGNUP_EMAIL_ERROR_MESSAGE,
+} from "@/lib/phone-validation";
 import { supabase } from "@/lib/supabase";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,28 +20,73 @@ import {
 } from "react-native";
 
 export default function LoginPage() {
+  const { signupSuccess } = useLocalSearchParams<{ signupSuccess?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function showError(title: string, message: string) {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.alert(message);
+      return;
+    }
+    Alert.alert(title, message);
+  }
+
+  useEffect(() => {
+    if (signupSuccess !== "1") return;
+
+    const message =
+      "Compte créé avec succès. Vous pouvez maintenant vous connecter.";
+
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.alert(message);
+    } else {
+      Alert.alert("Compte créé", message);
+    }
+
+    router.replace("/login");
+  }, [signupSuccess, router]);
+
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      if (!email) setEmailError("Veuillez renseigner votre email.");
+      if (!password) setPasswordError("Veuillez renseigner votre mot de passe.");
+      showError("Erreur", "Veuillez remplir tous les champs.");
       return;
     }
 
+    if (!isValidSignupEmail(email)) {
+      setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+      showError("Erreur", SIGNUP_EMAIL_ERROR_MESSAGE);
+      return;
+    }
+
+    setEmailError("");
+    setPasswordError("");
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (error) {
-      Alert.alert("Erreur de connexion", error.message);
+      const isInvalidCredentials =
+        error.message?.toLowerCase().includes("invalid login credentials") ||
+        error.message?.toLowerCase().includes("invalid credentials");
+
+      const message = isInvalidCredentials
+        ? "Email ou mot de passe incorrect."
+        : error.message;
+
+      setPasswordError(isInvalidCredentials ? "Email ou mot de passe incorrect." : "");
+      showError("Erreur de connexion", message);
       setLoading(false);
     } else {
-      router.replace("/(locataire)");
+      router.replace("/(tabs)");
     }
   }
 
@@ -69,20 +119,42 @@ export default function LoginPage() {
           <Input
             placeholder="Votre email"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(sanitizeSignupEmailInput(value));
+              if (emailError) setEmailError("");
+            }}
+            onBlur={() => {
+              if (email && !isValidSignupEmail(email)) {
+                setEmailError(SIGNUP_EMAIL_ERROR_MESSAGE);
+              }
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
           />
+          {emailError ? (
+            <Text className="text-xs text-red-500">{emailError}</Text>
+          ) : null}
 
           <Input
             placeholder="Votre mot de passe"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (passwordError) setPasswordError("");
+            }}
+            onBlur={() => {
+              if (!password) {
+                setPasswordError("Veuillez renseigner votre mot de passe.");
+              }
+            }}
             secureTextEntry
             autoCapitalize="none"
             autoComplete="password"
           />
+          {passwordError ? (
+            <Text className="text-xs text-red-500">{passwordError}</Text>
+          ) : null}
 
           <Button
             onPress={handleLogin}

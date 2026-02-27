@@ -1,3 +1,4 @@
+import AjouterBienModal from "@/components/biens/AjouterBienModal";
 import NotificationBellButton from "@/components/ui/notification-bell-button";
 import ProfileHeaderButton from "@/components/ui/profile-header-button";
 import { Text } from "@/components/ui/text";
@@ -11,6 +12,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Linking,
     Pressable,
     ScrollView,
     View,
@@ -35,7 +37,6 @@ type BienDetail = {
 
 const screenWidth = Dimensions.get("window").width;
 
-// --- Info Row Component ---
 function InfoRow({ icon, text }: { icon: string; text: string }) {
     return (
         <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" }}>
@@ -65,6 +66,10 @@ export default function BienDetailPage() {
     const [bien, setBien] = useState<BienDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [rawPropertyData, setRawPropertyData] = useState<any>(null);
+    const [contactPhone, setContactPhone] = useState<string | null>(null);
 
     useEffect(() => {
         const checkRole = async () => {
@@ -72,6 +77,7 @@ export default function BienDetailPage() {
             if (session?.user) {
                 const role = session.user.user_metadata?.role || "tenant";
                 setUserRole(role);
+                setUserId(session.user.id);
             }
         };
         checkRole();
@@ -87,6 +93,9 @@ export default function BienDetailPage() {
                     *,
                     property_images (
                         storage_path
+                    ),
+                    profiles:owner_id (
+                        phone
                     )
                 `)
                 .eq("id", id)
@@ -102,10 +111,10 @@ export default function BienDetailPage() {
                 surface: Number(data.surface_m2) || 0,
                 type: data.property_type || "Bien",
                 chambres: data.rooms || 0,
-                cuisines: undefined, // Donnée non présente dans la table properties
+                cuisines: undefined,
                 toilettes: data.bathrooms || 0,
                 classeEnergie: data.energy_class || "",
-                visite: undefined, // Donnée non présente dans la table properties
+                visite: undefined,
                 meuble: data.is_furnished || false,
                 description: data.description || "Aucune description fournie.",
                 images: (data.property_images || []).map((img: any) => {
@@ -114,7 +123,61 @@ export default function BienDetailPage() {
                 })
             };
 
+            setRawPropertyData({
+                id: data.id,
+                address: data.address || "",
+                city: data.city || "",
+                postal_code: data.postal_code || "",
+                property_type: data.property_type || "",
+                rooms: data.rooms || 0,
+                bathrooms: data.bathrooms || 0,
+                surface_m2: data.surface_m2 || 0,
+                monthly_rent: data.monthly_rent || 0,
+                floor_number: data.floor_number || 0,
+                is_furnished: data.is_furnished || false,
+                has_elevator: data.has_elevator || false,
+                energy_class: data.energy_class || "",
+                description: data.description || "",
+                available_from: data.available_from || null,
+                images: (data.property_images || []).map((img: any) => {
+                    const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(img.storage_path);
+                    return publicUrl;
+                }),
+            });
+
             setBien(mapped);
+
+            // Set contact phone based on viewer role
+            const viewerRole = userRole;
+            if (viewerRole === 'owner' || viewerRole === 'agency') {
+                // Owner/agency viewing: try to get tenant phone
+                const { data: leaseData } = await supabase
+                    .from("leases")
+                    .select("id")
+                    .eq("property_id", data.id)
+                    .eq("status", "active")
+                    .maybeSingle();
+
+                if (leaseData) {
+                    const { data: tenantLink } = await supabase
+                        .from("lease_tenants")
+                        .select("tenant_id, profiles:tenant_id(phone)")
+                        .eq("lease_id", leaseData.id)
+                        .limit(1)
+                        .maybeSingle();
+
+                    const tenantProfile = tenantLink?.profiles as any;
+                    if (tenantProfile?.phone) {
+                        setContactPhone(tenantProfile.phone);
+                    }
+                }
+            } else {
+                // Tenant viewing: get owner phone
+                const ownerProfile = data.profiles as any;
+                if (ownerProfile?.phone) {
+                    setContactPhone(ownerProfile.phone);
+                }
+            }
         } catch (error: any) {
             console.error("[BienDetail] Fetch error:", error);
             Alert.alert("Erreur", "Impossible de charger les détails du bien.");
@@ -135,7 +198,7 @@ export default function BienDetailPage() {
 
     if (!bien) return null;
 
-    const images = bien.images.length > 0 ? bien.images : [null]; // Fallback if no images
+    const images = bien.images.length > 0 ? bien.images : [null];
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -143,7 +206,6 @@ export default function BienDetailPage() {
                 contentContainerStyle={{ paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* === HEADER === */}
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}
@@ -178,9 +240,8 @@ export default function BienDetailPage() {
                 </LinearGradient>
 
                 <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-                    {/* === BACK + ADDRESS === */}
                     <Pressable
-                        onPress={() => router.push("/(locataire)/biens")}
+                        onPress={() => router.back()}
                         style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
                     >
                         <View
@@ -201,7 +262,6 @@ export default function BienDetailPage() {
                         </Text>
                     </Pressable>
 
-                    {/* === IMAGE GALLERY === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -212,7 +272,6 @@ export default function BienDetailPage() {
                             marginBottom: 16,
                         }}
                     >
-                        {/* Main image */}
                         <View
                             style={{
                                 width: "100%",
@@ -236,7 +295,6 @@ export default function BienDetailPage() {
                             )}
                         </View>
 
-                        {/* Thumbnail row */}
                         {images.length > 1 && (
                             <View style={{ flexDirection: "row", gap: 2, padding: 2 }}>
                                 {images.map((img, i) => (
@@ -265,7 +323,6 @@ export default function BienDetailPage() {
                         )}
                     </View>
 
-                    {/* === PROPERTY INFO === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -276,7 +333,6 @@ export default function BienDetailPage() {
                             marginBottom: 16,
                         }}
                     >
-                        {/* Address + type */}
                         <Text style={{ fontSize: 18, fontWeight: "700", color: "#1e293b", fontFamily: "Montserrat_700Bold" }}>
                             {bien.adresse}
                         </Text>
@@ -284,7 +340,6 @@ export default function BienDetailPage() {
                             {bien.ville}
                         </Text>
 
-                        {/* Badges: chambres, cuisine, surface, toilettes */}
                         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                             {[
                                 { icon: "bed-outline", label: `${bien.chambres} Chambre${bien.chambres > 1 ? "s" : ""}`, show: true },
@@ -313,7 +368,6 @@ export default function BienDetailPage() {
                             ))}
                         </View>
 
-                        {/* Info rows */}
                         {bien.classeEnergie ? (
                             <InfoRow icon="speedometer-outline" text={`Classe ${bien.classeEnergie}`} />
                         ) : null}
@@ -326,7 +380,6 @@ export default function BienDetailPage() {
                         />
                     </View>
 
-                    {/* === PRICE + CONTACT CARD === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -346,6 +399,13 @@ export default function BienDetailPage() {
                         </View>
 
                         <Pressable
+                            onPress={() => {
+                                if (contactPhone) {
+                                    Linking.openURL(`tel:${contactPhone}`);
+                                } else {
+                                    Alert.alert("Information", "Aucun numéro de téléphone renseigné.");
+                                }
+                            }}
                             style={{
                                 backgroundColor: "#3153A1",
                                 borderRadius: 12,
@@ -362,12 +422,33 @@ export default function BienDetailPage() {
                             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Contacter</Text>
                         </Pressable>
 
+                        {(userRole === 'owner' || userRole === 'agency') && (
+                            <Pressable
+                                onPress={() => setIsEditModalVisible(true)}
+                                style={{
+                                    backgroundColor: "#f0f4ff",
+                                    borderRadius: 12,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 32,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    marginBottom: 10,
+                                    borderWidth: 1,
+                                    borderColor: "#3153A1",
+                                }}
+                            >
+                                <Ionicons name="create-outline" size={18} color="#3153A1" style={{ marginRight: 8 }} />
+                                <Text style={{ color: "#3153A1", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Modifier le logement</Text>
+                            </Pressable>
+                        )}
+
                         <Text style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", fontFamily: "Montserrat_400Regular" }}>
                             {bien.type ? `${bien.type} · ` : ""}{bien.surface} m² · {bien.ville}
                         </Text>
                     </View>
 
-                    {/* === DESCRIPTION === */}
                     <View
                         style={{
                             backgroundColor: "#fff",
@@ -400,6 +481,19 @@ export default function BienDetailPage() {
                     </View>
                 </View>
             </ScrollView>
+
+            {userId && (
+                <AjouterBienModal
+                    visible={isEditModalVisible}
+                    onClose={() => setIsEditModalVisible(false)}
+                    onSuccess={() => {
+                        setIsEditModalVisible(false);
+                        fetchBienDetail();
+                    }}
+                    ownerId={userId}
+                    editProperty={rawPropertyData}
+                />
+            )}
         </View>
     );
 }

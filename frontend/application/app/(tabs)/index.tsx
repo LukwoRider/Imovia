@@ -166,7 +166,7 @@ export default function DashboardLocataire() {
             if (profile) setUserName(profile.full_name.split(" ")[0]);
 
             // 2. Fetch Active Lease & Property
-            const { data: leaseTenant } = await supabase
+            const { data: leaseTenants } = await supabase
                 .from("lease_tenants")
                 .select(`
                     lease_id,
@@ -176,8 +176,13 @@ export default function DashboardLocataire() {
                     )
                 `)
                 .eq("tenant_id", user.id)
-                .limit(1)
-                .single();
+                .order("lease_id", { ascending: false });
+
+            const leaseTenant = (leaseTenants || [])
+                .map((row: any) => ({ ...row, leases: Array.isArray(row.leases) ? row.leases[0] : row.leases }))
+                .find((row: any) => row?.leases?.status === "active")
+                ?? (leaseTenants || [])
+                    .map((row: any) => ({ ...row, leases: Array.isArray(row.leases) ? row.leases[0] : row.leases }))[0];
 
             if (leaseTenant?.leases) {
                 const lease = leaseTenant.leases as any;
@@ -187,14 +192,15 @@ export default function DashboardLocataire() {
 
                 // 3. Fetch Stats
                 // - Next payment
-                const { data: nextPayment } = await supabase
+                const { data: nextPayments } = await supabase
                     .from("rent_payments")
                     .select("amount_due, due_date")
                     .eq("lease_id", leaseId)
                     .in("status", ["due", "late"])
                     .order("due_date", { ascending: true })
-                    .limit(1)
-                    .single();
+                    .limit(1);
+
+                const nextPayment = nextPayments?.[0];
 
                 // - Documents count
                 const { count: docCount } = await supabase
@@ -385,7 +391,7 @@ export default function DashboardLocataire() {
                                 <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>Aucun bail actif trouvé.</Text>
                             )}
 
-                            <Button onPress={() => router.push("/(locataire)/logement")}>
+                            <Button onPress={() => router.push("/(tabs)/logement")}>
                                 <Ionicons name="document-text-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                                 <Text>Voir les détails</Text>
                             </Button>
@@ -446,7 +452,7 @@ export default function DashboardLocataire() {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                                 <SectionHeader icon="warning-outline" title="Mes incidents" subtitle="Suivi de vos déclarations" />
                                 <Pressable
-                                    onPress={() => router.push("/(locataire)/incidents")}
+                                    onPress={() => router.push("/(tabs)/incidents")}
                                     style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
                                 >
                                     <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>
@@ -488,13 +494,6 @@ export default function DashboardLocataire() {
                                 <Text style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic", marginBottom: 10 }}>Aucun incident signalé.</Text>
                             )}
 
-                            <Button
-                                onPress={() => router.push("/(locataire)/incidents")}
-                                style={{ marginTop: 14 }}
-                            >
-                                <Ionicons name="warning-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                                <Text>Déclarer un incident</Text>
-                            </Button>
                         </View>
 
                         <View
@@ -511,7 +510,7 @@ export default function DashboardLocataire() {
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                                 <SectionHeader icon="folder-outline" title="Mes documents" subtitle="Accès rapide à vos documents" />
                                 <Pressable
-                                    onPress={() => router.push("/(locataire)/documents")}
+                                    onPress={() => router.push("/(tabs)/documents")}
                                     style={{ backgroundColor: "#3153A1", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 }}
                                 >
                                     <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>Voir tout</Text>

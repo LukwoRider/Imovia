@@ -30,6 +30,7 @@ export default function IncidentsPage() {
     const [showDeclarer, setShowDeclarer] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const [isOwnerOrAgency, setIsOwnerOrAgency] = useState(false);
+    const [leaseCount, setLeaseCount] = useState<number>(0);
 
     useEffect(() => {
         const initialize = async () => {
@@ -55,10 +56,19 @@ export default function IncidentsPage() {
                 }
 
                 const checkRole = role.toLowerCase();
-                const isManagement = checkRole === 'owner' || checkRole === 'agency' || checkRole === 'propriétaire';
+                const isManagement = ['owner', 'agency', 'agence', 'propriétaire', 'proprietaire'].includes(checkRole);
 
                 setUserRole(role);
                 setIsOwnerOrAgency(isManagement);
+
+                if (!isManagement) {
+                    const { count } = await supabase
+                        .from("lease_tenants")
+                        .select("*", { count: "exact", head: true })
+                        .eq("tenant_id", user.id);
+                    setLeaseCount(count || 0);
+                }
+
                 fetchIncidents(role, user.id, isManagement);
             } catch (err) {
                 console.error("[Incidents] Init error:", err);
@@ -84,6 +94,7 @@ export default function IncidentsPage() {
                     created_at,
                     status,
                     location_details,
+                    incident_type,
                     properties!inner (
                         owner_id,
                         profiles:owner_id (
@@ -114,6 +125,7 @@ export default function IncidentsPage() {
                         created_at,
                         status,
                         location_details,
+                        incident_type,
                         properties (
                             owner_id,
                             profiles:owner_id (
@@ -143,6 +155,7 @@ export default function IncidentsPage() {
             return {
                 id: inc.id,
                 titre: inc.description?.split('\n')[0] || "Incident signalé",
+                typeProb: inc.incident_type || "other",
                 dateDeclaration: new Date(inc.created_at).toLocaleDateString("fr-FR", {
                     day: "2-digit",
                     month: "2-digit",
@@ -151,7 +164,7 @@ export default function IncidentsPage() {
                     minute: "2-digit"
                 }).replace(",", " à"),
                 description: inc.description || "",
-                localisation: inc.location_details || "Non précisé",
+                localisation: inc.location_details || null,
                 statut: mapBackendStatus(inc.status),
                 dureeLabel: calculateDurationLabel(inc.status, inc.created_at, inc.created_at),
                 gestionnaireNom: owner?.full_name || "Imovia",
@@ -175,18 +188,24 @@ export default function IncidentsPage() {
         const start = new Date(createdAt);
         const now = new Date();
         const diffMs = now.getTime() - start.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
         if (status === "resolved") {
             const end = updatedAt ? new Date(updatedAt) : now;
             return `Résolu le ${end.toLocaleDateString("fr-FR")}`;
         }
 
-        if (status === "in_progress") {
-            return `En cours depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
-        }
+        const minutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30.41); // Average month length
+        const years = Math.floor(days / 365);
 
-        return `En cours depuis ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+        if (years > 0) return `Il y a ${years} an${years > 1 ? "s" : ""}`;
+        if (months > 0) return `Il y a ${months} mois`;
+        if (days > 0) return `Il y a ${days} jour${days > 1 ? "s" : ""}`;
+        if (hours > 0) return `Il y a ${hours} heure${hours > 1 ? "s" : ""}`;
+        if (minutes > 0) return `Il y a ${minutes} minute${minutes > 1 ? "s" : ""}`;
+        return "À l'instant";
     }
 
     useScrollToTopOnFocus(scrollViewRef);
@@ -203,7 +222,7 @@ export default function IncidentsPage() {
                 (inc) =>
                     inc.titre.toLowerCase().includes(q) ||
                     inc.description.toLowerCase().includes(q) ||
-                    inc.localisation.toLowerCase().includes(q)
+                    (inc.localisation && inc.localisation.toLowerCase().includes(q))
             );
         }
 
@@ -289,7 +308,15 @@ export default function IncidentsPage() {
                                 </View>
                             </View>
                         </LinearGradient>
-                        <DeclarerIncidentView onBack={() => setShowDeclarer(false)} />
+                        <DeclarerIncidentView
+                            onBack={() => setShowDeclarer(false)}
+                            onSuccess={async () => {
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) {
+                                    fetchIncidents(userRole || "tenant", user.id, isOwnerOrAgency);
+                                }
+                            }}
+                        />
                     </>
                 ) : (
                     <>
@@ -354,31 +381,33 @@ export default function IncidentsPage() {
                         </LinearGradient>
 
                         <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
-                            <Pressable
-                                onPress={() => setShowDeclarer(true)}
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    backgroundColor: "#3153A1",
-                                    borderRadius: 10,
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 8,
-                                    alignSelf: "flex-start",
-                                    marginBottom: 12,
-                                }}
-                            >
-                                <Ionicons name="construct-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                                <Text
+                            {!isOwnerOrAgency && leaseCount > 0 && (
+                                <Pressable
+                                    onPress={() => setShowDeclarer(true)}
                                     style={{
-                                        color: "#fff",
-                                        fontSize: 11,
-                                        fontWeight: "600",
-                                        fontFamily: "Montserrat_600SemiBold",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        backgroundColor: "#3153A1",
+                                        borderRadius: 10,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 8,
+                                        alignSelf: "flex-start",
+                                        marginBottom: 12,
                                     }}
                                 >
-                                    Déclarer un incident
-                                </Text>
-                            </Pressable>
+                                    <Ionicons name="construct-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                                    <Text
+                                        style={{
+                                            color: "#fff",
+                                            fontSize: 11,
+                                            fontWeight: "600",
+                                            fontFamily: "Montserrat_600SemiBold",
+                                        }}
+                                    >
+                                        Déclarer un incident
+                                    </Text>
+                                </Pressable>
+                            )}
 
                             <View
                                 style={{
@@ -501,7 +530,18 @@ export default function IncidentsPage() {
                                 </View>
                             ) : pagedIncidents.length > 0 ? (
                                 pagedIncidents.map((inc) => (
-                                    <IncidentCard key={inc.id} incident={inc} />
+                                    <IncidentCard
+                                        key={inc.id}
+                                        incident={inc}
+                                        isManagement={isOwnerOrAgency}
+                                        onRefresh={() => {
+                                            supabase.auth.getSession().then(({ data }) => {
+                                                if (data.session?.user) {
+                                                    fetchIncidents(userRole || "tenant", data.session.user.id, isOwnerOrAgency);
+                                                }
+                                            });
+                                        }}
+                                    />
                                 ))
                             ) : (
                                 <View

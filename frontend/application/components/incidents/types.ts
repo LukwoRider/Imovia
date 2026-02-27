@@ -3,9 +3,10 @@ export type IncidentStatus = "tous" | "resolus" | "en_cours" | "attente";
 export type Incident = {
     id: string;
     titre: string;
+    typeProb: string;
     dateDeclaration: string;
     description: string;
-    localisation: string;
+    localisation: string | null;
     statut: "resolus" | "en_cours" | "attente";
     dureeLabel: string;
     gestionnaireNom: string;

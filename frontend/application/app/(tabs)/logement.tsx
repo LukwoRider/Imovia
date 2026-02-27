@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
 
 type LogementData = {
     titre: string;
@@ -189,7 +189,7 @@ export default function LogementPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Utilisateur non connecté");
 
-            const { data: leaseData, error: leaseError } = await supabase
+            const { data: leaseRows, error: leaseError } = await supabase
                 .from("lease_tenants")
                 .select(`
                     lease_id,
@@ -204,23 +204,34 @@ export default function LogementPage() {
                         )
                     )
                 `)
-                .eq("tenant_id", user.id)
-                .maybeSingle();
+                .eq("tenant_id", user.id);
 
             if (leaseError) throw leaseError;
 
-            if (!leaseData || !leaseData.leases) {
+            const leaseCandidates = (leaseRows || [])
+                .map((row: any) => {
+                    const lease = Array.isArray(row.leases) ? row.leases[0] : row.leases;
+                    return lease ? { lease_id: row.lease_id, lease } : null;
+                })
+                .filter(Boolean) as { lease_id: string; lease: any }[];
+
+            const selectedLease =
+                leaseCandidates
+                    .filter(({ lease }) => lease?.status === "active")
+                    .sort((a, b) => new Date(b.lease.start_date || 0).getTime() - new Date(a.lease.start_date || 0).getTime())[0]
+                ?? leaseCandidates
+                    .sort((a, b) => new Date(b.lease.start_date || 0).getTime() - new Date(a.lease.start_date || 0).getTime())[0];
+
+            if (!selectedLease?.lease) {
                 setLogement(null);
                 setContrat(null);
                 setProprietaire(null);
                 return;
             }
 
-            const l = leaseData.leases as any;
+            const l = selectedLease.lease as any;
             const p = l.properties;
             const owner = p.profiles;
-
-            const { data: authOwner } = await supabase.auth.admin?.getUserById?.(p.owner_id) as any;
 
             setLogement({
                 titre: p.title || "Votre logement",
@@ -583,6 +594,13 @@ export default function LogementPage() {
                             {proprietaire.email !== "Non renseignée" && <ContactRow icon="mail-outline" text={proprietaire.email} />}
 
                             <Pressable
+                                onPress={() => {
+                                    if (proprietaire?.tel && proprietaire.tel !== "Non renseigné") {
+                                        Linking.openURL(`tel:${proprietaire.tel}`);
+                                    } else {
+                                        Alert.alert("Information", "Aucun numéro de téléphone renseigné.");
+                                    }
+                                }}
                                 style={{
                                     backgroundColor: "#3153A1",
                                     borderRadius: 12,

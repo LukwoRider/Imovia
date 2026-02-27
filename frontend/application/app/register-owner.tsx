@@ -22,10 +22,10 @@ import {
     View,
 } from "react-native";
 
-export default function RegisterAgencyPage() {
+export default function RegisterOwnerPage() {
     const router = useRouter();
-    const [agencyName, setAgencyName] = useState("");
-    const [siret, setSiret] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [firstName, setFirstName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("+33");
     const [password, setPassword] = useState("");
@@ -42,8 +42,8 @@ export default function RegisterAgencyPage() {
         Alert.alert("Erreur", message);
     }
 
-    async function handleAgencySignUp() {
-        if (!email || !password || !agencyName || !siret) {
+    async function handleSignUp() {
+        if (!email || !password || !lastName || !firstName) {
             showError("Veuillez remplir tous les champs obligatoires.");
             return;
         }
@@ -68,15 +68,17 @@ export default function RegisterAgencyPage() {
         setPhoneError("");
 
         setLoading(true);
-
-        const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+        const {
+            data: { user },
+            error: signUpError,
+        } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
-                    full_name: agencyName,
-                    role: "agency",
-                    phone: phone,
+                    full_name: `${firstName} ${lastName}`,
+                    role: "owner",
+                    phone,
                 },
             },
         });
@@ -88,43 +90,19 @@ export default function RegisterAgencyPage() {
         }
 
         if (user) {
-            // Wait a bit for the trigger to create the profile
-            // Actually, we can just try to update the role and insert the agency profile
-            // But if the trigger worked, we just need to insert the agency profile
-
-            // First, ensure the profile has the correct role (just in case trigger defaults to tenant)
             const { error: roleError } = await supabase
-                .from('profiles')
-                .update({ role: 'agency' as any })
-                .eq('id', user.id);
+                .from("profiles")
+                .update({ role: "owner" as any })
+                .eq("id", user.id);
 
             if (roleError) {
                 console.error("Error updating profile role:", roleError);
-                // We proceed anyway to try inserting agency_profile
             }
 
-            const { error: profileError } = await supabase
-                .from("agency_profiles")
-                .insert({
-                    profile_id: user.id,
-                    agency_name: agencyName,
-                    siret: siret,
-                    business_email: email,
-                    business_phone: phone,
-                });
-
-            if (profileError) {
-                console.error("Error creating agency profile:", profileError);
-                Alert.alert(
-                    "Partiel",
-                    "Compte créé mais erreur lors de l'enregistrement des détails de l'agence. Contactez le support."
-                );
-            } else {
-                router.replace({
-                    pathname: "/login",
-                    params: { signupSuccess: "1" },
-                });
-            }
+            router.replace({
+                pathname: "/login",
+                params: { signupSuccess: "1" },
+            });
         }
 
         setLoading(false);
@@ -159,28 +137,30 @@ export default function RegisterAgencyPage() {
                     </Text>
                 </View>
 
-                <View className="gap-6 mb-4">
+                <View className="mb-4">
                     <View style={{ marginBottom: 10 }}>
                         <Text className="text-sm font-semibold text-foreground mb-1.5">
-                            Nom de l'agence
+                            Nom
                         </Text>
                         <Input
-                            placeholder="Nom de l'agence"
-                            value={agencyName}
-                            onChangeText={setAgencyName}
+                            placeholder="Votre nom"
+                            value={lastName}
+                            onChangeText={setLastName}
                             autoCapitalize="words"
+                            autoComplete="family-name"
                         />
                     </View>
 
                     <View style={{ marginBottom: 10 }}>
                         <Text className="text-sm font-semibold text-foreground mb-1.5">
-                            Siret
+                            Prénom
                         </Text>
                         <Input
-                            placeholder="Votre siret"
-                            value={siret}
-                            onChangeText={setSiret}
-                            keyboardType="numeric"
+                            placeholder="Votre prénom"
+                            value={firstName}
+                            onChangeText={setFirstName}
+                            autoCapitalize="words"
+                            autoComplete="given-name"
                         />
                     </View>
 
@@ -265,10 +245,7 @@ export default function RegisterAgencyPage() {
                         />
                     </View>
 
-                    <Button
-                        onPress={handleAgencySignUp}
-                        disabled={loading}
-                    >
+                    <Button onPress={handleSignUp} disabled={loading}>
                         <Text>{loading ? "Création..." : "Créer votre compte"}</Text>
                     </Button>
                 </View>

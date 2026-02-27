@@ -45,8 +45,9 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="register-form" options={{ headerShown: false }} />
+          <Stack.Screen name="register-owner" options={{ headerShown: false }} />
           <Stack.Screen name="register-agency" options={{ headerShown: false }} />
-          <Stack.Screen name="(locataire)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(proprietaire)" options={{ headerShown: false }} />
           <Stack.Screen name="bien/[id]" options={{ headerShown: false }} />
         </Stack>

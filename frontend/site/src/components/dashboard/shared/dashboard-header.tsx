@@ -40,8 +40,6 @@ export function DashboardHeader({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: 
 
         // Root Dashboard
         if (paths[0] === 'dashboard') {
-            // Link to the specific dashboard for the user's role (tenant/owner/agency)
-            // If we're already deeper in a role path (e.g. /dashboard/tenant/search), stay on that role
             const targetRole = (paths.length > 1 && (paths[1] === 'tenant' || paths[1] === 'owner' || paths[1] === 'agency'))
                 ? paths[1]
                 : user.role;

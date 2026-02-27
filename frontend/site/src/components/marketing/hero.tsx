@@ -1,17 +1,16 @@
 "use client"
 
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, TrendingUp, Users, ShieldCheck } from "lucide-react"
-import { motion } from "framer-motion"
 import { FadeInUp } from "@/components/ui/motion-wrapper"
+import { motion } from "framer-motion"
+import { CheckCircle2, ShieldCheck, TrendingUp, Users } from "lucide-react"
+import Link from "next/link"
 
 export function Hero() {
     return (
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
             <div className="container px-4 md:px-6 mx-auto">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-                    {/* Left Content */}
                     <FadeInUp className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
                         <h1 className="text-4xl font-extrabold tracking-tight lg:text-6xl text-foreground">
                             Gérez vos biens immobiliers avec{" "}
@@ -61,9 +60,7 @@ export function Hero() {
                         </div>
                     </FadeInUp>
 
-                    {/* Right Visual (CSS UI Mockup) */}
                     <div className="relative mx-auto lg:ml-auto w-full max-w-[500px] lg:max-w-none perspective-1000">
-                        {/* Abstract Background Blobs */}
                         <motion.div
                             animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.3, 0.5] }}
                             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -75,20 +72,18 @@ export function Hero() {
                             className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-100 rounded-full blur-3xl -z-10"
                         />
 
-                        {/* Main Dashboard Card */}
                         <motion.div
                             initial={{ opacity: 0, rotateX: 20, rotateY: -20 }}
                             whileInView={{ opacity: 1, rotateX: 5, rotateY: -5 }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             animate={{ y: [0, -15, 0] }}
-                            style={{ y: 0 }} // default style
+                            style={{ y: 0 }}
                         >
                             <motion.div
                                 animate={{ y: [0, -15, 0] }}
                                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                                 className="relative bg-white rounded-2xl shadow-2xl border border-border/50 p-6 z-10 hover:rotate-0 transition-transform duration-500 ease-out"
                             >
-                                {/* Fake Header */}
                                 <div className="flex items-center justify-between mb-8 border-b pb-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
@@ -105,7 +100,6 @@ export function Hero() {
                                     </div>
                                 </div>
 
-                                {/* Stats Grid */}
                                 <div className="grid grid-cols-2 gap-4 mb-8">
                                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                                         <div className="flex items-center gap-2 mb-2">
@@ -129,7 +123,6 @@ export function Hero() {
                                     </div>
                                 </div>
 
-                                {/* List Items */}
                                 <div className="space-y-3">
                                     <div className="h-2 w-32 bg-slate-200 rounded mb-4" />
                                     {[1, 2, 3].map((i) => (
@@ -148,7 +141,6 @@ export function Hero() {
                             </motion.div>
                         </motion.div>
 
-                        {/* Floating Notification Card */}
                         <motion.div
                             animate={{ y: [0, -10, 0] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}

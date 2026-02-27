@@ -7,7 +7,7 @@ interface InputProps extends TextInputProps {
 }
 
 const Input = React.forwardRef<TextInput, InputProps>(
-    ({ className, placeholderTextColor, ...props }, ref) => {
+    ({ className, placeholderTextColor, style, ...props }, ref) => {
         return (
             <TextInput
                 ref={ref}
@@ -15,9 +15,13 @@ const Input = React.forwardRef<TextInput, InputProps>(
                 selectionColor="#3153A1"
                 cursorColor="#3153A1"
                 underlineColorAndroid="transparent"
-                style={Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : undefined}
+                style={[
+                    { fontFamily: "Montserrat_400Regular" },
+                    Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : undefined,
+                    style,
+                ]}
                 className={cn(
-                    "h-12 rounded-lg border border-input bg-background px-4 text-base text-foreground",
+                    "h-12 rounded-lg border border-input bg-background px-4 text-base text-foreground font-[Montserrat_400Regular]",
                     "placeholder:text-muted-foreground",
                     "focus:border-primary",
                     className

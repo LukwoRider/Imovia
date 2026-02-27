@@ -347,7 +347,7 @@ export default function PaymentsPage() {
                                         placeholder="Rechercher par nom ou email..."
                                         value={tenantSearchQuery}
                                         onChangeText={setTenantSearchQuery}
-                                        style={{ flex: 1, padding: 12, fontSize: 16 }}
+                                        style={{ flex: 1, padding: 12, fontSize: 16, fontFamily: "Montserrat_400Regular" }}
                                     />
                                 </View>
 
@@ -395,7 +395,7 @@ export default function PaymentsPage() {
                                         value={onboardingForm.rentAmount}
                                         onChangeText={val => setOnboardingForm({ ...onboardingForm, rentAmount: val })}
                                         keyboardType="numeric"
-                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0" }}
+                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0", fontFamily: "Montserrat_400Regular" }}
                                     />
                                 </View>
 
@@ -405,7 +405,7 @@ export default function PaymentsPage() {
                                         value={onboardingForm.chargesAmount}
                                         onChangeText={val => setOnboardingForm({ ...onboardingForm, chargesAmount: val })}
                                         keyboardType="numeric"
-                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0" }}
+                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0", fontFamily: "Montserrat_400Regular" }}
                                     />
                                 </View>
 
@@ -415,7 +415,7 @@ export default function PaymentsPage() {
                                         value={onboardingForm.paymentDay}
                                         onChangeText={val => setOnboardingForm({ ...onboardingForm, paymentDay: val })}
                                         keyboardType="numeric"
-                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0" }}
+                                        style={{ backgroundColor: "#f8fafc", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0", fontFamily: "Montserrat_400Regular" }}
                                     />
                                 </View>
 

@@ -78,6 +78,7 @@ export default function LocataireLayout() {
                 tabBarLabelStyle: {
                     fontSize: 9,
                     lineHeight: 12,
+                    fontFamily: "Montserrat_500Medium",
                     fontWeight: "500",
                     marginTop: 2,
                     includeFontPadding: false,

@@ -546,7 +546,8 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderColor: "#e2e8f0",
-        fontSize: 16
+        fontSize: 16,
+        fontFamily: "Montserrat_400Regular"
     },
     saveButton: {
         backgroundColor: "#3153A1",

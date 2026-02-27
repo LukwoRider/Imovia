@@ -9,16 +9,17 @@ interface CustomTextProps extends TextProps {
 }
 
 const Text = React.forwardRef<RNText, CustomTextProps>(
-    ({ className, ...props }, ref) => {
+    ({ className, style, ...props }, ref) => {
         const textClass = React.useContext(TextClassContext);
         return (
             <RNText
                 ref={ref}
                 className={cn(
-                    "text-base text-foreground web:select-text",
+                    "text-base text-foreground web:select-text font-[Montserrat_400Regular]",
                     textClass,
                     className
                 )}
+                style={[{ fontFamily: "Montserrat_400Regular" }, style]}
                 {...props}
             />
         );

@@ -30,6 +30,12 @@ If needed:
 npx expo install
 ```
 
+## creation .env
+
+``` bash
+NEXT_PUBLIC_SUPABASE_URL="url in the mail"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="key in the mail"
+```
 ## Running the App
 
 ``` bash

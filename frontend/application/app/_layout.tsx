@@ -4,12 +4,13 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
+import { supabase } from "@/lib/supabase";
 
 import { NotificationBellProvider } from "@/components/ui/notification-bell-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -18,6 +19,8 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
+  const segments = useSegments();
   const colorScheme = useColorScheme();
 
   const [fontsLoaded] = useFonts({
@@ -27,11 +30,33 @@ export default function RootLayout() {
     Montserrat_700Bold: require("@expo-google-fonts/montserrat/700Bold/Montserrat_700Bold.ttf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
+useEffect(() => {
+    if (!fontsLoaded) return;
+
+    SplashScreen.hideAsync();
   }, [fontsLoaded]);
+
+  useEffect(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.replace("/(tabs)");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const inAuthGroup = segments[0] === "(tabs)";
+
+      if (session && !inAuthGroup) {
+        router.replace("/(tabs)");
+      } else if (!session) {
+        router.replace("/");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   if (!fontsLoaded) {
     return null;

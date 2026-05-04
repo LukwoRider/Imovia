@@ -195,74 +195,107 @@ begin
   insert into public.properties (
     id,
     owner_id,
-    title,
     description,
     address,
+    postal_code,
     city,
     country,
     surface_m2,
     property_type,
-    status
+    status,
+    monthly_rent,
+    rooms,
+    bathrooms,
+    energy_class,
+    is_furnished,
+    available_from
   )
   values (
     v_property_available,
     v_owner_id,
-    'T2 Downtown',
     'Available seeded property for frontend listing tests.',
     '12 Rue de Test',
+    '69001',
     'Lyon',
     'FR',
     45,
     'apartment',
-    'available'
+    'available',
+    750,
+    2,
+    1,
+    'C',
+    false,
+    current_date
   )
   on conflict (id) do update
   set
     owner_id = excluded.owner_id,
-    title = excluded.title,
     description = excluded.description,
     address = excluded.address,
+    postal_code = excluded.postal_code,
     city = excluded.city,
     country = excluded.country,
     surface_m2 = excluded.surface_m2,
     property_type = excluded.property_type,
-    status = excluded.status;
+    status = excluded.status,
+    monthly_rent = excluded.monthly_rent,
+    rooms = excluded.rooms,
+    bathrooms = excluded.bathrooms,
+    energy_class = excluded.energy_class,
+    is_furnished = excluded.is_furnished,
+    available_from = excluded.available_from;
 
   insert into public.properties (
     id,
     owner_id,
-    title,
     description,
     address,
+    postal_code,
     city,
     country,
     surface_m2,
     property_type,
-    status
+    status,
+    monthly_rent,
+    rooms,
+    bathrooms,
+    energy_class,
+    is_furnished
   )
   values (
     v_property_rented,
     v_owner_id,
-    'T3 Riverside',
     'Rented seeded property for active lease scenarios.',
     '8 Quai Seed',
+    '69002',
     'Lyon',
     'FR',
     63,
     'apartment',
-    'rented'
+    'rented',
+    950,
+    3,
+    1,
+    'D',
+    true
   )
   on conflict (id) do update
   set
     owner_id = excluded.owner_id,
-    title = excluded.title,
     description = excluded.description,
     address = excluded.address,
+    postal_code = excluded.postal_code,
     city = excluded.city,
     country = excluded.country,
     surface_m2 = excluded.surface_m2,
     property_type = excluded.property_type,
-    status = excluded.status;
+    status = excluded.status,
+    monthly_rent = excluded.monthly_rent,
+    rooms = excluded.rooms,
+    bathrooms = excluded.bathrooms,
+    energy_class = excluded.energy_class,
+    is_furnished = excluded.is_furnished;
 
   -- Applications: one pending and one already accepted.
   insert into public.rental_applications (
@@ -416,27 +449,30 @@ begin
     property_id,
     lease_id,
     reporter_id,
-    title,
     description,
-    status
+    status,
+    incident_type,
+    priority
   )
   values (
     v_incident_open,
     v_property_rented,
     v_active_lease,
     v_tenant_id,
-    'Seeded water leak',
     'Leak under kitchen sink (seed data).',
-    'open'
+    'open',
+    'plumbing',
+    'high'
   )
   on conflict (id) do update
   set
     property_id = excluded.property_id,
     lease_id = excluded.lease_id,
     reporter_id = excluded.reporter_id,
-    title = excluded.title,
     description = excluded.description,
-    status = excluded.status;
+    status = excluded.status,
+    incident_type = excluded.incident_type,
+    priority = excluded.priority;
 
   insert into public.maintenance_requests (
     id,

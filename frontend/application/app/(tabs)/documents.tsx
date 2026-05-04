@@ -22,6 +22,7 @@ import * as Sharing from "expo-sharing";
 import JSZip from "jszip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 function isOwnerOrAgencyRole(role?: string | null) {
     if (!role) return false;
@@ -46,6 +47,8 @@ export default function DocumentsPage() {
     const [userRole, setUserRole] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
+
+    const tabBarHeight = useTabBarHeight();
 
     const isOwnerOrAgency = useMemo(() => isOwnerOrAgencyRole(userRole), [userRole]);
 
@@ -274,6 +277,7 @@ export default function DocumentsPage() {
             <ScrollView
                 ref={scrollViewRef}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
             >
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}

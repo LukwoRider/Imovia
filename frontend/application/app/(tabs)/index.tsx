@@ -10,6 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 // --- Types ---
 type StatItem = {
@@ -144,6 +145,7 @@ export default function DashboardLocataire() {
     const [payments, setPayments] = useState<any[]>([]);
     const [incidents, setIncidents] = useState<any[]>([]);
     const [documents, setDocuments] = useState<any[]>([]);
+    const tabBarHeight = useTabBarHeight();
 
     useScrollToTopOnFocus(scrollViewRef);
 
@@ -280,7 +282,7 @@ export default function DashboardLocataire() {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-            <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: 32 }}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}>
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}
                     start={{ x: 0, y: 0 }}

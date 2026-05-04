@@ -4,6 +4,11 @@ import { Tabs } from "expo-router";
 import { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+export const useTabBarHeight = () => {
+    const insets = useSafeAreaInsets();
+    return 60 + (insets.bottom > 0 ? insets.bottom : 16);
+}
+
 export default function LocataireLayout() {
     const insets = useSafeAreaInsets();
     const [userRole, setUserRole] = useState<string | null>(null);
@@ -22,8 +27,7 @@ export default function LocataireLayout() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            let role = user.user_metadata?.role || "tenant";
-
+            let role = user.user_metadata?.role || "tenant";          
             const { data: profile } = await supabase
                 .from("profiles")
                 .select("role")
@@ -56,20 +60,19 @@ export default function LocataireLayout() {
                 tabBarActiveTintColor: "#3153A1",
                 tabBarInactiveTintColor: "#7a7a7a",
                 tabBarStyle: {
+                    position: "absolute",
+                    bottom: insets.bottom > 0 ? insets.bottom : 16, 
+                    height: 60,
+                    marginInline: 16,
                     backgroundColor: "#fff",
-                    borderTopWidth: 0,
+                    borderRadius: 18,
                     borderWidth: 1,
                     borderColor: "#ececec",
-                    borderRadius: 18,
-                    position: "absolute",
-                    left: 16,
-                    right: 16,
-                    bottom: 8,
-                    paddingTop: 8,
-                    paddingBottom: 10 + insets.bottom,
-                    height: 74 + insets.bottom,
-                    elevation: 0,
-                    shadowOpacity: 0,
+                    elevation: 4, 
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 10,
                 },
                 tabBarItemStyle: {
                     paddingTop: 1,
@@ -82,10 +85,6 @@ export default function LocataireLayout() {
                     fontWeight: "500",
                     marginTop: 2,
                     includeFontPadding: false,
-                },
-                sceneStyle: {
-                    backgroundColor: "#f9fafb",
-                    paddingBottom: 90 + insets.bottom,
                 },
             }}
         >

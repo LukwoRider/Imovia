@@ -28,6 +28,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 function isOwnerOrAgencyRole(role?: string | null) {
     if (!role) return false;
@@ -53,6 +54,7 @@ export default function BiensPage() {
     const [loyerMax, setLoyerMax] = useState(LOYER_MAX);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchFocused, setSearchFocused] = useState(false);
+    const tabBarHeight = useTabBarHeight();
 
     const [userRole, setUserRole] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
@@ -199,7 +201,7 @@ export default function BiensPage() {
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
             <ScrollView
                 ref={scrollViewRef}
-                contentContainerStyle={{ paddingBottom: 32 }}
+                contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >

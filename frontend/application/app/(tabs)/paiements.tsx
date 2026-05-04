@@ -9,11 +9,14 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, RefreshControl, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 export default function PaymentsPage() {
     const [leases, setLeases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+    const tabBarHeight = useTabBarHeight();
 
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [onboardingStep, setOnboardingStep] = useState(1);
@@ -141,6 +144,7 @@ export default function PaymentsPage() {
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3153A1"]} />
                 }
+                contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
             >
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}

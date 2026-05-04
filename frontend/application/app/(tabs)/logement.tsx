@@ -8,6 +8,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 type LogementData = {
     titre: string;
@@ -174,6 +175,8 @@ export default function LogementPage() {
     const scrollViewRef = useRef<ScrollView>(null);
     useScrollToTopOnFocus(scrollViewRef);
 
+    const tabBarHeight = useTabBarHeight();
+
     const [loading, setLoading] = useState(true);
     const [logement, setLogement] = useState<LogementData | null>(null);
     const [contrat, setContrat] = useState<ContratData | null>(null);
@@ -295,6 +298,7 @@ export default function LogementPage() {
             <ScrollView
                 ref={scrollViewRef}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
             >
                 <LinearGradient
                     colors={["#1e3a6d", "#3153A1"]}

@@ -18,6 +18,7 @@ import {
     type Incident,
     type IncidentStatus,
 } from "@/components/incidents/types";
+import { useTabBarHeight } from "./_layout";
 
 export default function IncidentsPage() {
     const scrollViewRef = useRef<ScrollView>(null);
@@ -31,6 +32,8 @@ export default function IncidentsPage() {
     const [userRole, setUserRole] = useState<string | null>(null);
     const [isOwnerOrAgency, setIsOwnerOrAgency] = useState(false);
     const [leaseCount, setLeaseCount] = useState<number>(0);
+
+    const tabBarHeight = useTabBarHeight();
 
     useEffect(() => {
         const initialize = async () => {
@@ -246,7 +249,7 @@ export default function IncidentsPage() {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-            <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}>
                 {showDeclarer ? (
                     <>
                         <LinearGradient

@@ -11,6 +11,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
+import { useTabBarHeight } from "./_layout";
 
 const AVATAR_SOURCE = require("@/assets/images/profile-man.png");
 
@@ -24,6 +25,8 @@ export default function ProfilePage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [agencyName, setAgencyName] = useState("");
   const [siret, setSiret] = useState("");
+
+  const tabBarHeight = useTabBarHeight();
 
   const isAgency = userRole === "agency";
 
@@ -179,7 +182,7 @@ export default function ProfilePage() {
       <ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
       >
         <ProfileHero onSignOut={handleSignOut} isSigningOut={isSigningOut} />
 

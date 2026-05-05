@@ -13,6 +13,7 @@ import {
     Alert,
     Dimensions,
     Linking,
+    Platform,
     Pressable,
     ScrollView,
     View,
@@ -74,15 +75,60 @@ export default function BienDetailPage() {
     useEffect(() => {
         const checkRole = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const role = session.user.user_metadata?.role || "tenant";
-                setUserRole(role);
+            if(session?.user) {
                 setUserId(session.user.id);
+                const { data: profile } = await supabase
+                   .from("profiles")
+                   .select("role")
+                   .eq("id", session?.user.id)
+                   .maybeSingle();
+                   if (profile?.role) {
+                    setUserRole(profile.role);
+                   }
             }
         };
         checkRole();
         if (id) fetchBienDetail();
     }, [id]);
+
+    const handleDelete = async () => {
+        const title = "Confirmer la suppression";
+        const message = "Êtes-vous sûr de vouloir supprimer ce bien ? Cette action est irréversible.";
+
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm(`${title}\n\n${message}`);
+            if (confirmed) {
+                await executeDelete();
+            }
+        } else {
+            Alert.alert(title, message, [
+                { text: "Annuler", style: "cancel" },
+                { 
+                    text: "Supprimer", 
+                    style: "destructive", 
+                    onPress: () => executeDelete() 
+                },
+            ]);
+        }
+    };
+
+const executeDelete = async () => {
+    try {
+        const { error } = await supabase
+            .from("properties")
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+        router.back();
+    } catch (error) {
+        if (Platform.OS === 'web') {
+            window.alert("Erreur : Impossible de supprimer le bien");
+        } else {
+            Alert.alert("Erreur", "Impossible de supprimer le bien");
+        }
+    }
+};
 
     async function fetchBienDetail() {
         setLoading(true);
@@ -423,6 +469,7 @@ export default function BienDetailPage() {
                         </Pressable>
 
                         {(userRole === 'owner' || userRole === 'agency') && (
+                            <>
                             <Pressable
                                 onPress={() => setIsEditModalVisible(true)}
                                 style={{
@@ -442,6 +489,26 @@ export default function BienDetailPage() {
                                 <Ionicons name="create-outline" size={18} color="#3153A1" style={{ marginRight: 8 }} />
                                 <Text style={{ color: "#3153A1", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Modifier le logement</Text>
                             </Pressable>
+                            <Pressable
+                                onPress={handleDelete}
+                                style={{
+                                    backgroundColor: "#fad6d2",
+                                    borderRadius: 12,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 32,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    marginBottom: 10,
+                                    borderWidth: 1,
+                                    borderColor: "#a13131",
+                                }}
+                            >
+                                <Ionicons name="trash-bin" size={18} color="#a13131" style={{ marginRight: 8 }} />
+                                <Text style={{ color: "#a13131", fontSize: 15, fontWeight: "600", fontFamily: "Montserrat_600SemiBold" }}>Supprimer le logement</Text>
+                            </Pressable>
+                            </>
                         )}
 
                         <Text style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", fontFamily: "Montserrat_400Regular" }}>

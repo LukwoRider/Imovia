@@ -124,44 +124,48 @@ export default function LocataireLayout() {
                     tabPress: () => bumpTabPulse("biens"),
                 }}
             />
-            <Tabs.Screen
-                name="logement"
-                options={{
-                    title: "Mon logement",
-                    href: isOwnerOrAgency ? null : "/(tabs)/logement",
-                    tabBarIcon: ({ color, focused }) => (
-                        <AnimatedTabIcon
-                            name="home-outline"
-                            size={20}
-                            color={color}
-                            focused={focused}
-                            pulseKey={tabPulse.logement}
-                        />
-                    ),
-                }}
-                listeners={{
-                    tabPress: () => bumpTabPulse("logement"),
-                }}
-            />
-            <Tabs.Screen
-                name="paiements"
-                options={{
-                    title: isOwnerOrAgency ? "Locations" : "Mes paiements",
-                    href: isOwnerOrAgency ? "/(tabs)/paiements" : null,
-                    tabBarIcon: ({ color, focused }) => (
-                        <AnimatedTabIcon
-                            name="card-outline"
-                            size={20}
-                            color={color}
-                            focused={focused}
-                            pulseKey={tabPulse.paiements}
-                        />
-                    ),
-                }}
-                listeners={{
-                    tabPress: () => bumpTabPulse("paiements"),
-                }}
-            />
+            <Tabs.Protected guard={!isOwnerOrAgency}>
+                <Tabs.Screen
+                    name="logement"
+                    options={{
+                        title: "Mon logement",
+                        href: isOwnerOrAgency ? null : "/(tabs)/logement",
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="home-outline"
+                                size={20}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.logement}
+                            />
+                        ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("logement"),
+                    }}
+                />
+            </Tabs.Protected>
+            <Tabs.Protected guard={isOwnerOrAgency}>
+                <Tabs.Screen
+                    name="paiements"
+                    options={{
+                        title: isOwnerOrAgency ? "Locations" : "Mes paiements",
+                        href: isOwnerOrAgency ? "/(tabs)/paiements" : null,
+                        tabBarIcon: ({ color, focused }) => (
+                            <AnimatedTabIcon
+                                name="card-outline"
+                                size={20}
+                                color={color}
+                                focused={focused}
+                                pulseKey={tabPulse.paiements}
+                            />
+                        ),
+                    }}
+                    listeners={{
+                        tabPress: () => bumpTabPulse("paiements"),
+                    }}
+                />
+            </Tabs.Protected>
             <Tabs.Screen
                 name="documents"
                 options={{

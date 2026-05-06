@@ -113,6 +113,8 @@ export default function BiensPage() {
                     id,
                     address,
                     city,
+                    is_for_sale,
+                    is_under_renovation,
                     monthly_rent,
                     surface_m2,
                     property_type,
@@ -131,11 +133,15 @@ export default function BiensPage() {
           console.warn(
             '[Biens] User matches owner role but no UID provided, falling back to all available',
           );
-          query = query.eq('status', 'available');
+          query = query
+            .eq('status', 'available')
+            .eq('is_under_renovation', false);
         }
       } else {
         console.log('[Biens] Fetching for tenant (available properties)');
-        query = query.eq('status', 'available');
+        query = query
+          .eq('status', 'available')
+          .eq('is_under_renovation', false);
       }
 
       const { data, error } = await query.order('created_at', {
@@ -165,6 +171,8 @@ export default function BiensPage() {
           imagesCount,
           thumbnail: allImageUrls[0],
           images: allImageUrls,
+          is_for_sale: p.is_for_sale,
+          is_under_renovation: p.is_under_renovation,
         };
       });
 
@@ -465,6 +473,7 @@ export default function BiensPage() {
                 key={bien.id}
                 item={bien}
                 onPress={() => router.push(`/bien/${bien.id}` as any)}
+                isOwnerView={isOwnerOrAgencyRole(userRole)}
               />
             ))
           ) : (

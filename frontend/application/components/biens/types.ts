@@ -8,6 +8,8 @@ export type Property = {
   imagesCount: number;
   thumbnail?: string;
   images?: string[];
+  is_for_sale: boolean;
+  is_under_renovation: boolean;
 };
 
 export const ITEMS_PER_PAGE = 4;

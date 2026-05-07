@@ -1,10 +1,11 @@
-import { Text } from "@/components/ui/text";
-import { useRef } from "react";
-import {
-  GestureResponderEvent,
-  LayoutChangeEvent,
-  View,
-} from "react-native";
+import React, { useEffect } from 'react';
+import { View, Text, LayoutChangeEvent, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { scheduleOnRN } from 'react-native-worklets';
 
 type RangeSliderProps = {
   label: string;
@@ -16,6 +17,8 @@ type RangeSliderProps = {
   formatRange: (start: number, end: number) => string;
 };
 
+const THUMB_RADIUS = 10;
+
 export default function RangeSlider({
   label,
   minValue,
@@ -25,142 +28,175 @@ export default function RangeSlider({
   onRangeChange,
   formatRange,
 }: RangeSliderProps) {
-  const trackWidth = useRef(0);
-  const activeThumb = useRef<"start" | "end" | null>(null);
+  const trackWidth = useSharedValue(0);
 
-  const getPercent = (v: number) => ((v - minValue) / (maxValue - minValue)) * 100;
-  const startPercent = getPercent(startValue);
-  const endPercent = getPercent(endValue);
+  const getRatio = (v: number) => (v - minValue) / (maxValue - minValue);
+
+  const startRatio = useSharedValue(getRatio(startValue));
+  const endRatio = useSharedValue(getRatio(endValue));
+
+  useEffect(() => {
+    startRatio.value = getRatio(startValue);
+    endRatio.value = getRatio(endValue);
+  }, [startValue, endValue, minValue, maxValue]);
 
   const handleTrackLayout = (e: LayoutChangeEvent) => {
-    trackWidth.current = e.nativeEvent.layout.width;
+    trackWidth.value = e.nativeEvent.layout.width;
   };
 
-  const updateRangeFromTouch = (e: GestureResponderEvent) => {
-    if (trackWidth.current === 0) return;
-
-    const touchX = Math.max(0, Math.min(trackWidth.current, e.nativeEvent.locationX));
-    const ratio = Math.max(0, Math.min(1, touchX / trackWidth.current));
-    const nextValue = Math.round(minValue + ratio * (maxValue - minValue));
-
-    if (!activeThumb.current) {
-      const startX = (startPercent / 100) * trackWidth.current;
-      const endX = (endPercent / 100) * trackWidth.current;
-      activeThumb.current =
-        Math.abs(touchX - startX) <= Math.abs(touchX - endX) ? "start" : "end";
-    }
-
-    if (activeThumb.current === "start") {
-      onRangeChange(Math.min(nextValue, endValue), endValue);
-      return;
-    }
-
-    onRangeChange(startValue, Math.max(nextValue, startValue));
+  const handleRangeChange = (sRatio: number, eRatio: number) => {
+    const newStart = Math.round(minValue + sRatio * (maxValue - minValue));
+    const newEnd = Math.round(minValue + eRatio * (maxValue - minValue));
+    onRangeChange(newStart, newEnd);
   };
+
+  const startCtx = useSharedValue(0);
+  const panStart = Gesture.Pan()
+    .hitSlop(20)
+    .onBegin(() => {
+      startCtx.value = startRatio.value * trackWidth.value;
+    })
+    .onUpdate((e) => {
+      if (trackWidth.value === 0) return;
+      const newX = startCtx.value + e.translationX;
+      const ratio = Math.max(
+        0,
+        Math.min(newX / trackWidth.value, endRatio.value),
+      );
+      startRatio.value = ratio;
+      scheduleOnRN(handleRangeChange, ratio, endRatio.value);
+    });
+
+  const endCtx = useSharedValue(0);
+  const panEnd = Gesture.Pan()
+    .hitSlop(20)
+    .onBegin(() => {
+      endCtx.value = endRatio.value * trackWidth.value;
+    })
+    .onUpdate((e) => {
+      if (trackWidth.value === 0) return;
+      const newX = endCtx.value + e.translationX;
+      const ratio = Math.max(
+        startRatio.value,
+        Math.min(newX / trackWidth.value, 1),
+      );
+      endRatio.value = ratio;
+      scheduleOnRN(handleRangeChange, startRatio.value, ratio);
+    });
+
+  const activeTrackStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: startRatio.value * trackWidth.value }],
+      width: Math.max(
+        0,
+        (endRatio.value - startRatio.value) * trackWidth.value,
+      ),
+    };
+  });
+
+  const thumbStartStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: startRatio.value * trackWidth.value - THUMB_RADIUS },
+      ],
+    };
+  });
+
+  const thumbEndStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: endRatio.value * trackWidth.value - THUMB_RADIUS },
+      ],
+    };
+  });
 
   return (
-    <View style={{ marginBottom: 12 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "700",
-            color: "#1e293b",
-            fontFamily: "Montserrat_700Bold",
-          }}
-        >
-          {label}
-        </Text>
-        <View
-          style={{
-            backgroundColor: "#f0f2f5",
-            borderRadius: 6,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 11,
-              color: "#6b7280",
-              fontWeight: "500",
-              fontFamily: "Montserrat_500Medium",
-            }}
-          >
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
             {formatRange(startValue, endValue)}
           </Text>
         </View>
       </View>
-      <View
-        onLayout={handleTrackLayout}
-        onStartShouldSetResponder={() => true}
-        onMoveShouldSetResponder={() => true}
-        onResponderGrant={updateRangeFromTouch}
-        onResponderMove={updateRangeFromTouch}
-        onResponderRelease={() => {
-          activeThumb.current = null;
-        }}
-        style={{
-          height: 32,
-          justifyContent: "center",
-        }}
-      >
-        <View style={{ height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
-          <View
-            style={{
-              position: "absolute",
-              height: 4,
-              backgroundColor: "#3153A1",
-              borderRadius: 2,
-              left: `${startPercent}%`,
-              width: `${Math.max(0, endPercent - startPercent)}%`,
-            }}
-          />
+
+      <View style={styles.trackContainer} onLayout={handleTrackLayout}>
+        <View style={styles.backgroundTrack}>
+          <Animated.View style={[styles.activeTrack, activeTrackStyle]} />
         </View>
-        <View
-          style={{
-            position: "absolute",
-            left: `${startPercent}%`,
-            marginLeft: -10,
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-            backgroundColor: "#fff",
-            borderWidth: 3,
-            borderColor: "#3153A1",
-            shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 4,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 3,
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            left: `${endPercent}%`,
-            marginLeft: -10,
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-            backgroundColor: "#fff",
-            borderWidth: 3,
-            borderColor: "#3153A1",
-            shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 4,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 3,
-          }}
-        />
+
+        <GestureDetector gesture={panStart}>
+          <Animated.View style={[styles.thumb, thumbStartStyle]} />
+        </GestureDetector>
+
+        <GestureDetector gesture={panEnd}>
+          <Animated.View style={[styles.thumb, thumbEndStyle]} />
+        </GestureDetector>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1e293b',
+    fontFamily: 'Montserrat_700Bold',
+  },
+  badge: {
+    backgroundColor: '#f0f2f5',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeText: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontWeight: '500',
+    fontFamily: 'Montserrat_500Medium',
+  },
+  trackContainer: {
+    height: 32,
+    justifyContent: 'center',
+  },
+  backgroundTrack: {
+    height: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  activeTrack: {
+    position: 'absolute',
+    height: 4,
+    backgroundColor: '#3153A1',
+    borderRadius: 2,
+    left: 0,
+  },
+  thumb: {
+    position: 'absolute',
+    left: 0,
+    width: THUMB_RADIUS * 2,
+    height: THUMB_RADIUS * 2,
+    borderRadius: THUMB_RADIUS,
+    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#3153A1',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    zIndex: 10,
+  },
+});
